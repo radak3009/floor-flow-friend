@@ -266,6 +266,19 @@ async function airtableCreateThenDelete(params: {
   }
 }
 
+function resolveByName<T>(
+  map: Record<string, T> | undefined | null,
+  name: string,
+): T | undefined {
+  if (!map) return undefined;
+  if (map[name] !== undefined) return map[name];
+  const lower = name.toLowerCase();
+  for (const [k, v] of Object.entries(map)) {
+    if (k.toLowerCase() === lower) return v;
+  }
+  return undefined;
+}
+
 export const bootstrapSmokeTestFn = createServerFn({ method: "POST" })
   .handler(async (): Promise<SmokeTestResult> => {
     await assertBootstrapAllowed();
@@ -273,22 +286,27 @@ export const bootstrapSmokeTestFn = createServerFn({ method: "POST" })
     const cfg = await loadActiveConfig();
     if (!cfg || !cfg.tables) throw new Error("Prvo regeneriši mapu.");
 
-    const promeneTableId = cfg.tables["PromeneNaloga"];
-    const prijaveTableId = cfg.tables["PrijaveNaSistem"];
+    const promeneTableId = resolveByName(cfg.tables, "PromeneNaloga");
+    const prijaveTableId = resolveByName(cfg.tables, "PrijaveNaSistem");
+    const promeneFields = resolveByName(cfg.fields ?? {}, "PromeneNaloga");
+    const prijaveFields = resolveByName(cfg.fields ?? {}, "PrijaveNaSistem");
 
-    // 1) PAT write scope + Promene upis
+    // 1) PAT write scope + Promene upis (koristi fieldId iz mape, ne naziv)
     let promeneResult: SmokeCheck = { ok: false, message: "Tabela PromeneNaloga nije mapirana" };
     if (promeneTableId) {
-      promeneResult = await airtableCreateThenDelete({
-        baseId: cfg.baseId,
-        pat: cfg.pat,
-        tableId: promeneTableId,
-        fields: { Komentar: "__smoke_test__ (auto-delete)" },
-      });
+      const komentarFieldId = resolveByName(promeneFields, "komentar");
+      if (!komentarFieldId) {
+        promeneResult = { ok: false, message: "Polje 'komentar' u PromeneNaloga nije mapirano" };
+      } else {
+        promeneResult = await airtableCreateThenDelete({
+          baseId: cfg.baseId,
+          pat: cfg.pat,
+          tableId: promeneTableId,
+          fields: { [komentarFieldId]: "__smoke_test__ (auto-delete)" },
+        });
+      }
     }
 
-    // PAT write scope = ako je bilo koji create uspeo, znamo da PAT ima write
-    // Ako je promene pao na 403/INVALID_PERMISSIONS — to je write scope problem
     const patWrite: SmokeCheck = promeneResult.ok
       ? { ok: true }
       : /403|PERMISSION|INVALID_PERMISSIONS|NOT_AUTHORIZED/i.test(promeneResult.message ?? "")
@@ -298,12 +316,17 @@ export const bootstrapSmokeTestFn = createServerFn({ method: "POST" })
     // 2) PrijaveNaSistem upis
     let prijaveResult: SmokeCheck = { ok: false, message: "Tabela PrijaveNaSistem nije mapirana" };
     if (prijaveTableId) {
-      prijaveResult = await airtableCreateThenDelete({
-        baseId: cfg.baseId,
-        pat: cfg.pat,
-        tableId: prijaveTableId,
-        fields: { "Datum i vreme prijave": new Date().toISOString() },
-      });
+      const datumFieldId = resolveByName(prijaveFields, "datumIVremePrijave");
+      if (!datumFieldId) {
+        prijaveResult = { ok: false, message: "Polje 'datumIVremePrijave' u PrijaveNaSistem nije mapirano" };
+      } else {
+        prijaveResult = await airtableCreateThenDelete({
+          baseId: cfg.baseId,
+          pat: cfg.pat,
+          tableId: prijaveTableId,
+          fields: { [datumFieldId]: new Date().toISOString() },
+        });
+      }
     }
 
     return {
