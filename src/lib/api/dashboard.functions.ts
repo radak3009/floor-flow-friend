@@ -186,7 +186,21 @@ async function buildAirtableDashboard(): Promise<{ machines: MachineDashboardRow
       ciklusiTotal: pickNum(m.ciklusiTotal),
       projektovanCiklusSek: pickNum(m.projektovanCiklusSek),
       trenutniCiklusSek: pickNum(m.trenutniCiklusSek),
-      performanse: pickNum((wo as any)?.performanse) ?? pickNum(m.performanseFinal) ?? pickNum(m.performanse),
+      performanse: (() => {
+        const proj = pickNum(m.projektovanCiklusSek);
+        const tren = pickNum(m.trenutniCiklusSek);
+        if (proj && tren) return (tren - proj) / proj;
+        // Fallback: parse string formule "🟩 8.9%" iz RadniNalozi/Monitoring
+        const raw = (wo as any)?.performanse ?? m.performanseFinal ?? m.performanse;
+        const s = Array.isArray(raw) ? raw[0] : raw;
+        if (typeof s === "number") return s;
+        if (typeof s === "string") {
+          const match = s.match(/-?\d+(?:[.,]\d+)?/);
+          if (match) return parseFloat(match[0].replace(",", ".")) / 100;
+        }
+        return undefined;
+      })(),
+
       brojKaviteta: pickNum(m.brojKaviteta) ?? pickNum(wo?.brojKaviteta),
       masaKomadaG: pickNum((wo as any)?.masaKomadaG),
       planiranStart: pickStr(wo?.planiranStart),
