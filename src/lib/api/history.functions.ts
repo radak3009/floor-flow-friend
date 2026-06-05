@@ -2,7 +2,6 @@ import { createServerFn } from "@tanstack/react-start";
 import {
   RadniNalozi,
   Zastoji,
-  Inspekcija,
   PromeneNaloga,
   Resursi,
   Artikli,
@@ -18,7 +17,8 @@ import { sharedMemoize } from "@/lib/airtable/shared-cache.server";
 type RnRow = RecordOf<"RadniNalozi">;
 type ZastojRow = RecordOf<"Zastoji">;
 type SkartRow = RecordOf<"PromeneNaloga">;
-type InspRow = RecordOf<"Inspekcija">;
+// Inspekcija se u remixu vodi kao PromeneNaloga sa `tipZapisa = "Inspekcija"`.
+type InspRow = RecordOf<"PromeneNaloga">;
 type AnyRow = { id: string } & Record<string, unknown>;
 
 const CAP = 100;
