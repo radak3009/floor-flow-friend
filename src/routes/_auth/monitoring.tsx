@@ -243,7 +243,7 @@ function MonitoringPage() {
 
   const machines = useMemo(() => {
     const arr = [...(data?.machines || [])];
-    arr.sort((a, b) => a.nazivLinije.localeCompare(b.nazivLinije, "sr", { sensitivity: "base" }));
+    arr.sort((a, b) => a.nazivLinije.localeCompare(b.nazivLinije, "sr", { sensitivity: "base", numeric: true }));
     return arr;
   }, [data]);
 
