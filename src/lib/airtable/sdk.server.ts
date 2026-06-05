@@ -69,7 +69,16 @@ function fieldIdForCtx(ctx: ActiveContext, table: TableName, camel: string): str
  * "Naručilac" → "narucilac"). Identity unosi su zaštita ako neko menja kod.
  */
 const FIELD_ALIASES: Partial<Record<TableName, Record<string, string>>> = {
-  RadniNalozi: { kupac: "narucilac", masaKomadaKg: "masaKomadaG", masaKomadaG: "masaKomadaKg" },
+  // RadniNalozi: u nekim bazama je link na artikal nazvan "proizvod" (label
+  // "Proizvod") umesto "artikal" → alias da kod koji koristi `rn.artikal`
+  // i dalje radi.
+  RadniNalozi: {
+    kupac: "narucilac",
+    masaKomadaKg: "masaKomadaG",
+    masaKomadaG: "masaKomadaKg",
+    artikal: "proizvod",
+    proizvod: "artikal",
+  },
   Zastoji: { idZapisa: "idZapisa" },
   PromeneNaloga: { artikal: "artikal", idZapisa: "idZapisa" },
   // Airtable label "Uređaj" → različite camelCase verzije ovisno o regen-u:
@@ -82,8 +91,12 @@ const FIELD_ALIASES: Partial<Record<TableName, Record<string, string>>> = {
   // Regen pravi camelKey iz labele "Procenjeno trajanje (d:h:min)" →
   // `procenjenoTrajanjeDHMin` (velika H/M), dok kod koristi
   // `procenjenoTrajanjeDhmin`. Isto i za trajanjeZastoja(H:min) i
-  // energija(KwH). Aliasi ispod podržavaju oba pravca.
+  // energija(KwH). Aliasi ispod podržavaju oba pravca. Takođe: u nekim
+  // bazama je "Naziv mašine/linije" mapiran samo kao `naziv` — alias
+  // `nazivLinije ↔ naziv` čuva legacy code-key.
   Monitoring: {
+    nazivLinije: "naziv",
+    naziv: "nazivLinije",
     procenjenoTrajanjeDhmin: "procenjenoTrajanjeDHMin",
     procenjenoTrajanjeDHMin: "procenjenoTrajanjeDhmin",
     procenjenoTrajanjeHmin: "procenjenoTrajanjeHMin",
