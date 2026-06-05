@@ -1,6 +1,11 @@
 import { createServerFn } from "@tanstack/react-start";
-import { Inspekcija, KontaktOsobe, uploadAttachment, resolveFieldId } from "@/lib/airtable/sdk.server";
+import { PromeneNaloga, KontaktOsobe, uploadAttachment, resolveFieldId } from "@/lib/airtable/sdk.server";
 import { findIdByClientOpId } from "@/lib/airtable/dedupe.server";
+
+// U remixovanoj bazi tabela `Inspekcija` ne postoji — zapisi inspekcije se
+// čuvaju u `PromeneNaloga` sa `tipZapisa = "Inspekcija"`. Polje `masaKomadaG`
+// iz UI-ja (grami) mapira se na `izmerenaMasaKg` (kilogrami) sa konverzijom.
+const TIP_ZAPISA_INSPEKCIJA = "Inspekcija";
 
 export type Kvalitet = "Dobro" | "Zadovoljava" | "Nezadovoljava" | "Neprihvatljivo" | "N/A";
 export type Odstupanje = "OK" | "N/OK" | "N/A";
@@ -121,7 +126,7 @@ export const logInspectionFn = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     // Outbox dedupe
     if (data.clientOpId) {
-      const existing = await findIdByClientOpId("Inspekcija", data.clientOpId);
+      const existing = await findIdByClientOpId("PromeneNaloga", data.clientOpId);
       if (existing) return { ok: true as const, id: existing, deduped: true as const };
     }
     let kreiraola = data.userId;
@@ -134,23 +139,24 @@ export const logInspectionFn = createServerFn({ method: "POST" })
     const record: Record<string, unknown> = {
       radniNalog: [data.radniNalogId],
       kreiraoLa: kreiraola,
+      tipZapisa: TIP_ZAPISA_INSPEKCIJA,
       brojIspitanogKomada: data.brojIspitanogKomada,
       vizuelno: data.vizuelno,
       funkcionalno: data.funkcionalno,
       integralniKvalitet: data.integralniKvalitet,
       odstupanjeOdInstrukcija: data.odstupanjeOdInstrukcija,
     };
-    // Airtable polje je `masaKomadaG` (grami) — šaljemo direktno bez konverzije.
-    if (data.masaKomadaG !== undefined) record.masaKomadaG = data.masaKomadaG;
+    // UI šalje masu u gramima; Airtable polje `izmerenaMasaKg` je u kilogramima.
+    if (data.masaKomadaG !== undefined) record.izmerenaMasaKg = data.masaKomadaG / 1000;
     if (data.kolicinaNeusaglasenih !== undefined) record.kolicinaNeusaglasenih = data.kolicinaNeusaglasenih;
     if (data.komentar) record.komentar = data.komentar;
     if (data.uzrokOdstupanja) record.uzrokOdstupanja = data.uzrokOdstupanja;
     if (data.clientOpId) record.__extraFields = { clientOpId: data.clientOpId };
-    const created = await Inspekcija.create({ record });
+    const created = await PromeneNaloga.create({ record });
     const recordId = (created as any).id as string;
 
     if (data.prilozi && data.prilozi.length) {
-      const prilogFieldId = await resolveFieldId("Inspekcija", "prilog");
+      const prilogFieldId = await resolveFieldId("PromeneNaloga", "prilog");
       for (const a of data.prilozi) {
         await uploadAttachment({
           recordId,
@@ -187,7 +193,8 @@ export const getInspectionsForWorkOrderFn = createServerFn({ method: "GET" })
     return { radniNalogId: input.radniNalogId, limit: input.limit ?? 100 };
   })
   .handler(async ({ data }): Promise<{ items: InspekcijaRow[] }> => {
-    const { records } = await Inspekcija.findAll({
+    const { records } = await PromeneNaloga.findAll({
+      filters: { tipZapisa: TIP_ZAPISA_INSPEKCIJA } as any,
       sort: [{ field: "datumKreiranja", direction: "desc" }],
       limit: 500,
     });
@@ -234,7 +241,7 @@ export const getInspectionsForWorkOrderFn = createServerFn({ method: "GET" })
         id: r.id,
         createdAt: r.datumKreiranja as string | undefined,
         brojIspitanogKomada: pickNum(r.brojIspitanogKomada),
-        masaKomadaG: pickNum((r as any).masaKomadaG),
+        masaKomadaG: (() => { const kg = pickNum((r as any).izmerenaMasaKg); return typeof kg === "number" ? kg * 1000 : undefined; })(),
         vizuelno: pickStr(r.vizuelno),
         funkcionalno: pickStr(r.funkcionalno),
         integralniKvalitet: pickStr(r.integralniKvalitet),

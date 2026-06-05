@@ -85,9 +85,6 @@ const FIELD_ALIASES: Partial<Record<TableName, Record<string, string>>> = {
   // "ureaj" (stripping diakritika) ili "uredjaj" (translit). Aliasi ispod
   // garantuju da code-key "ureaj" radi u oba slučaja.
   PrijaveNaSistem: { ureaj: "uredjaj", uredjaj: "ureaj" },
-  // Airtable polje za masu u Inspekcija je `masaKomadaG`; štitimo se ako
-  // regen vrati staro ime `masaKomadaKg`.
-  Inspekcija: { masaKomadaKg: "masaKomadaG", masaKomadaG: "masaKomadaKg" },
   // Regen pravi camelKey iz labele "Procenjeno trajanje (d:h:min)" →
   // `procenjenoTrajanjeDHMin` (velika H/M), dok kod koristi
   // `procenjenoTrajanjeDhmin`. Isto i za trajanjeZastoja(H:min) i
@@ -484,7 +481,8 @@ export const Zastoji = makeTable("Zastoji");
 export const Grupe = makeTable("Grupe");
 export const Tipovi = makeTable("Tipovi");
 export const Komitenti = makeTable("Komitenti");
-export const Inspekcija = makeTable("Inspekcija");
+// `Inspekcija` tabela ne postoji u remixovanoj bazi — inspekcije se vode u
+// `PromeneNaloga` sa `tipZapisa = "Inspekcija"`. Vidi src/lib/api/inspection.functions.ts.
 
 /**
  * Resolve the current Airtable field ID for a camelCase key under the active config.

@@ -2,7 +2,6 @@ import { createServerFn } from "@tanstack/react-start";
 import {
   RadniNalozi,
   Zastoji,
-  Inspekcija,
   PromeneNaloga,
   Resursi,
   Artikli,
@@ -18,7 +17,8 @@ import { sharedMemoize } from "@/lib/airtable/shared-cache.server";
 type RnRow = RecordOf<"RadniNalozi">;
 type ZastojRow = RecordOf<"Zastoji">;
 type SkartRow = RecordOf<"PromeneNaloga">;
-type InspRow = RecordOf<"Inspekcija">;
+// Inspekcija se u remixu vodi kao PromeneNaloga sa `tipZapisa = "Inspekcija"`.
+type InspRow = RecordOf<"PromeneNaloga">;
 type AnyRow = { id: string } & Record<string, unknown>;
 
 const CAP = 100;
@@ -223,7 +223,7 @@ export const getHistoryFn = createServerFn({ method: "GET" })
         : safe(PromeneNaloga.findAll({ filters: { radniNalog: { linkAnyOf: rnBrojList }, kolicinaSkarta: { gt: 0 }, deleted: { not: true } }, limit: CAP + 1, sort: [{ field: "datumKreiranja", direction: "desc" }] }), "Skart"),
       rnBrojList.length === 0
         ? Promise.resolve({ records: [] as InspRow[] })
-        : safe(Inspekcija.findAll({ filters: { radniNalog: { linkAnyOf: rnBrojList } }, limit: CAP + 1, sort: [{ field: "datumKreiranja", direction: "desc" }] }), "Inspekcija"),
+        : safe(PromeneNaloga.findAll({ filters: { radniNalog: { linkAnyOf: rnBrojList }, tipZapisa: "Inspekcija", deleted: { not: true } } as any, limit: CAP + 1, sort: [{ field: "datumKreiranja", direction: "desc" }] }), "Inspekcija(PromeneNaloga)"),
     ]);
 
     // Defensive client-side filter in case ARRAYJOIN matching missed/over-matched.
@@ -450,7 +450,8 @@ export const getHistoryFn = createServerFn({ method: "GET" })
       };
     });
 
-    const inspekcije: InspHistoryRow[] = inspRecords.map((r) => {
+    const inspekcije: InspHistoryRow[] = inspRecords.map((rec) => {
+      const r = rec as AnyRow;
       const rnId = firstId(r.radniNalog);
       return {
         id: r.id,

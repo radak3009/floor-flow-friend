@@ -3,7 +3,7 @@
  * Koristi raw Airtable formulu po polju `clientOpId` (field name).
  *
  * Polje `clientOpId` mora postojati u Airtable tabelama:
- *   PromeneNaloga, Inspekcija, Zastoji, RadniNalozi
+ *   PromeneNaloga, Zastoji, RadniNalozi
  *
  * Ne mora biti u statičkoj schema.ts mapi — koristimo field name direktno.
  */
