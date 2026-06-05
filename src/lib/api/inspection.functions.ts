@@ -1,6 +1,11 @@
 import { createServerFn } from "@tanstack/react-start";
-import { Inspekcija, KontaktOsobe, uploadAttachment, resolveFieldId } from "@/lib/airtable/sdk.server";
+import { PromeneNaloga, KontaktOsobe, uploadAttachment, resolveFieldId } from "@/lib/airtable/sdk.server";
 import { findIdByClientOpId } from "@/lib/airtable/dedupe.server";
+
+// U remixovanoj bazi tabela `Inspekcija` ne postoji — zapisi inspekcije se
+// čuvaju u `PromeneNaloga` sa `tipZapisa = "Inspekcija"`. Polje `masaKomadaG`
+// iz UI-ja (grami) mapira se na `izmerenaMasaKg` (kilogrami) sa konverzijom.
+const TIP_ZAPISA_INSPEKCIJA = "Inspekcija";
 
 export type Kvalitet = "Dobro" | "Zadovoljava" | "Nezadovoljava" | "Neprihvatljivo" | "N/A";
 export type Odstupanje = "OK" | "N/OK" | "N/A";
