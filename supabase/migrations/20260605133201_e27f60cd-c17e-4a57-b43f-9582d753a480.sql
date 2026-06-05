@@ -1,0 +1,1 @@
+ALTER TABLE public.airtable_config ADD COLUMN IF NOT EXISTS finalized boolean NOT NULL DEFAULT false;
