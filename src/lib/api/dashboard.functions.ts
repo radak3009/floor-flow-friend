@@ -186,7 +186,7 @@ async function buildAirtableDashboard(): Promise<{ machines: MachineDashboardRow
       ciklusiTotal: pickNum(m.ciklusiTotal),
       projektovanCiklusSek: pickNum(m.projektovanCiklusSek),
       trenutniCiklusSek: pickNum(m.trenutniCiklusSek),
-      performanse: pickNum(m.performanseFinal) ?? pickNum(m.performanse),
+      performanse: pickNum((wo as any)?.performanse) ?? pickNum(m.performanseFinal) ?? pickNum(m.performanse),
       brojKaviteta: pickNum(m.brojKaviteta) ?? pickNum(wo?.brojKaviteta),
       masaKomadaG: pickNum((wo as any)?.masaKomadaG),
       planiranStart: pickStr(wo?.planiranStart),
