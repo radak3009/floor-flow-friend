@@ -133,14 +133,11 @@ async function buildAirtableDashboard(): Promise<{ machines: MachineDashboardRow
     }
   }
 
-  // DEBUG performanse
-  for (const m of monResult.records.slice(0, 3)) {
-    console.log("[perf-debug]", pickStr(m.nazivLinije), "performanse=", JSON.stringify((m as any).performanse), "performanseFinal=", JSON.stringify((m as any).performanseFinal), "allKeys=", Object.keys(m).filter(k=>k.toLowerCase().includes("perf")));
-  }
   const machines: MachineDashboardRow[] = monResult.records.map((m) => {
     let radniNalogId = firstId(m.radniNalog);
     let wo = radniNalogId ? woMap.get(radniNalogId) : undefined;
     const resursiId = firstId(m.proizvodnaLinija);
+
 
 
     if (wo && resursiId) {
@@ -189,7 +186,7 @@ async function buildAirtableDashboard(): Promise<{ machines: MachineDashboardRow
       ciklusiTotal: pickNum(m.ciklusiTotal),
       projektovanCiklusSek: pickNum(m.projektovanCiklusSek),
       trenutniCiklusSek: pickNum(m.trenutniCiklusSek),
-      performanse: pickNum(m.performanseFinal) ?? pickNum(m.performanse),
+      performanse: pickNum((wo as any)?.performanse) ?? pickNum(m.performanseFinal) ?? pickNum(m.performanse),
       brojKaviteta: pickNum(m.brojKaviteta) ?? pickNum(wo?.brojKaviteta),
       masaKomadaG: pickNum((wo as any)?.masaKomadaG),
       planiranStart: pickStr(wo?.planiranStart),
