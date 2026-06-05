@@ -194,7 +194,7 @@ export const getInspectionsForWorkOrderFn = createServerFn({ method: "GET" })
   })
   .handler(async ({ data }): Promise<{ items: InspekcijaRow[] }> => {
     const { records } = await PromeneNaloga.findAll({
-      filters: { tipZapisa: TIP_ZAPISA_INSPEKCIJA },
+      filters: { tipZapisa: TIP_ZAPISA_INSPEKCIJA } as any,
       sort: [{ field: "datumKreiranja", direction: "desc" }],
       limit: 500,
     });
