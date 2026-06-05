@@ -126,7 +126,7 @@ export const logInspectionFn = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     // Outbox dedupe
     if (data.clientOpId) {
-      const existing = await findIdByClientOpId("Inspekcija", data.clientOpId);
+      const existing = await findIdByClientOpId("PromeneNaloga", data.clientOpId);
       if (existing) return { ok: true as const, id: existing, deduped: true as const };
     }
     let kreiraola = data.userId;
@@ -139,23 +139,24 @@ export const logInspectionFn = createServerFn({ method: "POST" })
     const record: Record<string, unknown> = {
       radniNalog: [data.radniNalogId],
       kreiraoLa: kreiraola,
+      tipZapisa: TIP_ZAPISA_INSPEKCIJA,
       brojIspitanogKomada: data.brojIspitanogKomada,
       vizuelno: data.vizuelno,
       funkcionalno: data.funkcionalno,
       integralniKvalitet: data.integralniKvalitet,
       odstupanjeOdInstrukcija: data.odstupanjeOdInstrukcija,
     };
-    // Airtable polje je `masaKomadaG` (grami) — šaljemo direktno bez konverzije.
-    if (data.masaKomadaG !== undefined) record.masaKomadaG = data.masaKomadaG;
+    // UI šalje masu u gramima; Airtable polje `izmerenaMasaKg` je u kilogramima.
+    if (data.masaKomadaG !== undefined) record.izmerenaMasaKg = data.masaKomadaG / 1000;
     if (data.kolicinaNeusaglasenih !== undefined) record.kolicinaNeusaglasenih = data.kolicinaNeusaglasenih;
     if (data.komentar) record.komentar = data.komentar;
     if (data.uzrokOdstupanja) record.uzrokOdstupanja = data.uzrokOdstupanja;
     if (data.clientOpId) record.__extraFields = { clientOpId: data.clientOpId };
-    const created = await Inspekcija.create({ record });
+    const created = await PromeneNaloga.create({ record });
     const recordId = (created as any).id as string;
 
     if (data.prilozi && data.prilozi.length) {
-      const prilogFieldId = await resolveFieldId("Inspekcija", "prilog");
+      const prilogFieldId = await resolveFieldId("PromeneNaloga", "prilog");
       for (const a of data.prilozi) {
         await uploadAttachment({
           recordId,
