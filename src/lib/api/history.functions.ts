@@ -223,7 +223,7 @@ export const getHistoryFn = createServerFn({ method: "GET" })
         : safe(PromeneNaloga.findAll({ filters: { radniNalog: { linkAnyOf: rnBrojList }, kolicinaSkarta: { gt: 0 }, deleted: { not: true } }, limit: CAP + 1, sort: [{ field: "datumKreiranja", direction: "desc" }] }), "Skart"),
       rnBrojList.length === 0
         ? Promise.resolve({ records: [] as InspRow[] })
-        : safe(Inspekcija.findAll({ filters: { radniNalog: { linkAnyOf: rnBrojList } }, limit: CAP + 1, sort: [{ field: "datumKreiranja", direction: "desc" }] }), "Inspekcija"),
+        : safe(PromeneNaloga.findAll({ filters: { radniNalog: { linkAnyOf: rnBrojList }, tipZapisa: "Inspekcija", deleted: { not: true } } as any, limit: CAP + 1, sort: [{ field: "datumKreiranja", direction: "desc" }] }), "Inspekcija(PromeneNaloga)"),
     ]);
 
     // Defensive client-side filter in case ARRAYJOIN matching missed/over-matched.
