@@ -228,9 +228,20 @@ function buildOp(ctx: ActiveContext, table: TableName, camel: string, val: Filte
 function buildFormula(ctx: ActiveContext, table: TableName, filters: Filters): string | undefined {
   const keys = Object.keys(filters);
   if (keys.length === 0) return undefined;
-  const parts = keys.map((k) => buildOp(ctx, table, k, filters[k]));
+  // Tihi skip filtera za polja koja ne postoje u trenutnoj šemi (remix-friendly).
+  // Npr. `deleted` ne mora postojati u remixovanoj bazi — bolje da filter bude no-op
+  // nego da ceo upit pukne.
+  const validKeys = keys.filter((k) => {
+    if (k === "recordId") return true;
+    if (fieldIdForCtx(ctx, table, k)) return true;
+    console.warn(`[airtable-sdk] Filter polje "${k}" ne postoji na tabeli "${table}" — preskačem.`);
+    return false;
+  });
+  if (validKeys.length === 0) return undefined;
+  const parts = validKeys.map((k) => buildOp(ctx, table, k, filters[k]));
   return parts.length === 1 ? parts[0] : `AND(${parts.join(",")})`;
 }
+
 
 // ---------- Record translation ----------
 function fromAirtable<T = Record<string, any>>(ctx: ActiveContext, table: TableName, rec: { id: string; fields: Record<string, any>; createdTime?: string }): T & { id: string } {
