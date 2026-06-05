@@ -450,7 +450,8 @@ export const getHistoryFn = createServerFn({ method: "GET" })
       };
     });
 
-    const inspekcije: InspHistoryRow[] = inspRecords.map((r) => {
+    const inspekcije: InspHistoryRow[] = inspRecords.map((rec) => {
+      const r = rec as AnyRow;
       const rnId = firstId(r.radniNalog);
       return {
         id: r.id,
