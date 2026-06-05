@@ -241,7 +241,7 @@ export const getInspectionsForWorkOrderFn = createServerFn({ method: "GET" })
         id: r.id,
         createdAt: r.datumKreiranja as string | undefined,
         brojIspitanogKomada: pickNum(r.brojIspitanogKomada),
-        masaKomadaG: pickNum((r as any).masaKomadaG),
+        masaKomadaG: (() => { const kg = pickNum((r as any).izmerenaMasaKg); return typeof kg === "number" ? kg * 1000 : undefined; })(),
         vizuelno: pickStr(r.vizuelno),
         funkcionalno: pickStr(r.funkcionalno),
         integralniKvalitet: pickStr(r.integralniKvalitet),
