@@ -177,9 +177,81 @@ export default function InspectionModal({ open, onOpenChange, radniNalogId, user
           </div>
 
           <div className="space-y-1.5">
+            <Label>Masa ulivka (kg)</Label>
+            <Input type="number" min={0} step="0.01" value={masaUlivkaKg} onChange={(e) => setMasaUlivkaKg(e.target.value)} className="h-11" />
+          </div>
+
+          <div className="space-y-1.5">
+            <Label>Materijal</Label>
+            <Popover open={materijalOpen} onOpenChange={setMaterijalOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  type="button"
+                  variant="outline"
+                  role="combobox"
+                  aria-expanded={materijalOpen}
+                  className="w-full justify-between h-11 font-normal"
+                >
+                  <span className={cn("truncate", materijal.length === 0 && "text-muted-foreground")}>
+                    {materijal.length === 0 ? "Izaberi..." : `${materijal.length} izabrano`}
+                  </span>
+                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                <Command>
+                  <CommandInput placeholder="Pretraži materijal..." />
+                  <CommandList>
+                    <CommandEmpty>
+                      {materijalOptionsQ.isLoading ? "Učitavanje..." : "Nema rezultata."}
+                    </CommandEmpty>
+                    <CommandGroup>
+                      {materijalOptions.map((opt) => {
+                        const selected = materijal.includes(opt);
+                        return (
+                          <CommandItem
+                            key={opt}
+                            value={opt}
+                            onSelect={() => {
+                              setMaterijal((prev) =>
+                                prev.includes(opt) ? prev.filter((x) => x !== opt) : [...prev, opt],
+                              );
+                            }}
+                          >
+                            <Check className={cn("mr-2 h-4 w-4", selected ? "opacity-100" : "opacity-0")} />
+                            {opt}
+                          </CommandItem>
+                        );
+                      })}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
+            {materijal.length > 0 && (
+              <div className="flex flex-wrap gap-1 pt-1">
+                {materijal.map((v) => (
+                  <Badge key={v} variant="secondary" className="gap-1">
+                    {v}
+                    <button
+                      type="button"
+                      onClick={() => setMaterijal((prev) => prev.filter((x) => x !== v))}
+                      className="hover:text-destructive"
+                      aria-label={`Ukloni ${v}`}
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </Badge>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="space-y-1.5">
             <Label>Vizuelno *</Label>
             <ColoredSelect value={vizuelno} onValueChange={(v) => setVizuelno(v as Kvalitet)} options={KVALITET_OPTIONS} />
           </div>
+
 
           <div className="space-y-1.5">
             <Label>Funkcionalno *</Label>
