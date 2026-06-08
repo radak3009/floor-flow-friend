@@ -24,6 +24,8 @@ interface LogInspectionInput {
   userId: string;
   brojIspitanogKomada: number;
   masaKomadaG?: number;
+  masaUlivkaKg?: number;
+  materijal?: string[];
   vizuelno: Kvalitet;
   funkcionalno: Kvalitet;
   integralniKvalitet: Kvalitet;
