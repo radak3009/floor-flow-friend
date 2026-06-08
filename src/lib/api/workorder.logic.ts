@@ -3,7 +3,7 @@
 export type Action = "start" | "pause" | "resume" | "stop";
 
 export const VALID_TRANSITIONS: Record<Action, string[]> = {
-  start: ["Na čekanju", "Spreman", "Nacrt"],
+  start: ["Potvrđen", "Spreman", "Upit"],
   pause: ["U radu"],
   resume: ["Pauziran"],
   stop: ["U radu", "Pauziran"],
