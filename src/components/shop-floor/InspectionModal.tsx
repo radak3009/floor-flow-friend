@@ -140,6 +140,8 @@ export default function InspectionModal({ open, onOpenChange, radniNalogId, user
           kolicinaNeusaglasenih: kolicinaNeu ? Number(kolicinaNeu) : undefined,
           komentar: komentar.trim() || undefined,
           uzrokOdstupanja: uzrok.trim() || undefined,
+          masaUlivkaKg: masaUlivkaKg ? Number(masaUlivkaKg) : undefined,
+          materijal: materijal.length ? materijal : undefined,
           prilozi: prilozi.length ? prilozi : undefined,
         },
       );
