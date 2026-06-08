@@ -334,10 +334,15 @@ export const getAvailableWorkOrdersFn = createServerFn({ method: "GET" })
 
     // Resolve artikal names
     const artIds = new Set<string>();
+    const kupacIds = new Set<string>();
     for (const r of filtered) {
-      if (r.artikalIzErPa) continue;
-      const aid = Array.isArray(r.artikal) ? r.artikal[0] : r.artikal;
-      if (aid && typeof aid === "string") artIds.add(aid);
+      if (!r.artikalIzErPa) {
+        const aid = Array.isArray(r.artikal) ? r.artikal[0] : r.artikal;
+        if (aid && typeof aid === "string") artIds.add(aid);
+      }
+      const kRaw = (r as AnyRow).kupac ?? (r as AnyRow).narucilac;
+      const kid = Array.isArray(kRaw) ? kRaw[0] : kRaw;
+      if (typeof kid === "string" && kid.startsWith("rec")) kupacIds.add(kid);
     }
     const nameById = new Map<string, string>();
     if (artIds.size > 0) {
@@ -353,6 +358,20 @@ export const getAvailableWorkOrdersFn = createServerFn({ method: "GET" })
         console.warn("Failed to resolve artikal names:", e);
       }
     }
+    const kupacById = new Map<string, string>();
+    if (kupacIds.size > 0) {
+      try {
+        const { records: ks } = await Komitenti.findAll({
+          filters: { recordId: { in: Array.from(kupacIds) } },
+          limit: 500,
+        });
+        for (const k of ks) {
+          if (typeof k.naziv === "string") kupacById.set(k.id, k.naziv);
+        }
+      } catch (e) {
+        console.warn("Failed to resolve kupac names:", e);
+      }
+    }
 
     const items: AvailableWorkOrder[] = filtered.map((r) => {
       let artikalNaziv: string | undefined;
@@ -361,9 +380,12 @@ export const getAvailableWorkOrdersFn = createServerFn({ method: "GET" })
         const aid = Array.isArray(r.artikal) ? r.artikal[0] : r.artikal;
         if (aid && typeof aid === "string") artikalNaziv = nameById.get(aid);
       }
-      // `narucilac` is not on RadniNalozi schema; read defensively in case the
-      // active base exposes it as a lookup/computed field.
-      const narucilacRaw = (r as AnyRow).narucilac;
+      const kRaw = (r as AnyRow).kupac ?? (r as AnyRow).narucilac;
+      const kFirst = Array.isArray(kRaw) ? kRaw[0] : kRaw;
+      let narucilac: string | undefined;
+      if (typeof kFirst === "string") {
+        narucilac = kFirst.startsWith("rec") ? kupacById.get(kFirst) : kFirst;
+      }
       return {
         id: r.id,
         brojNaloga: typeof r.brojNaloga === "string" ? r.brojNaloga : undefined,
@@ -372,7 +394,7 @@ export const getAvailableWorkOrdersFn = createServerFn({ method: "GET" })
         artikalNaziv,
         planiranaKolicina: typeof r.planiranaKolicina === "number" ? r.planiranaKolicina : undefined,
         bukingSort: typeof r.bukingSort === "number" ? r.bukingSort : undefined,
-        narucilac: typeof narucilacRaw === "string" ? narucilacRaw : Array.isArray(narucilacRaw) ? String(narucilacRaw[0] ?? "") || undefined : undefined,
+        narucilac,
       };
     });
 
