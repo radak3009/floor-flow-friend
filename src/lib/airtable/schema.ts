@@ -479,7 +479,9 @@ export const FIELDS = {
     "prilog": "fldvsroX9TebOV4hm",
     "upisSkarta": "fldHYJZNrsBqHjjHm",
     "razlogBrisanjaSkarta": "fldBhdLjMqF7prMhs",
-    "artikal": "fld0G61hJ7xQfzNyz"
+    "artikal": "fld0G61hJ7xQfzNyz",
+    "masaUlivkaKg": "fldcuIHqq0pDQ8ScZ",
+    "materijal": "fldjfRRPzxkPFrHPc"
   },
   "CycleIntervals": {
     "naziv": "fld57d3DbDPbzQDnR",

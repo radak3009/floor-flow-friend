@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { AsyncButton } from "@/components/ui/async-button";
@@ -7,7 +8,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import type { Kvalitet, Odstupanje } from "@/lib/api/inspection.functions";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Badge } from "@/components/ui/badge";
+import { Check, ChevronsUpDown, X } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { getMaterijalOptionsFn, type Kvalitet, type Odstupanje } from "@/lib/api/inspection.functions";
 import { enqueue } from "@/lib/offline/outbox";
 import { toast } from "sonner";
 import { invalidateAfterActionDelayed } from "@/lib/query/invalidate";
@@ -75,12 +81,24 @@ export default function InspectionModal({ open, onOpenChange, radniNalogId, user
   const [komentar, setKomentar] = useState("");
   const [uzrok, setUzrok] = useState("");
   const [files, setFiles] = useState<File[]>([]);
+  const [masaUlivkaKg, setMasaUlivkaKg] = useState("");
+  const [materijal, setMaterijal] = useState<string[]>([]);
+  const [materijalOpen, setMaterijalOpen] = useState(false);
+
+  const fetchMaterijalOptions = useServerFn(getMaterijalOptionsFn);
+  const materijalOptionsQ = useQuery({
+    queryKey: ["materijal-options"],
+    queryFn: () => fetchMaterijalOptions(),
+    staleTime: 10 * 60 * 1000,
+    enabled: open,
+  });
+  const materijalOptions = materijalOptionsQ.data?.options ?? [];
 
   useEffect(() => {
     if (open) {
       setBrojIspitanog(""); setMasaG(""); setVizuelno(""); setFunkcionalno("");
       setIntegralni(""); setOdstupanje(""); setKolicinaNeu(""); setKomentar(""); setUzrok("");
-      setFiles([]);
+      setFiles([]); setMasaUlivkaKg(""); setMaterijal([]);
     }
   }, [open]);
 
@@ -122,6 +140,8 @@ export default function InspectionModal({ open, onOpenChange, radniNalogId, user
           kolicinaNeusaglasenih: kolicinaNeu ? Number(kolicinaNeu) : undefined,
           komentar: komentar.trim() || undefined,
           uzrokOdstupanja: uzrok.trim() || undefined,
+          masaUlivkaKg: masaUlivkaKg ? Number(masaUlivkaKg) : undefined,
+          materijal: materijal.length ? materijal : undefined,
           prilozi: prilozi.length ? prilozi : undefined,
         },
       );
@@ -157,9 +177,81 @@ export default function InspectionModal({ open, onOpenChange, radniNalogId, user
           </div>
 
           <div className="space-y-1.5">
+            <Label>Masa ulivka (kg)</Label>
+            <Input type="number" min={0} step="0.01" value={masaUlivkaKg} onChange={(e) => setMasaUlivkaKg(e.target.value)} className="h-11" />
+          </div>
+
+          <div className="space-y-1.5">
+            <Label>Materijal</Label>
+            <Popover open={materijalOpen} onOpenChange={setMaterijalOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  type="button"
+                  variant="outline"
+                  role="combobox"
+                  aria-expanded={materijalOpen}
+                  className="w-full justify-between h-11 font-normal"
+                >
+                  <span className={cn("truncate", materijal.length === 0 && "text-muted-foreground")}>
+                    {materijal.length === 0 ? "Izaberi..." : `${materijal.length} izabrano`}
+                  </span>
+                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                <Command>
+                  <CommandInput placeholder="Pretraži materijal..." />
+                  <CommandList>
+                    <CommandEmpty>
+                      {materijalOptionsQ.isLoading ? "Učitavanje..." : "Nema rezultata."}
+                    </CommandEmpty>
+                    <CommandGroup>
+                      {materijalOptions.map((opt) => {
+                        const selected = materijal.includes(opt);
+                        return (
+                          <CommandItem
+                            key={opt}
+                            value={opt}
+                            onSelect={() => {
+                              setMaterijal((prev) =>
+                                prev.includes(opt) ? prev.filter((x) => x !== opt) : [...prev, opt],
+                              );
+                            }}
+                          >
+                            <Check className={cn("mr-2 h-4 w-4", selected ? "opacity-100" : "opacity-0")} />
+                            {opt}
+                          </CommandItem>
+                        );
+                      })}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
+            {materijal.length > 0 && (
+              <div className="flex flex-wrap gap-1 pt-1">
+                {materijal.map((v) => (
+                  <Badge key={v} variant="secondary" className="gap-1">
+                    {v}
+                    <button
+                      type="button"
+                      onClick={() => setMaterijal((prev) => prev.filter((x) => x !== v))}
+                      className="hover:text-destructive"
+                      aria-label={`Ukloni ${v}`}
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </Badge>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="space-y-1.5">
             <Label>Vizuelno *</Label>
             <ColoredSelect value={vizuelno} onValueChange={(v) => setVizuelno(v as Kvalitet)} options={KVALITET_OPTIONS} />
           </div>
+
 
           <div className="space-y-1.5">
             <Label>Funkcionalno *</Label>
