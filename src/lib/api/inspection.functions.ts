@@ -271,3 +271,40 @@ export const getInspectionsForWorkOrderFn = createServerFn({ method: "GET" })
 
     return { items };
   });
+
+// ---------- Materijal options (multipleSelect choices via Airtable Metadata API) ----------
+let materijalCache: { at: number; value: string[] } | null = null;
+const MATERIJAL_TTL_MS = 10 * 60 * 1000;
+
+export const getMaterijalOptionsFn = createServerFn({ method: "GET" })
+  .handler(async (): Promise<{ options: string[] }> => {
+    const now = Date.now();
+    if (materijalCache && now - materijalCache.at < MATERIJAL_TTL_MS) {
+      return { options: materijalCache.value };
+    }
+    const cfg = await loadActiveConfig();
+    const baseId = cfg?.baseId;
+    const pat = cfg?.pat;
+    const promeneTableId =
+      (cfg?.tables as any)?.PromeneNaloga ?? TABLES.PromeneNaloga;
+    const materijalFieldId =
+      (cfg?.fields as any)?.PromeneNaloga?.materijal ?? FIELDS.PromeneNaloga.materijal;
+    if (!baseId || !pat) return { options: [] };
+    try {
+      const res = await fetch(`https://api.airtable.com/v0/meta/bases/${baseId}/tables`, {
+        headers: { Authorization: `Bearer ${pat}` },
+      });
+      if (!res.ok) return { options: [] };
+      const json = (await res.json()) as {
+        tables: Array<{ id: string; fields: Array<{ id: string; options?: { choices?: Array<{ name: string }> } }> }>;
+      };
+      const table = json.tables.find((t) => t.id === promeneTableId);
+      const field = table?.fields.find((f) => f.id === materijalFieldId);
+      const opts = (field?.options?.choices ?? []).map((c) => c.name).filter(Boolean);
+      materijalCache = { at: now, value: opts };
+      return { options: opts };
+    } catch (e) {
+      console.warn("getMaterijalOptionsFn failed:", e);
+      return { options: [] };
+    }
+  });
