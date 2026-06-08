@@ -131,16 +131,10 @@ export const logInspectionFn = createServerFn({ method: "POST" })
       const existing = await findIdByClientOpId("PromeneNaloga", data.clientOpId);
       if (existing) return { ok: true as const, id: existing, deduped: true as const };
     }
-    let kreiraola = data.userId;
-    try {
-      const user: any = await KontaktOsobe.findOne({ id: data.userId });
-      if (user) kreiraola = user.imeIPrezime || user.ime || user.naziv || data.userId;
-    } catch {
-      // fall back to id
-    }
     const record: Record<string, unknown> = {
       radniNalog: [data.radniNalogId],
-      kreiraoLa: kreiraola,
+      // `kreiraola` (fld9Z2gwJI8iIFjqZ) je linked field na KontaktOsobe — šalje se kao niz record ID-jeva.
+      kreiraola: [data.userId],
       // `tipZapisa` je computed (formula) polje u Airtable — ne sme se slati pri create.
       brojIspitanogKomada: data.brojIspitanogKomada,
       vizuelno: data.vizuelno,
