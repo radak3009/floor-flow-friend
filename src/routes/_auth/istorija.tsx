@@ -236,7 +236,7 @@ function IstorijaPage() {
               <SelectItem value="__all">Svi statusi</SelectItem>
               <SelectItem value="U toku">U toku</SelectItem>
               <SelectItem value="Pauziran">Pauziran</SelectItem>
-              <SelectItem value="Na čekanju">Na čekanju</SelectItem>
+              <SelectItem value="Potvrđen">Potvrđen</SelectItem>
               <SelectItem value="Završen">Završen</SelectItem>
               <SelectItem value="Arhiviran">Arhiviran</SelectItem>
             </SelectContent>

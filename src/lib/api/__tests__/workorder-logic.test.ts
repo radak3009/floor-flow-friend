@@ -21,7 +21,7 @@ function base(over: Partial<ActionInput> = {}): ActionInput {
 describe("VALID_TRANSITIONS", () => {
   it("matches the documented state machine", () => {
     expect(VALID_TRANSITIONS).toEqual({
-      start: ["Na čekanju", "Spreman", "Nacrt"],
+      start: ["Potvrđen", "Spreman", "Upit"],
       pause: ["U radu"],
       resume: ["Pauziran"],
       stop: ["U radu", "Pauziran"],

@@ -91,7 +91,7 @@ async function buildAirtableDashboard(): Promise<{ machines: MachineDashboardRow
 
   const availableResursiIds = new Set<string>(
     rnResult.records
-      .filter((rn) => rn.statusNaloga === "Na čekanju" || rn.statusNaloga === "Pauziran")
+      .filter((rn) => rn.statusNaloga === "Potvrđen" || rn.statusNaloga === "Pauziran")
       .map((rn) => firstId(rn.proizvodnaLinija))
       .filter((id): id is string => !!id),
   );
