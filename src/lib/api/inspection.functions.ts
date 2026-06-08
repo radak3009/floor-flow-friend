@@ -1,8 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
-import { PromeneNaloga, KontaktOsobe, uploadAttachment, resolveFieldId } from "@/lib/airtable/sdk.server";
+import { PromeneNaloga, KontaktOsobe, Materijali, uploadAttachment, resolveFieldId } from "@/lib/airtable/sdk.server";
 import { findIdByClientOpId } from "@/lib/airtable/dedupe.server";
-import { loadActiveConfig } from "@/lib/airtable/config.server";
-import { TABLES, FIELDS } from "@/lib/airtable/schema";
 
 // U remixovanoj bazi tabela `Inspekcija` ne postoji — zapisi inspekcije se
 // čuvaju u `PromeneNaloga` sa `tipZapisa = "Inspekcija"`. Polje `masaKomadaG`
