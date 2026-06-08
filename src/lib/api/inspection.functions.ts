@@ -250,6 +250,13 @@ export const getInspectionsForWorkOrderFn = createServerFn({ method: "GET" })
         createdAt: r.datumKreiranja as string | undefined,
         brojIspitanogKomada: pickNum(r.brojIspitanogKomada),
         masaKomadaG: (() => { const kg = pickNum((r as any).izmerenaMasaKg); return typeof kg === "number" ? kg * 1000 : undefined; })(),
+        masaUlivkaKg: pickNum((r as any).masaUlivkaKg),
+        materijal: (() => {
+          const v = (r as any).materijal;
+          if (Array.isArray(v)) return v.filter((x) => typeof x === "string");
+          if (typeof v === "string" && v) return [v];
+          return undefined;
+        })(),
         vizuelno: pickStr(r.vizuelno),
         funkcionalno: pickStr(r.funkcionalno),
         integralniKvalitet: pickStr(r.integralniKvalitet),
