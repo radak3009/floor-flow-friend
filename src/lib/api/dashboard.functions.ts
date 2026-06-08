@@ -193,7 +193,13 @@ async function buildAirtableDashboard(): Promise<{ machines: MachineDashboardRow
       brojNaloga: pickStr(wo?.brojNaloga),
       sifraArtikla: pickStr(wo?.sifraArtikla),
       artikalNaziv,
-      narucilac: pickStr(wo?.kupac),
+      narucilac: (() => {
+        const fromWo = (wo as Record<string, unknown> | undefined)?.kupac;
+        const fromMon = (m as Record<string, unknown>).kupac;
+        const id = firstId(fromWo) ?? firstId(fromMon);
+        if (id && id.startsWith("rec") && kupacMap.has(id)) return kupacMap.get(id);
+        return pickStr(fromWo) ?? pickStr(fromMon);
+      })(),
       alat: (() => {
         const aid = firstId(wo?.alat);
         if (aid && aid.startsWith("rec")) return alatMap.get(aid) || pickStr(wo?.alatLookup);
