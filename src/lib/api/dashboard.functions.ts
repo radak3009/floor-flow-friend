@@ -1,5 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import { Monitoring, RadniNalozi, Artikli, Resursi } from "@/lib/airtable/sdk.server";
+import { Monitoring, RadniNalozi, Artikli, Resursi, Komitenti } from "@/lib/airtable/sdk.server";
 import type { RecordOf } from "@/lib/airtable/types";
 import { sharedMemoize } from "@/lib/airtable/shared-cache.server";
 import { getActiveOverrides, reconcileAndDrop, deleteOverride, type OverridePatch, type OverrideExpected } from "@/lib/api/overrides.server";
@@ -133,6 +133,31 @@ async function buildAirtableDashboard(): Promise<{ machines: MachineDashboardRow
     }
   }
 
+  // Resolve kupac (Komitenti) record ids -> naziv. Field may be linked-record
+  // returning recIDs, or lookup returning naziv; handle both.
+  const neededKupacIds = new Set<string>();
+  const collectKupacId = (v: unknown) => {
+    const id = firstId(v);
+    if (id && id.startsWith("rec")) neededKupacIds.add(id);
+  };
+  for (const m of monResult.records) {
+    collectKupacId((m as Record<string, unknown>).kupac);
+    const rnId = firstId(m.radniNalog);
+    const wo = rnId ? woMap.get(rnId) : undefined;
+    if (wo) collectKupacId((wo as Record<string, unknown>).kupac);
+  }
+  const kupacMap = new Map<string, string>();
+  if (neededKupacIds.size > 0) {
+    try {
+      const kupacResult = await Komitenti.findAll({ filters: { recordId: { in: Array.from(neededKupacIds) } }, limit: 500 });
+      for (const k of kupacResult.records) {
+        if (typeof k.naziv === "string") kupacMap.set(k.id, k.naziv);
+      }
+    } catch (e) {
+      console.warn("Failed to resolve kupac names:", e);
+    }
+  }
+
   const machines: MachineDashboardRow[] = monResult.records.map((m) => {
     let radniNalogId = firstId(m.radniNalog);
     let wo = radniNalogId ? woMap.get(radniNalogId) : undefined;
@@ -168,7 +193,13 @@ async function buildAirtableDashboard(): Promise<{ machines: MachineDashboardRow
       brojNaloga: pickStr(wo?.brojNaloga),
       sifraArtikla: pickStr(wo?.sifraArtikla),
       artikalNaziv,
-      narucilac: pickStr(wo?.kupac),
+      narucilac: (() => {
+        const fromWo = (wo as Record<string, unknown> | undefined)?.kupac;
+        const fromMon = (m as Record<string, unknown>).kupac;
+        const id = firstId(fromWo) ?? firstId(fromMon);
+        if (id && id.startsWith("rec") && kupacMap.has(id)) return kupacMap.get(id);
+        return pickStr(fromWo) ?? pickStr(fromMon);
+      })(),
       alat: (() => {
         const aid = firstId(wo?.alat);
         if (aid && aid.startsWith("rec")) return alatMap.get(aid) || pickStr(wo?.alatLookup);
