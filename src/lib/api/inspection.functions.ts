@@ -155,6 +155,8 @@ export const logInspectionFn = createServerFn({ method: "POST" })
     if (data.kolicinaNeusaglasenih !== undefined) record.kolicinaNeusaglasenih = data.kolicinaNeusaglasenih;
     if (data.komentar) record.komentar = data.komentar;
     if (data.uzrokOdstupanja) record.uzrokOdstupanja = data.uzrokOdstupanja;
+    if (data.masaUlivkaKg !== undefined) record.masaUlivkaKg = data.masaUlivkaKg;
+    if (data.materijal && data.materijal.length) record.materijal = data.materijal;
     if (data.clientOpId) record.__extraFields = { clientOpId: data.clientOpId };
     const created = await PromeneNaloga.create({ record });
     const recordId = (created as any).id as string;
