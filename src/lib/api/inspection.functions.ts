@@ -238,6 +238,8 @@ export const getInspectionsForWorkOrderFn = createServerFn({ method: "GET" })
       return typeof v === "number" ? v : undefined;
     };
 
+    const materijaliMap = await loadMaterijaliMap();
+
     const items: InspekcijaRow[] = filtered.map((r) => {
       // Polje fld3r0UC5dh24oDnk (kreiraoLa) u Inspekcijama je tekst i obično
       // već sadrži "Ime i Prezime" (vidi logInspectionFn). U starijim zapisima
@@ -251,9 +253,11 @@ export const getInspectionsForWorkOrderFn = createServerFn({ method: "GET" })
         masaUlivkaKg: pickNum((r as any).masaUlivkaKg),
         materijal: (() => {
           const v = (r as any).materijal;
-          if (Array.isArray(v)) return v.filter((x) => typeof x === "string");
-          if (typeof v === "string" && v) return [v];
-          return undefined;
+          const ids: string[] = Array.isArray(v)
+            ? v.filter((x) => typeof x === "string")
+            : typeof v === "string" && v ? [v] : [];
+          if (!ids.length) return undefined;
+          return ids.map((id) => materijaliMap.get(id) ?? id);
         })(),
         vizuelno: pickStr(r.vizuelno),
         funkcionalno: pickStr(r.funkcionalno),
@@ -269,6 +273,7 @@ export const getInspectionsForWorkOrderFn = createServerFn({ method: "GET" })
 
     return { items };
   });
+
 
 // ---------- Materijal options (linked-record field → Materijali table) ----------
 export interface MaterijalOption { id: string; naziv: string }
