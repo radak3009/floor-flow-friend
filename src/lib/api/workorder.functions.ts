@@ -1,5 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import { RadniNalozi, PromeneNaloga, KontaktOsobe, Grupe, Tipovi, Artikli, Role } from "@/lib/airtable/sdk.server";
+import { RadniNalozi, PromeneNaloga, KontaktOsobe, Grupe, Tipovi, Artikli, Role, Komitenti } from "@/lib/airtable/sdk.server";
 import { findIdByClientOpId } from "@/lib/airtable/dedupe.server";
 import { memoize } from "@/lib/airtable/cache.server";
 import { sharedMemoize, sharedInvalidate } from "@/lib/airtable/shared-cache.server";
