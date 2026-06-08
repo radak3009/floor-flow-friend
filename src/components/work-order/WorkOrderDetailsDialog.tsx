@@ -124,6 +124,8 @@ function InspekcijaList({ items }: { items: InspekcijaRow[] }) {
             {it.integralniKvalitet && <div>Integralni: <span className="text-foreground">{it.integralniKvalitet}</span></div>}
             {it.odstupanjeOdInstrukcija && <div>Odstupanje: <span className="text-foreground">{it.odstupanjeOdInstrukcija}</span></div>}
             {it.masaKomadaG != null && <div>Masa (g): <span className="text-foreground">{it.masaKomadaG.toLocaleString("sr", { maximumFractionDigits: 3 })}</span></div>}
+            {it.masaUlivkaKg != null && <div>Masa ulivka (kg): <span className="text-foreground">{it.masaUlivkaKg.toLocaleString("sr", { maximumFractionDigits: 3 })}</span></div>}
+            {it.materijal?.length ? <div>Materijal: <span className="text-foreground">{it.materijal.join(", ")}</span></div> : null}
             {it.kolicinaNeusaglasenih != null && <div>Neusaglašeno: <span className="text-foreground">{it.kolicinaNeusaglasenih}</span></div>}
           </div>
           {it.uzrokOdstupanja && <div className="text-xs"><span className="text-muted-foreground">Uzrok: </span>{it.uzrokOdstupanja}</div>}
