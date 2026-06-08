@@ -309,7 +309,7 @@ export interface AvailableWorkOrder {
   narucilac?: string;
 }
 
-const STARTABLE_STATUSES = ["Na čekanju", "Spreman", "Nacrt", "Pauziran"];
+const STARTABLE_STATUSES = ["Potvrđen", "Spreman", "Upit", "Pauziran"];
 
 export const getAvailableWorkOrdersFn = createServerFn({ method: "GET" })
   .inputValidator((input: { resursId: string }) => {
