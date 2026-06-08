@@ -182,6 +182,8 @@ export interface InspekcijaRow {
   createdAt?: string;
   brojIspitanogKomada?: number;
   masaKomadaG?: number;
+  masaUlivkaKg?: number;
+  materijal?: string[];
   vizuelno?: string;
   funkcionalno?: string;
   integralniKvalitet?: string;
