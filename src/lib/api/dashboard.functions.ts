@@ -1,5 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import { Monitoring, RadniNalozi, Artikli, Resursi } from "@/lib/airtable/sdk.server";
+import { Monitoring, RadniNalozi, Artikli, Resursi, Komitenti } from "@/lib/airtable/sdk.server";
 import type { RecordOf } from "@/lib/airtable/types";
 import { sharedMemoize } from "@/lib/airtable/shared-cache.server";
 import { getActiveOverrides, reconcileAndDrop, deleteOverride, type OverridePatch, type OverrideExpected } from "@/lib/api/overrides.server";
