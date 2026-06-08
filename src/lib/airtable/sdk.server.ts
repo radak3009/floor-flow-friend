@@ -481,6 +481,7 @@ export const Zastoji = makeTable("Zastoji");
 export const Grupe = makeTable("Grupe");
 export const Tipovi = makeTable("Tipovi");
 export const Komitenti = makeTable("Komitenti");
+export const Materijali = makeTable("Materijali");
 // `Inspekcija` tabela ne postoji u remixovanoj bazi — inspekcije se vode u
 // `PromeneNaloga` sa `tipZapisa = "Inspekcija"`. Vidi src/lib/api/inspection.functions.ts.
 

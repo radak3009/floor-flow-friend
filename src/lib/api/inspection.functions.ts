@@ -1,8 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
-import { PromeneNaloga, KontaktOsobe, uploadAttachment, resolveFieldId } from "@/lib/airtable/sdk.server";
+import { PromeneNaloga, KontaktOsobe, Materijali, uploadAttachment, resolveFieldId } from "@/lib/airtable/sdk.server";
 import { findIdByClientOpId } from "@/lib/airtable/dedupe.server";
-import { loadActiveConfig } from "@/lib/airtable/config.server";
-import { TABLES, FIELDS } from "@/lib/airtable/schema";
 
 // U remixovanoj bazi tabela `Inspekcija` ne postoji — zapisi inspekcije se
 // čuvaju u `PromeneNaloga` sa `tipZapisa = "Inspekcija"`. Polje `masaKomadaG`
@@ -240,6 +238,8 @@ export const getInspectionsForWorkOrderFn = createServerFn({ method: "GET" })
       return typeof v === "number" ? v : undefined;
     };
 
+    const materijaliMap = await loadMaterijaliMap();
+
     const items: InspekcijaRow[] = filtered.map((r) => {
       // Polje fld3r0UC5dh24oDnk (kreiraoLa) u Inspekcijama je tekst i obično
       // već sadrži "Ime i Prezime" (vidi logInspectionFn). U starijim zapisima
@@ -253,9 +253,11 @@ export const getInspectionsForWorkOrderFn = createServerFn({ method: "GET" })
         masaUlivkaKg: pickNum((r as any).masaUlivkaKg),
         materijal: (() => {
           const v = (r as any).materijal;
-          if (Array.isArray(v)) return v.filter((x) => typeof x === "string");
-          if (typeof v === "string" && v) return [v];
-          return undefined;
+          const ids: string[] = Array.isArray(v)
+            ? v.filter((x) => typeof x === "string")
+            : typeof v === "string" && v ? [v] : [];
+          if (!ids.length) return undefined;
+          return ids.map((id) => materijaliMap.get(id) ?? id);
         })(),
         vizuelno: pickStr(r.vizuelno),
         funkcionalno: pickStr(r.funkcionalno),
@@ -272,39 +274,37 @@ export const getInspectionsForWorkOrderFn = createServerFn({ method: "GET" })
     return { items };
   });
 
-// ---------- Materijal options (multipleSelect choices via Airtable Metadata API) ----------
-let materijalCache: { at: number; value: string[] } | null = null;
+
+// ---------- Materijal options (linked-record field → Materijali table) ----------
+export interface MaterijalOption { id: string; naziv: string }
+let materijalCache: { at: number; value: MaterijalOption[] } | null = null;
 const MATERIJAL_TTL_MS = 10 * 60 * 1000;
 
+async function loadMaterijaliMap(): Promise<Map<string, string>> {
+  const list = await loadMaterijaliOptions();
+  return new Map(list.map((m) => [m.id, m.naziv]));
+}
+
+async function loadMaterijaliOptions(): Promise<MaterijalOption[]> {
+  const now = Date.now();
+  if (materijalCache && now - materijalCache.at < MATERIJAL_TTL_MS) {
+    return materijalCache.value;
+  }
+  try {
+    const { records } = await Materijali.findAll({ limit: 1000 });
+    const opts: MaterijalOption[] = (records as any[])
+      .map((r) => ({ id: r.id as string, naziv: (typeof r.naziv === "string" ? r.naziv : (r.sifra ?? r.id)) as string }))
+      .filter((o) => !!o.id)
+      .sort((a, b) => a.naziv.localeCompare(b.naziv, "sr"));
+    materijalCache = { at: now, value: opts };
+    return opts;
+  } catch (e) {
+    console.warn("loadMaterijaliOptions failed:", e);
+    return [];
+  }
+}
+
 export const getMaterijalOptionsFn = createServerFn({ method: "GET" })
-  .handler(async (): Promise<{ options: string[] }> => {
-    const now = Date.now();
-    if (materijalCache && now - materijalCache.at < MATERIJAL_TTL_MS) {
-      return { options: materijalCache.value };
-    }
-    const cfg = await loadActiveConfig();
-    const baseId = cfg?.baseId;
-    const pat = cfg?.pat;
-    const promeneTableId =
-      (cfg?.tables as any)?.PromeneNaloga ?? TABLES.PromeneNaloga;
-    const materijalFieldId =
-      (cfg?.fields as any)?.PromeneNaloga?.materijal ?? FIELDS.PromeneNaloga.materijal;
-    if (!baseId || !pat) return { options: [] };
-    try {
-      const res = await fetch(`https://api.airtable.com/v0/meta/bases/${baseId}/tables`, {
-        headers: { Authorization: `Bearer ${pat}` },
-      });
-      if (!res.ok) return { options: [] };
-      const json = (await res.json()) as {
-        tables: Array<{ id: string; fields: Array<{ id: string; options?: { choices?: Array<{ name: string }> } }> }>;
-      };
-      const table = json.tables.find((t) => t.id === promeneTableId);
-      const field = table?.fields.find((f) => f.id === materijalFieldId);
-      const opts = (field?.options?.choices ?? []).map((c) => c.name).filter(Boolean);
-      materijalCache = { at: now, value: opts };
-      return { options: opts };
-    } catch (e) {
-      console.warn("getMaterijalOptionsFn failed:", e);
-      return { options: [] };
-    }
+  .handler(async (): Promise<{ options: MaterijalOption[] }> => {
+    return { options: await loadMaterijaliOptions() };
   });

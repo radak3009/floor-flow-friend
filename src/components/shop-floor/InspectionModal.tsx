@@ -207,19 +207,19 @@ export default function InspectionModal({ open, onOpenChange, radniNalogId, user
                     </CommandEmpty>
                     <CommandGroup>
                       {materijalOptions.map((opt) => {
-                        const selected = materijal.includes(opt);
+                        const selected = materijal.includes(opt.id);
                         return (
                           <CommandItem
-                            key={opt}
-                            value={opt}
+                            key={opt.id}
+                            value={opt.naziv}
                             onSelect={() => {
                               setMaterijal((prev) =>
-                                prev.includes(opt) ? prev.filter((x) => x !== opt) : [...prev, opt],
+                                prev.includes(opt.id) ? prev.filter((x) => x !== opt.id) : [...prev, opt.id],
                               );
                             }}
                           >
                             <Check className={cn("mr-2 h-4 w-4", selected ? "opacity-100" : "opacity-0")} />
-                            {opt}
+                            {opt.naziv}
                           </CommandItem>
                         );
                       })}
@@ -230,22 +230,26 @@ export default function InspectionModal({ open, onOpenChange, radniNalogId, user
             </Popover>
             {materijal.length > 0 && (
               <div className="flex flex-wrap gap-1 pt-1">
-                {materijal.map((v) => (
-                  <Badge key={v} variant="secondary" className="gap-1">
-                    {v}
-                    <button
-                      type="button"
-                      onClick={() => setMaterijal((prev) => prev.filter((x) => x !== v))}
-                      className="hover:text-destructive"
-                      aria-label={`Ukloni ${v}`}
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  </Badge>
-                ))}
+                {materijal.map((id) => {
+                  const label = materijalOptions.find((o) => o.id === id)?.naziv ?? id;
+                  return (
+                    <Badge key={id} variant="secondary" className="gap-1">
+                      {label}
+                      <button
+                        type="button"
+                        onClick={() => setMaterijal((prev) => prev.filter((x) => x !== id))}
+                        className="hover:text-destructive"
+                        aria-label={`Ukloni ${label}`}
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </Badge>
+                  );
+                })}
               </div>
             )}
           </div>
+
 
           <div className="space-y-1.5">
             <Label>Vizuelno *</Label>
