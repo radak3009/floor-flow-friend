@@ -81,12 +81,24 @@ export default function InspectionModal({ open, onOpenChange, radniNalogId, user
   const [komentar, setKomentar] = useState("");
   const [uzrok, setUzrok] = useState("");
   const [files, setFiles] = useState<File[]>([]);
+  const [masaUlivkaKg, setMasaUlivkaKg] = useState("");
+  const [materijal, setMaterijal] = useState<string[]>([]);
+  const [materijalOpen, setMaterijalOpen] = useState(false);
+
+  const fetchMaterijalOptions = useServerFn(getMaterijalOptionsFn);
+  const materijalOptionsQ = useQuery({
+    queryKey: ["materijal-options"],
+    queryFn: () => fetchMaterijalOptions(),
+    staleTime: 10 * 60 * 1000,
+    enabled: open,
+  });
+  const materijalOptions = materijalOptionsQ.data?.options ?? [];
 
   useEffect(() => {
     if (open) {
       setBrojIspitanog(""); setMasaG(""); setVizuelno(""); setFunkcionalno("");
       setIntegralni(""); setOdstupanje(""); setKolicinaNeu(""); setKomentar(""); setUzrok("");
-      setFiles([]);
+      setFiles([]); setMasaUlivkaKg(""); setMaterijal([]);
     }
   }, [open]);
 
