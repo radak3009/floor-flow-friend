@@ -141,7 +141,7 @@ export const logInspectionFn = createServerFn({ method: "POST" })
     const record: Record<string, unknown> = {
       radniNalog: [data.radniNalogId],
       kreiraoLa: kreiraola,
-      tipZapisa: TIP_ZAPISA_INSPEKCIJA,
+      // `tipZapisa` je computed (formula) polje u Airtable — ne sme se slati pri create.
       brojIspitanogKomada: data.brojIspitanogKomada,
       vizuelno: data.vizuelno,
       funkcionalno: data.funkcionalno,
