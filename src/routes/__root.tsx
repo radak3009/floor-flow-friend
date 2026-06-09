@@ -141,18 +141,42 @@ function HtmlLangSync() {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const [isClient, setIsClient] = useState(false);
-  const [userBuster, setUserBuster] = useState<string>("anon");
+  // Stabilan userBuster — pročitan sinhrono pri prvom renderu da ne bi
+  // promena "anon" → userId restartovala persister restore.
+  const [userBuster] = useState<string>(() => {
+    if (typeof window === "undefined") return "anon";
+    try {
+      const raw = localStorage.getItem("mes_session_v2");
+      const id = raw ? JSON.parse(raw)?.id : null;
+      return typeof id === "string" && id ? id : "anon";
+    } catch {
+      return "anon";
+    }
+  });
   useEffect(() => {
     setIsClient(true);
     registerServiceWorker();
-    try {
-      const raw = localStorage.getItem("mes_session_v2");
-      if (raw) {
-        const id = JSON.parse(raw)?.id;
-        if (typeof id === "string" && id) setUserBuster(id);
-      }
-    } catch { /* noop */ }
   }, []);
+
+  // Persister mora biti stabilan kroz rendere; svaki novi identitet
+  // restartuje IndexedDB restore i zaglavljuje query-je (isRestoring).
+  const persister = useMemo(() => createIdbPersister(), []);
+  const buildId = typeof __BUILD_ID__ !== "undefined" ? __BUILD_ID__ : "dev";
+  const persistOptions = useMemo(
+    () => ({
+      persister,
+      maxAge: OFFLINE_CACHE_MAX_AGE_MS,
+      buster: `${buildId}:${userBuster}`,
+      dehydrateOptions: {
+        shouldDehydrateQuery: (q: { queryKey: unknown }) => {
+          const key0 = Array.isArray(q.queryKey) ? q.queryKey[0] : q.queryKey;
+          // Live dashboard se uvek refetch-uje; ne persistuj ga da bi restore bio brz.
+          return key0 !== "dashboard";
+        },
+      },
+    }),
+    [persister, buildId, userBuster],
+  );
 
   // Persister koristi IndexedDB → samo u browseru.
   // Na serveru (SSR) renderujemo običan QueryClientProvider bez persistencije.
@@ -177,11 +201,7 @@ function RootComponent() {
       <ThemeProvider>
         <PersistQueryClientProvider
           client={queryClient}
-          persistOptions={{
-            persister: createIdbPersister(),
-            maxAge: OFFLINE_CACHE_MAX_AGE_MS,
-            buster: `${typeof __BUILD_ID__ !== "undefined" ? __BUILD_ID__ : "dev"}:${userBuster}`,
-          }}
+          persistOptions={persistOptions}
         >
           <AuthProvider>
             <HtmlLangSync />
