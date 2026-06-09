@@ -80,7 +80,14 @@ const FIELD_ALIASES: Partial<Record<TableName, Record<string, string>>> = {
     proizvod: "artikal",
   },
   Zastoji: { idZapisa: "idZapisa" },
-  PromeneNaloga: { artikal: "artikal", idZapisa: "idZapisa" },
+  PromeneNaloga: {
+    artikal: "artikal",
+    idZapisa: "idZapisa",
+    opcija: "opcije",
+    opcije: "opcija",
+    kreiraola: "kreiraoLa",
+    kreiraoLa: "kreiraola",
+  },
   // Airtable label "Uređaj" → različite camelCase verzije ovisno o regen-u:
   // "ureaj" (stripping diakritika) ili "uredjaj" (translit). Aliasi ispod
   // garantuju da code-key "ureaj" radi u oba slučaja.
