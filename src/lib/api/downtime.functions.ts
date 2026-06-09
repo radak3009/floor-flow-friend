@@ -78,13 +78,17 @@ export const logDowntimeFn = createServerFn({ method: "POST" })
     await PromeneNaloga.create({ record });
 
     // Override sloj — trenutna vidljivost dok Airtable automatizacija ne sustigne
-    if (data.ongoing && data.grupaNaziv) {
-      // Definisanje: prikaži grupu odmah; reconcile kad Airtable upiše isto polje
-      await upsertOverride(
-        data.monitoringId,
-        { grupaZastoja: data.grupaNaziv },
-        { grupaZastoja: data.grupaNaziv },
-      );
+    if (data.ongoing) {
+      // Definisanje: prikaži grupu odmah i forsiraj statusMasine="Zastoj"
+      // kako bi se pregazio eventualni rezidualni override iz start/resume
+      // (koji postavlja statusMasine="U radu" sa TTL 120s).
+      const patch: Record<string, unknown> = { statusMasine: "Zastoj" };
+      const expected: Record<string, unknown> = { statusMasine: "Zastoj" };
+      if (data.grupaNaziv) {
+        patch.grupaZastoja = data.grupaNaziv;
+        expected.grupaZastoja = data.grupaNaziv;
+      }
+      await upsertOverride(data.monitoringId, patch, expected);
     } else if (!data.ongoing) {
       // Podela: zastoj je završen — mašina više nije u "Zastoj"
       await upsertOverride(
