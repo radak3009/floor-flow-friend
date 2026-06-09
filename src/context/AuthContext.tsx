@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { refreshSessionFn } from "@/lib/api/auth.functions";
-import { clearPersistedCache } from "@/lib/offline/persister";
+
 
 export interface UserPermissions {
   viewAssignedMachines: boolean;
