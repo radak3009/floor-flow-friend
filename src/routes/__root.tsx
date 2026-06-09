@@ -122,7 +122,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import { createIdbPersister, OFFLINE_CACHE_MAX_AGE_MS } from "@/lib/offline/persister";
 import { registerServiceWorker } from "@/lib/offline/registerSW";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { ThemeProvider } from "@/context/ThemeContext";
 import { I18nextProvider, useTranslation } from "react-i18next";
 import i18n from "@/lib/i18n";
