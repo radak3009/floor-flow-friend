@@ -93,16 +93,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = (u: SessionUser) => {
-    // Očisti keš prethodnog korisnika (in-memory + persistovani IndexedDB)
+    // Očisti samo in-memory keš. IDB persister keš se odbacuje preko
+    // buster-a (sadrži user.id i BUILD_ID); manuelno brisanje IDB ključa
+    // se sudara sa persister restore/save i izaziva zaglavljen restore.
     try { queryClient.clear(); } catch { /* noop */ }
-    void clearPersistedCache();
     localStorage.setItem(SESSION_KEY, JSON.stringify(u));
     setUser(u);
   };
 
   const logout = () => {
     try { queryClient.clear(); } catch { /* noop */ }
-    void clearPersistedCache();
     localStorage.removeItem(SESSION_KEY);
     setUser(null);
   };
