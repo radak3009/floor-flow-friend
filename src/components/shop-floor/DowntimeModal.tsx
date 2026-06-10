@@ -43,6 +43,8 @@ export default function DowntimeModal({ open, onOpenChange, monitoringId, userId
   const queryClient = useQueryClient();
   const callDropdown = useServerFn(getDropdownDataFn);
   const callActive = useServerFn(getActiveDowntimeFn);
+  const { i18n } = useTranslation();
+  const lang = i18n.language;
 
   const [grupaId, setGrupaId] = useState("");
   const [tipId, setTipId] = useState("");
