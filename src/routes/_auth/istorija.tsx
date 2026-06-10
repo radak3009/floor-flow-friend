@@ -125,8 +125,6 @@ function IstorijaPage() {
   const getHistory = useServerFn(getHistoryFn);
   const getDashboard = useServerFn(getDashboardFn);
 
-  const { i18n } = useTranslation();
-  const lang: "sr" | "en" = i18n.language?.startsWith("en") ? "en" : "sr";
   const { data, isLoading, error } = useQuery({
     queryKey: ["history", from, to, resursId, status, lang],
     queryFn: () => getHistory({ data: { from: fromDateInput(from), to: fromDateInput(to, true), resursId: resursId || undefined, status: status || undefined, lang } }) as Promise<HistoryResult>,
