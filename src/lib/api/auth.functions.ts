@@ -97,16 +97,6 @@ export const loginFn = createServerFn({ method: "POST" })
       return { success: false as const, error: GENERIC_CREDENTIAL_ERROR };
     }
 
-    // 3) Lazy migracija plain-text PIN-a na PBKDF2 hash
-    if (!isHashed(storedPin)) {
-      try {
-        const newHash = await hashPin(inputPin);
-        await KontaktOsobe.update({ id: kontakt.id, record: { pin: newHash } });
-      } catch (e) {
-        console.warn("PIN lazy migration failed:", e);
-      }
-    }
-
     const ulogaVal = getCI(kontakt, "uloga");
     const roleId = Array.isArray(ulogaVal) ? (ulogaVal[0] as string | undefined) : (ulogaVal as string | undefined);
 
