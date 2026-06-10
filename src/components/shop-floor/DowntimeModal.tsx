@@ -168,7 +168,7 @@ export default function DowntimeModal({ open, onOpenChange, monitoringId, userId
                 <SelectValue placeholder={!grupaId ? "Prvo izaberite grupu" : tipovi.length === 0 ? "Nema tipova" : "Izaberite tip"} />
               </SelectTrigger>
               <SelectContent>
-                {tipovi.map((t) => (<SelectItem key={t.id} value={t.id}>{t.naziv}</SelectItem>))}
+                {tipovi.map((t) => (<SelectItem key={t.id} value={t.id}>{pickName(t, lang)}</SelectItem>))}
               </SelectContent>
             </Select>
           </div>
