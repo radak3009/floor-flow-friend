@@ -117,6 +117,7 @@ interface Input {
   to: string;
   resursId?: string;
   status?: string;
+  lang?: "sr" | "en";
 }
 
 /** Parse "Xd Yh Zmin" / "Yh Zmin" / "Zmin" -> minutes. */
@@ -138,7 +139,8 @@ export const getHistoryFn = createServerFn({ method: "GET" })
     return input;
   })
   .handler(async ({ data }): Promise<HistoryResult> => {
-    const cacheKey = `history:v3:${data.from}|${data.to}|${data.resursId ?? ""}|${data.status ?? ""}`;
+    const lang: "sr" | "en" = data.lang === "en" ? "en" : "sr";
+    const cacheKey = `history:v4:${data.from}|${data.to}|${data.resursId ?? ""}|${data.status ?? ""}|${lang}`;
     return sharedMemoize(cacheKey, 60_000, async () => {
     const { from, to, resursId, status } = data;
 
@@ -353,15 +355,23 @@ export const getHistoryFn = createServerFn({ method: "GET" })
       const naziv = pickStr(k.naziv);
       if (naziv) komitentiMap.set(k.id, naziv);
     }
+    const pickLocalized = (rec: AnyRow): string | undefined => {
+      const sr = pickStr(rec.naziv);
+      if (lang === "en") {
+        const en = pickStr((rec as Record<string, unknown>).name);
+        if (en && en.trim()) return en;
+      }
+      return sr;
+    };
     const grupeMap = new Map<string, string>();
     for (const g of grupeRes?.records ?? []) {
-      const naziv = pickStr(g.naziv);
-      if (naziv) grupeMap.set(g.id, naziv);
+      const name = pickLocalized(g);
+      if (name) grupeMap.set(g.id, name);
     }
     const tipoviMap = new Map<string, string>();
     for (const t of tipoviRes?.records ?? []) {
-      const naziv = pickStr(t.naziv);
-      if (naziv) tipoviMap.set(t.id, naziv);
+      const name = pickLocalized(t);
+      if (name) tipoviMap.set(t.id, name);
     }
     const kontaktiMap = new Map<string, string>();
     for (const k of kontaktiRes?.records ?? []) {

@@ -21,3 +21,10 @@ export function formatNumber(n: number | undefined | null, opts?: Intl.NumberFor
   if (n == null || Number.isNaN(n)) return "—";
   try { return n.toLocaleString(locale(), opts); } catch { return String(n); }
 }
+
+/** Vrati naziv u trenutnom jeziku (en → nameEn ako postoji, inače srpski naziv). */
+export function pickName(item: { naziv: string; nameEn?: string }, lang?: string): string {
+  const l = (lang ?? i18n.language ?? "sr").toString();
+  if (l.startsWith("en") && item.nameEn && item.nameEn.trim()) return item.nameEn;
+  return item.naziv;
+}

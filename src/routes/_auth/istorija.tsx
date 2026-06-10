@@ -107,7 +107,8 @@ function ColSearch({ value, onChange }: { value: string; onChange: (v: string) =
 }
 
 function IstorijaPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const lang: "sr" | "en" = i18n.language?.startsWith("en") ? "en" : "sr";
   const today = new Date();
   const sevenAgo = new Date(today);
   sevenAgo.setDate(today.getDate() - 6);
@@ -125,8 +126,8 @@ function IstorijaPage() {
   const getDashboard = useServerFn(getDashboardFn);
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ["history", from, to, resursId, status],
-    queryFn: () => getHistory({ data: { from: fromDateInput(from), to: fromDateInput(to, true), resursId: resursId || undefined, status: status || undefined } }) as Promise<HistoryResult>,
+    queryKey: ["history", from, to, resursId, status, lang],
+    queryFn: () => getHistory({ data: { from: fromDateInput(from), to: fromDateInput(to, true), resursId: resursId || undefined, status: status || undefined, lang } }) as Promise<HistoryResult>,
     enabled: !!user?.id,
     staleTime: 30_000,
   });

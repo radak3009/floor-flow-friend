@@ -15,6 +15,8 @@ import { getActiveDowntimeFn } from "@/lib/api/downtime.functions";
 import { enqueue } from "@/lib/offline/outbox";
 import { toast } from "sonner";
 import { invalidateAfterActionDelayed } from "@/lib/query/invalidate";
+import { pickName } from "@/lib/i18n/format";
+import { useTranslation } from "react-i18next";
 
 function fmtDt(iso?: string): string {
   if (!iso) return "—";
@@ -41,6 +43,8 @@ export default function DowntimeModal({ open, onOpenChange, monitoringId, userId
   const queryClient = useQueryClient();
   const callDropdown = useServerFn(getDropdownDataFn);
   const callActive = useServerFn(getActiveDowntimeFn);
+  const { i18n } = useTranslation();
+  const lang = i18n.language;
 
   const [grupaId, setGrupaId] = useState("");
   const [tipId, setTipId] = useState("");
@@ -75,7 +79,7 @@ export default function DowntimeModal({ open, onOpenChange, monitoringId, userId
 
   const m = useMutation({
     mutationFn: () => {
-      const grupaNaziv = grupaId ? grupe.find((g) => g.id === grupaId)?.naziv : undefined;
+      const grupaNaziv = grupaId ? (() => { const g = grupe.find((x) => x.id === grupaId); return g ? pickName(g, lang) : undefined; })() : undefined;
       return enqueue(
         "logDowntime",
         ongoing ? "Definisanje zastoja" : "Podela zastoja",
@@ -92,7 +96,7 @@ export default function DowntimeModal({ open, onOpenChange, monitoringId, userId
       );
     },
     onSuccess: (res) => {
-      const grupaNaziv = grupaId ? grupe.find((g) => g.id === grupaId)?.naziv : undefined;
+      const grupaNaziv = grupaId ? (() => { const g = grupe.find((x) => x.id === grupaId); return g ? pickName(g, lang) : undefined; })() : undefined;
       toast.success(res.queued
         ? "Sačuvano lokalno — biće poslato kad se konekcija vrati"
         : (ongoing ? "Zastoj definisan" : "Zastoj podeljen"));
@@ -152,7 +156,7 @@ export default function DowntimeModal({ open, onOpenChange, monitoringId, userId
             <Select value={grupaId} onValueChange={(v) => { setGrupaId(v); setTipId(""); }} disabled={dd.isLoading || noActive}>
               <SelectTrigger className="h-12"><SelectValue placeholder={dd.isLoading ? "Učitavanje..." : "Izaberite grupu"} /></SelectTrigger>
               <SelectContent>
-                {grupe.map((g) => (<SelectItem key={g.id} value={g.id}>{g.naziv}</SelectItem>))}
+                {grupe.map((g) => (<SelectItem key={g.id} value={g.id}>{pickName(g, lang)}</SelectItem>))}
               </SelectContent>
             </Select>
           </div>
@@ -164,7 +168,7 @@ export default function DowntimeModal({ open, onOpenChange, monitoringId, userId
                 <SelectValue placeholder={!grupaId ? "Prvo izaberite grupu" : tipovi.length === 0 ? "Nema tipova" : "Izaberite tip"} />
               </SelectTrigger>
               <SelectContent>
-                {tipovi.map((t) => (<SelectItem key={t.id} value={t.id}>{t.naziv}</SelectItem>))}
+                {tipovi.map((t) => (<SelectItem key={t.id} value={t.id}>{pickName(t, lang)}</SelectItem>))}
               </SelectContent>
             </Select>
           </div>

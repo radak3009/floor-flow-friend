@@ -1,42 +1,55 @@
-# Dodavanje polja u Inspekciju: Masa ulivka (kg) i Materijal
+## Cilj
+Kada je jezik aplikacije engleski, na svim mestima gde se prikazuju nazivi grupa i tipova (zastoji i škart) koristiti vrednost iz polja `Name`:
+- Tabela Grupe: `fldNocNcamwJBs48A`
+- Tabela Tipovi: `fldgP0gYzGcjxtnMR`
 
-## 1) Schema (`src/lib/airtable/schema.ts`)
-U `PromeneNaloga` dodati dva nova field ID-ja:
-- `masaUlivkaKg: "fldcuIHqq0pDQ8ScZ"`
-- `materijal: "fldjfRRPzxkPFrHPc"`
+Ako polje `Name` nije popunjeno za zapis, prikazati postojeći (srpski) `naziv`. Za jezik `sr` uvek koristiti `naziv`.
 
-Polja su opcionalna — NE dodaju se u `REQUIRED_SCHEMA`.
+## Izmene
 
-## 2) Server: opcije za Materijal
-Nova serverska funkcija u `src/lib/api/inspection.functions.ts`:
-- `getMaterijalOptionsFn` — preko Airtable Metadata API (`/v0/meta/bases/{baseId}/tables`) čita field `materijal` iz `PromeneNaloga` i vraća `options.choices[].name`. Rezultat se kešira u modulu (in-memory) na nivou servera ~10 min da se ne udara meta API na svako otvaranje forme.
+### 1. Schema (`src/lib/airtable/schema.ts`)
+Dodati ključ `name` u definicije tabela:
+- `Grupe.name = "fldNocNcamwJBs48A"`
+- `Tipovi.name = "fldgP0gYzGcjxtnMR"`
 
-## 3) Inspection server fn (`src/lib/api/inspection.functions.ts`)
-- Proširiti `LogInspectionInput` sa:
-  - `masaUlivkaKg?: number`
-  - `materijal?: string[]` (multipleSelect)
-- U `handler` upisati u `record`:
-  - ako je definisano: `record.masaUlivkaKg = data.masaUlivkaKg`
-  - ako je niz neprazan: `record.materijal = data.materijal`
-- Proširiti `InspekcijaRow` i mapiranje u `getInspectionsForWorkOrderFn`:
-  - `masaUlivkaKg?: number`
-  - `materijal?: string[]`
+(Runtime config se već regeneriše iz Airtable labela; ovo je fallback i osigurava da kod uvek može da računa na `name` ključ kao codeKey. Po potrebi dodati alias u `FIELD_ALIASES` ako se label u Airtable razlikuje od „Name".)
 
-## 4) Forma za unos (`src/components/shop-floor/InspectionModal.tsx`)
-- Dodati state: `masaUlivkaKg: string`, `materijal: string[]`.
-- Polje **Masa ulivka (kg)** — `Input type="number" step="0.01" min={0}` — UMETNUTI ODMAH IZA "Masa komada (g)" polja.
-- Polje **Materijal** — multi-select sa pretragom po nazivu (shadcn `Command` + `Popover` + `Checkbox` pattern, kao kombobox sa selektovanjem više vrednosti i prikazom badge-eva ispod). Opcije se učitavaju preko `useQuery` koji zove `getMaterijalOptionsFn`. Postaviti ODMAH IZA "Masa ulivka (kg)" a ISPRED "Vizuelno".
-- Reset na otvaranje (`useEffect` na `open`) — resetovati i nove vrednosti.
-- Pri submit-u prosleđivati `masaUlivkaKg` (broj ili undefined) i `materijal` (string[] ili undefined) u `enqueue("logInspection", …)`.
+### 2. Server: dropdown za zastoje/škart (`src/lib/api/workorder.functions.ts`)
+U `getDropdownDataFn`:
+- Proširiti `DropdownGrupa` i `DropdownTip` opcionim `nameEn?: string`.
+- U mapperima čitati `g.name` / `t.name` i puniti `nameEn` kad postoji ne-prazan string.
 
-## 5) Detalji radnog naloga — tab Inspekcija (`src/components/work-order/WorkOrderDetailsDialog.tsx`)
-U `InspekcijaList` (red sa grid `text-xs text-muted-foreground`) dodati:
-- `{it.masaUlivkaKg != null && <div>Masa ulivka (kg): <span className="text-foreground">{it.masaUlivkaKg.toLocaleString("sr",{maximumFractionDigits:3})}</span></div>}`
-- `{it.materijal?.length ? <div>Materijal: <span className="text-foreground">{it.materijal.join(", ")}</span></div> : null}`
+### 3. Server: history (`src/lib/api/history.functions.ts`)
+- `grupeMap` i `tipoviMap` promeniti iz `Map<string,string>` u `Map<string,{ sr: string; en?: string }>`.
+- `resolveName` helper prima ciljani jezik i bira `en` ako postoji, inače `sr`.
+- `getHistoryFn` (ili odgovarajući server fn) prihvata opcioni `lang: "sr" | "en"` u inputu; klijent ga šalje iz `i18n.language`.
 
-## 6) Tip outbox payload-a (`src/lib/offline/runners.ts` / `outbox.ts`)
-Ako su tipovi striktni za `logInspection`, dopuniti payload tip sa istim novim opcionim poljima da TS prođe.
+### 4. Klijent: prikaz
+Mali util `pickLocalizedName(item, lang)` u `src/lib/i18n/format.ts`:
+```ts
+export function pickName(item: { naziv: string; nameEn?: string }, lang: string) {
+  return lang.startsWith("en") && item.nameEn ? item.nameEn : item.naziv;
+}
+```
 
-## Napomena
-- "Masa komada" u formi je tehnički u gramima (UI label "Masa komada (g)") i konvertuje se u `izmerenaMasaKg`. Novo polje **Masa ulivka (kg)** ide direktno u `masaUlivkaKg` kao kg (bez konverzije), prema specifikaciji korisnika.
-- `materijal` je `multipleSelects` u Airtable-u — opcije se ne hardkoduju, već povlače sa meta API-ja, što omogućava da se kasnije dodaju nove vrednosti u Airtable bez deploya.
+Primeniti na:
+- `src/components/shop-floor/DowntimeModal.tsx` — render `grupe` i `tipovi` (Select opcije + sort key).
+- `src/components/work-order/dialogs.tsx` — render `grupe` i `tipovi` u dijalozima za škart.
+- Bilo gde drugde gde se renderuje `g.naziv` / `t.naziv` iz dropdown podataka (proveriti `rg`).
+
+Za istoriju: prosleđivati `i18n.language` u poziv server fn-a; server vraća već lokalizovane stringove pa UI ne mora ništa dodatno.
+
+### 5. Sortiranje
+U `getDropdownDataFn` zadržati sortiranje po `naziv` (srpski, `localeCompare("sr")`) da bi redosled ostao stabilan između jezika. Prikaz koristi lokalizovano ime, redosled ostaje isti.
+
+### 6. Ne dirati
+- Logiku snimanja zastoja/škarta (i dalje koristi recordId).
+- Boje, grupisanje, filtere.
+- Auth/PIN, persister, ostale ranije fix-ove.
+
+## Validacija
+- `bun run build`.
+- Provera u UI:
+  - SR → svi nazivi srpski (kao sada).
+  - EN → prikazuju se engleski tamo gde je `Name` popunjen, fallback na srpski tamo gde nije.
+  - Sortiranje konzistentno.
