@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
 import { z } from "zod";
 import { KontaktOsobe, Role, PrijaveNaSistem } from "@/lib/airtable/sdk.server";
-import { hashPin, isHashed, verifyPin } from "@/lib/auth/pin-hash.server";
+import { verifyPin } from "@/lib/auth/pin-hash.server";
 import { checkLockout, recordAttempt, clientIp, type AttemptReason } from "@/lib/auth/login-throttle.server";
 import { signSession } from "@/lib/auth/pin-session.server";
 
