@@ -10,9 +10,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getDropdownDataFn } from "@/lib/api/workorder.functions";
 import { pickName } from "@/lib/i18n/format";
-import { useTranslation } from "react-i18next";
+import { useTranslation, Trans } from "react-i18next";
 
-// ============= Generic confirm dialog for start / resume / pause =============
 export type ConfirmActionKind = "start" | "resume" | "pause";
 
 export function ConfirmActionDialog({
@@ -25,12 +24,13 @@ export function ConfirmActionDialog({
   onConfirm: (komentar?: string) => void;
   pending: boolean;
 }) {
+  const { t } = useTranslation();
   const [komentar, setKomentar] = useState("");
   const title =
-    kind === "start" ? "Pokretanje radnog naloga" :
-    kind === "resume" ? "Reaktivacija radnog naloga" : "Pauziranje radnog naloga";
+    kind === "start" ? t("dialogs.start.title") :
+    kind === "resume" ? t("dialogs.start.titleResume") : t("dialogs.pause.title");
   const btn =
-    kind === "start" ? "Pokreni" : kind === "resume" ? "Nastavi" : "Pauziraj";
+    kind === "start" ? t("dialogs.start.run") : kind === "resume" ? t("dialogs.start.resume") : t("dialogs.pause.btn");
   const showKomentar = kind === "pause";
 
   return (
@@ -39,17 +39,19 @@ export function ConfirmActionDialog({
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>
-            {brojNaloga ? <>Nalog <strong>{brojNaloga}</strong>.</> : "Potvrdite akciju."}
+            {brojNaloga ? (
+              <Trans i18nKey="dialogs.confirm.withOrder" values={{ broj: brojNaloga }} components={{ strong: <strong /> }} />
+            ) : t("dialogs.confirm.defaultDesc")}
           </DialogDescription>
         </DialogHeader>
         {showKomentar && (
           <div className="space-y-2">
-            <Label>Komentar (opciono)</Label>
-            <Textarea value={komentar} onChange={(e) => setKomentar(e.target.value)} rows={3} placeholder="Razlog..." />
+            <Label>{t("dialogs.commentLabel")}</Label>
+            <Textarea value={komentar} onChange={(e) => setKomentar(e.target.value)} rows={3} placeholder={t("dialogs.pause.commentPh")} />
           </div>
         )}
         <DialogFooter>
-          <Button variant="outline" size="touch" onClick={() => onOpenChange(false)}>Otkaži</Button>
+          <Button variant="outline" size="touch" onClick={() => onOpenChange(false)}>{t("common.cancel")}</Button>
           <AsyncButton size="touch" pending={pending} onClick={() => onConfirm(komentar.trim() || undefined)} className="min-w-28">{btn}</AsyncButton>
         </DialogFooter>
       </DialogContent>
@@ -57,14 +59,13 @@ export function ConfirmActionDialog({
   );
 }
 
-// ============= Scrap group/type selectors =============
 export function ScrapGroupTypeSelectors({
   grupa, setGrupa, tip, setTip,
 }: {
   grupa: string; setGrupa: (v: string) => void; tip: string; setTip: (v: string) => void;
 }) {
   const callDropdown = useServerFn(getDropdownDataFn);
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
   const lang = i18n.language;
   const q = useQuery({
     queryKey: ["dropdown-data"],
@@ -78,10 +79,10 @@ export function ScrapGroupTypeSelectors({
   return (
     <div className="grid grid-cols-1 gap-3">
       <div className="space-y-2">
-        <Label>Grupa škarta</Label>
+        <Label>{t("dialogs.scrap.groupLabel")}</Label>
         <Select value={grupa} onValueChange={(v) => { setGrupa(v); setTip(""); }} disabled={q.isLoading}>
           <SelectTrigger className="h-12">
-            <SelectValue placeholder={q.isLoading ? "Učitavanje..." : "Izaberite grupu"} />
+            <SelectValue placeholder={q.isLoading ? t("common.loadingDots") : t("dialogs.scrap.pickGroup")} />
           </SelectTrigger>
           <SelectContent>
             {grupe.map((g) => (<SelectItem key={g.id} value={g.id}>{pickName(g, lang)}</SelectItem>))}
@@ -89,10 +90,10 @@ export function ScrapGroupTypeSelectors({
         </Select>
       </div>
       <div className="space-y-2">
-        <Label>Tip škarta</Label>
+        <Label>{t("dialogs.scrap.typeLabel")}</Label>
         <Select value={tip} onValueChange={setTip} disabled={!grupa || tipovi.length === 0}>
           <SelectTrigger className="h-12">
-            <SelectValue placeholder={!grupa ? "Prvo izaberite grupu" : tipovi.length === 0 ? "Nema tipova za izabranu grupu" : "Izaberite tip"} />
+            <SelectValue placeholder={!grupa ? t("dialogs.scrap.pickGroupFirst") : tipovi.length === 0 ? t("dialogs.scrap.noTypesForGroup") : t("dialogs.scrap.pickType")} />
           </SelectTrigger>
           <SelectContent>
             {tipovi.map((t) => (<SelectItem key={t.id} value={t.id}>{pickName(t, lang)}</SelectItem>))}
@@ -103,7 +104,6 @@ export function ScrapGroupTypeSelectors({
   );
 }
 
-// ============= Scrap dialog =============
 export interface ScrapPayload {
   kolicinaSkarta: number;
   grupaSkartaId: string;
@@ -119,6 +119,7 @@ export function ScrapDialog({
   onConfirm: (payload: ScrapPayload) => void;
   pending: boolean;
 }) {
+  const { t } = useTranslation();
   const [skart, setSkart] = useState("");
   const [grupa, setGrupa] = useState("");
   const [tip, setTip] = useState("");
@@ -132,31 +133,31 @@ export function ScrapDialog({
     <Dialog open={open} onOpenChange={(v) => { if (!v) reset(); onOpenChange(v); }}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Upis škarta</DialogTitle>
-          <DialogDescription>Unesite količinu i klasifikaciju škarta.</DialogDescription>
+          <DialogTitle>{t("dialogs.scrap.title")}</DialogTitle>
+          <DialogDescription>{t("dialogs.scrap.desc")}</DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="scrap-kol" className="text-base">Količina škarta</Label>
+            <Label htmlFor="scrap-kol" className="text-base">{t("dialogs.scrap.qty")}</Label>
             <Input id="scrap-kol" type="number" inputMode="numeric" min={1}
               value={skart} onChange={(e) => setSkart(e.target.value)}
               className="h-14 text-2xl font-semibold text-center" placeholder="0" />
           </div>
           <ScrapGroupTypeSelectors grupa={grupa} setGrupa={setGrupa} tip={tip} setTip={setTip} />
           <div className="space-y-2">
-            <Label htmlFor="scrap-komentar">Komentar (opciono)</Label>
+            <Label htmlFor="scrap-komentar">{t("dialogs.commentLabel")}</Label>
             <Textarea id="scrap-komentar" value={komentar} onChange={(e) => setKomentar(e.target.value)} rows={2} />
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" size="touch" onClick={() => onOpenChange(false)}>Otkaži</Button>
+          <Button variant="outline" size="touch" onClick={() => onOpenChange(false)}>{t("common.cancel")}</Button>
           <AsyncButton
             size="touch"
             pending={pending}
-            pendingLabel="Upisujem..."
+            pendingLabel={t("dialogs.scrap.btnPending")}
             onClick={() => onConfirm({ kolicinaSkarta: skartNum, grupaSkartaId: grupa, tipSkartaId: tip, komentar: komentar.trim() || undefined })}
             disabled={!valid} className="min-w-28">
-            Upiši škart
+            {t("dialogs.scrap.btn")}
           </AsyncButton>
         </DialogFooter>
       </DialogContent>
@@ -164,7 +165,6 @@ export function ScrapDialog({
   );
 }
 
-// ============= Stop + Batch dialog =============
 export interface StopPayload {
   dobroProizvedeno: number;
   kolicinaSkarta?: number;
@@ -182,6 +182,7 @@ export function StopWithBatchDialog({
   onConfirm: (payload: StopPayload) => void;
   pending: boolean;
 }) {
+  const { t } = useTranslation();
   const [dobro, setDobro] = useState("0");
   const [skart, setSkart] = useState("");
   const [grupa, setGrupa] = useState("");
@@ -199,36 +200,38 @@ export function StopWithBatchDialog({
     <Dialog open={open} onOpenChange={(v) => { if (!v) reset(); onOpenChange(v); }}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Zatvaranje radnog naloga</DialogTitle>
+          <DialogTitle>{t("dialogs.stop.title")}</DialogTitle>
           <DialogDescription>
-            {brojNaloga ? <>Zatvori nalog <strong>{brojNaloga}</strong> i upiši konačnu količinu.</> : "Upiši konačnu količinu."}
+            {brojNaloga ? (
+              <Trans i18nKey="dialogs.stop.descWith" values={{ broj: brojNaloga }} components={{ strong: <strong /> }} />
+            ) : t("dialogs.stop.descNone")}
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="stop-dobro" className="text-base">Dobro proizvedeno</Label>
+            <Label htmlFor="stop-dobro" className="text-base">{t("dialogs.stop.goodProduced")}</Label>
             <Input id="stop-dobro" type="number" inputMode="numeric" min={0}
               value={dobro} onChange={(e) => setDobro(e.target.value)}
               className="h-14 text-2xl font-semibold text-center" />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="stop-skart">Škart (opciono)</Label>
+            <Label htmlFor="stop-skart">{t("dialogs.stop.scrapOpt")}</Label>
             <Input id="stop-skart" type="number" inputMode="numeric" min={0}
               value={skart} onChange={(e) => setSkart(e.target.value)}
               className="h-12" placeholder="0" />
           </div>
           {hasSkart && <ScrapGroupTypeSelectors grupa={grupa} setGrupa={setGrupa} tip={tip} setTip={setTip} />}
           <div className="space-y-2">
-            <Label htmlFor="stop-komentar">Komentar (opciono)</Label>
+            <Label htmlFor="stop-komentar">{t("dialogs.commentLabel")}</Label>
             <Textarea id="stop-komentar" value={komentar} onChange={(e) => setKomentar(e.target.value)} rows={2} />
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" size="touch" onClick={() => onOpenChange(false)}>Otkaži</Button>
+          <Button variant="outline" size="touch" onClick={() => onOpenChange(false)}>{t("common.cancel")}</Button>
           <AsyncButton
             size="touch"
             pending={pending}
-            pendingLabel="Zatvaram..."
+            pendingLabel={t("dialogs.stop.btnPending")}
             onClick={() => onConfirm({
               dobroProizvedeno: dobroNum,
               kolicinaSkarta: hasSkart ? skartNum : undefined,
@@ -238,7 +241,7 @@ export function StopWithBatchDialog({
             })}
             disabled={!valid}
             className="min-w-28 bg-destructive text-destructive-foreground hover:bg-destructive/90">
-            Zatvori nalog
+            {t("dialogs.stop.btn")}
           </AsyncButton>
         </DialogFooter>
       </DialogContent>
