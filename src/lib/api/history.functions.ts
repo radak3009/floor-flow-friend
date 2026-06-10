@@ -117,6 +117,7 @@ interface Input {
   to: string;
   resursId?: string;
   status?: string;
+  lang?: "sr" | "en";
 }
 
 /** Parse "Xd Yh Zmin" / "Yh Zmin" / "Zmin" -> minutes. */
@@ -138,7 +139,8 @@ export const getHistoryFn = createServerFn({ method: "GET" })
     return input;
   })
   .handler(async ({ data }): Promise<HistoryResult> => {
-    const cacheKey = `history:v3:${data.from}|${data.to}|${data.resursId ?? ""}|${data.status ?? ""}`;
+    const lang: "sr" | "en" = data.lang === "en" ? "en" : "sr";
+    const cacheKey = `history:v4:${data.from}|${data.to}|${data.resursId ?? ""}|${data.status ?? ""}|${lang}`;
     return sharedMemoize(cacheKey, 60_000, async () => {
     const { from, to, resursId, status } = data;
 
