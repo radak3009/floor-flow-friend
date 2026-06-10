@@ -79,7 +79,7 @@ export default function DowntimeModal({ open, onOpenChange, monitoringId, userId
 
   const m = useMutation({
     mutationFn: () => {
-      const grupaNaziv = grupaId ? grupe.find((g) => g.id === grupaId)?.naziv : undefined;
+      const grupaNaziv = grupaId ? (() => { const g = grupe.find((x) => x.id === grupaId); return g ? pickName(g, lang) : undefined; })() : undefined;
       return enqueue(
         "logDowntime",
         ongoing ? "Definisanje zastoja" : "Podela zastoja",
