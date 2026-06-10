@@ -96,7 +96,7 @@ export default function DowntimeModal({ open, onOpenChange, monitoringId, userId
       );
     },
     onSuccess: (res) => {
-      const grupaNaziv = grupaId ? grupe.find((g) => g.id === grupaId)?.naziv : undefined;
+      const grupaNaziv = grupaId ? (() => { const g = grupe.find((x) => x.id === grupaId); return g ? pickName(g, lang) : undefined; })() : undefined;
       toast.success(res.queued
         ? "Sačuvano lokalno — biće poslato kad se konekcija vrati"
         : (ongoing ? "Zastoj definisan" : "Zastoj podeljen"));
