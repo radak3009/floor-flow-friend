@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
 import { z } from "zod";
 import { KontaktOsobe, Role, PrijaveNaSistem } from "@/lib/airtable/sdk.server";
-import { hashPin, isHashed, verifyPin } from "@/lib/auth/pin-hash.server";
+import { verifyPin } from "@/lib/auth/pin-hash.server";
 import { checkLockout, recordAttempt, clientIp, type AttemptReason } from "@/lib/auth/login-throttle.server";
 import { signSession } from "@/lib/auth/pin-session.server";
 
@@ -95,16 +95,6 @@ export const loginFn = createServerFn({ method: "POST" })
     if (!ok) {
       await finishAttempt(false, "bad_pin");
       return { success: false as const, error: GENERIC_CREDENTIAL_ERROR };
-    }
-
-    // 3) Lazy migracija plain-text PIN-a na PBKDF2 hash
-    if (!isHashed(storedPin)) {
-      try {
-        const newHash = await hashPin(inputPin);
-        await KontaktOsobe.update({ id: kontakt.id, record: { pin: newHash } });
-      } catch (e) {
-        console.warn("PIN lazy migration failed:", e);
-      }
     }
 
     const ulogaVal = getCI(kontakt, "uloga");
