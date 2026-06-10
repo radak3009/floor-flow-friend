@@ -64,6 +64,8 @@ export function ScrapGroupTypeSelectors({
   grupa: string; setGrupa: (v: string) => void; tip: string; setTip: (v: string) => void;
 }) {
   const callDropdown = useServerFn(getDropdownDataFn);
+  const { i18n } = useTranslation();
+  const lang = i18n.language;
   const q = useQuery({
     queryKey: ["dropdown-data"],
     queryFn: () => callDropdown(),
@@ -82,7 +84,7 @@ export function ScrapGroupTypeSelectors({
             <SelectValue placeholder={q.isLoading ? "Učitavanje..." : "Izaberite grupu"} />
           </SelectTrigger>
           <SelectContent>
-            {grupe.map((g) => (<SelectItem key={g.id} value={g.id}>{g.naziv}</SelectItem>))}
+            {grupe.map((g) => (<SelectItem key={g.id} value={g.id}>{pickName(g, lang)}</SelectItem>))}
           </SelectContent>
         </Select>
       </div>
@@ -93,7 +95,7 @@ export function ScrapGroupTypeSelectors({
             <SelectValue placeholder={!grupa ? "Prvo izaberite grupu" : tipovi.length === 0 ? "Nema tipova za izabranu grupu" : "Izaberite tip"} />
           </SelectTrigger>
           <SelectContent>
-            {tipovi.map((t) => (<SelectItem key={t.id} value={t.id}>{t.naziv}</SelectItem>))}
+            {tipovi.map((t) => (<SelectItem key={t.id} value={t.id}>{pickName(t, lang)}</SelectItem>))}
           </SelectContent>
         </Select>
       </div>
