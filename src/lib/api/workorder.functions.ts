@@ -410,20 +410,29 @@ export const getAvailableWorkOrdersFn = createServerFn({ method: "GET" })
   });
 
 // ============= Dropdown data (Grupe / Tipovi) =============
-export interface DropdownGrupa { id: string; naziv: string; boja?: string }
-export interface DropdownTip { id: string; naziv: string; grupaId?: string }
+export interface DropdownGrupa { id: string; naziv: string; nameEn?: string; boja?: string }
+export interface DropdownTip { id: string; naziv: string; nameEn?: string; grupaId?: string }
 
 export const getDropdownDataFn = createServerFn({ method: "GET" }).handler(
   async (): Promise<{ grupe: DropdownGrupa[]; grupeZastoj: DropdownGrupa[]; tipovi: DropdownTip[] }> => {
-    return sharedMemoize("dropdown-data:v1", 10 * 60_000, async () => {
+    return sharedMemoize("dropdown-data:v2", 10 * 60_000, async () => {
       const [gRes, gzRes, tRes] = await Promise.all([
         Grupe.findAll({ filters: { tip: "Škart" }, limit: 500 }),
         Grupe.findAll({ filters: { tip: "Zastoj" }, limit: 500 }),
         Tipovi.findAll({ limit: 1000 }),
       ]);
+      const pickEn = (v: unknown): string | undefined => {
+        const x = Array.isArray(v) ? v[0] : v;
+        if (typeof x === "string") {
+          const s = x.trim();
+          return s ? s : undefined;
+        }
+        return undefined;
+      };
       const mapGrupa = (g: AnyRow): DropdownGrupa => ({
         id: String(g.id),
         naziv: typeof g.naziv === "string" ? g.naziv : String(g.naziv ?? ""),
+        nameEn: pickEn((g as Record<string, unknown>).name),
         boja: typeof g.boja === "string" ? g.boja : undefined,
       });
       const grupe = gRes.records.map(mapGrupa).filter((g) => g.naziv);
@@ -433,6 +442,7 @@ export const getDropdownDataFn = createServerFn({ method: "GET" }).handler(
         return {
           id: t.id,
           naziv: typeof t.naziv === "string" ? t.naziv : String(t.naziv ?? ""),
+          nameEn: pickEn((t as Record<string, unknown>).name),
           grupaId: typeof grupaId === "string" ? grupaId : undefined,
         };
       }).filter((t) => t.naziv);
