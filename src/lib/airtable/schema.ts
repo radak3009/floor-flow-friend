@@ -311,6 +311,7 @@ export const FIELDS = {
   },
   "Grupe": {
     "naziv": "fldprVbsHvWV8hThi",
+    "name": "fldNocNcamwJBs48A",
     "tip": "fld9v9mWG2UCaJQwz",
     "kategorija": "fldTOiooWQzDkmCYn",
     "grupaPoBoji": "fldKtcD2GAwZWA0LE",
@@ -324,6 +325,7 @@ export const FIELDS = {
   },
   "Tipovi": {
     "naziv": "fldKDRL5FlvzQOsNg",
+    "name": "fldgP0gYzGcjxtnMR",
     "tipPoBoji": "fldJ9U5WzTgMyyIkp",
     "nazivUBoji": "fld1p0tjNugjvC5v1",
     "grupaPoBoji": "fld5nHzMd4GMsBtyl",
