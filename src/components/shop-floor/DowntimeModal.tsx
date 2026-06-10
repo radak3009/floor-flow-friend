@@ -156,7 +156,7 @@ export default function DowntimeModal({ open, onOpenChange, monitoringId, userId
             <Select value={grupaId} onValueChange={(v) => { setGrupaId(v); setTipId(""); }} disabled={dd.isLoading || noActive}>
               <SelectTrigger className="h-12"><SelectValue placeholder={dd.isLoading ? "Učitavanje..." : "Izaberite grupu"} /></SelectTrigger>
               <SelectContent>
-                {grupe.map((g) => (<SelectItem key={g.id} value={g.id}>{g.naziv}</SelectItem>))}
+                {grupe.map((g) => (<SelectItem key={g.id} value={g.id}>{pickName(g, lang)}</SelectItem>))}
               </SelectContent>
             </Select>
           </div>
