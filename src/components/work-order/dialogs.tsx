@@ -9,6 +9,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getDropdownDataFn } from "@/lib/api/workorder.functions";
+import { pickName } from "@/lib/i18n/format";
+import { useTranslation } from "react-i18next";
 
 // ============= Generic confirm dialog for start / resume / pause =============
 export type ConfirmActionKind = "start" | "resume" | "pause";
