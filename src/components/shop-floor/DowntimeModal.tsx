@@ -15,6 +15,8 @@ import { getActiveDowntimeFn } from "@/lib/api/downtime.functions";
 import { enqueue } from "@/lib/offline/outbox";
 import { toast } from "sonner";
 import { invalidateAfterActionDelayed } from "@/lib/query/invalidate";
+import { pickName } from "@/lib/i18n/format";
+import { useTranslation } from "react-i18next";
 
 function fmtDt(iso?: string): string {
   if (!iso) return "—";
