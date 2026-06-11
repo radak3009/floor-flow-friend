@@ -64,12 +64,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     setReady(true);
 
-    // Background refresh of permissions/role on app load. Fail-open on network errors.
-    if (stored?.id) {
-      const userId = stored.id;
-      const baseline = stored;
-      refreshSessionFn({ data: { userId } })
+    // Sliding refresh sesije/permisija. Fail-open na mrežne greške.
+    // Pored inicijalnog refresh-a na mount, osvežavamo i periodično + na
+    // povratak fokusa: fabrički tableti stoje ulogovani danima, a PIN
+    // session token važi 12h — bez ovoga token istekne dok je aplikacija
+    // otvorena i svi zaštićeni server fn pozivi počnu tiho da padaju
+    // ("podaci se ne učitavaju" bez odjave).
+    let cancelled = false;
+    let lastRefresh = 0;
+    const MIN_GAP_MS = 10 * 60 * 1000; // ne češće od 10 min
+    const INTERVAL_MS = 4 * 60 * 60 * 1000; // a najmanje na 4h
+
+    const doRefresh = () => {
+      if (cancelled) return;
+      const now = Date.now();
+      if (now - lastRefresh < MIN_GAP_MS) return;
+      lastRefresh = now;
+
+      let current: SessionUser | null = null;
+      try {
+        const raw = localStorage.getItem(SESSION_KEY);
+        current = raw ? (JSON.parse(raw) as SessionUser) : null;
+      } catch {
+        /* noop */
+      }
+      if (!current?.id) return;
+      const baseline = current;
+
+      refreshSessionFn({ data: { userId: baseline.id } })
         .then((res) => {
+          if (cancelled) return;
           if (res.invalid) {
             try { localStorage.removeItem(SESSION_KEY); } catch { /* noop */ }
             setUser(null);
@@ -87,9 +111,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUser(merged);
         })
         .catch(() => {
-          /* tiho ignorisati: zadrži postojeću sesiju */
+          // tiho ignorisati: zadrži postojeću sesiju, pokušaće ponovo
+          lastRefresh = 0;
         });
-    }
+    };
+
+    doRefresh();
+    const interval = window.setInterval(doRefresh, INTERVAL_MS);
+    const onFocus = () => doRefresh();
+    const onVisibility = () => { if (!document.hidden) doRefresh(); };
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onVisibility);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(interval);
+      window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
   }, []);
 
   const login = (u: SessionUser) => {
