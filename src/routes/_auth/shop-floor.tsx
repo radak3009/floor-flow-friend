@@ -1110,9 +1110,9 @@ function AvailableWorkOrdersCard({
       <div className="flex items-center justify-between px-4 border-b border-border my-0 py-[16px] gap-0">
         <div className="flex items-center gap-2">
           <ListChecks className="size-4 text-primary" />
-          <h2 className="text-base font-semibold">Dostupni radni nalozi</h2>
+          <h2 className="text-base font-semibold">{t("shopFloor.availableWorkOrders")}</h2>
         </div>
-        <Button variant="ghost" size="icon" onClick={() => q.refetch()} disabled={q.isFetching} title="Osveži">
+        <Button variant="ghost" size="icon" onClick={() => q.refetch()} disabled={q.isFetching} title={t("shopFloor.refreshTitle")}>
           <RefreshCw className={`size-4 ${q.isFetching ? "animate-spin" : ""}`} />
         </Button>
       </div>
@@ -1120,14 +1120,14 @@ function AvailableWorkOrdersCard({
       <div className="px-4 pt-3">
         <div className="border-b-2 border-primary pb-2 inline-flex items-center gap-2 text-primary text-sm font-medium">
           <Play className="size-4" />
-          Pokretanje ({items.length})
+          {t("shopFloor.startList", { count: items.length })}
         </div>
       </div>
 
       {q.isLoading ? (
-        <div className="p-6 text-sm text-muted-foreground text-center">Učitavanje...</div>
+        <div className="p-6 text-sm text-muted-foreground text-center">{t("common.loadingDots")}</div>
       ) : items.length === 0 ? (
-        <div className="p-6 text-sm text-muted-foreground text-center">Nema dostupnih radnih naloga za ovu mašinu.</div>
+        <div className="p-6 text-sm text-muted-foreground text-center">{t("shopFloor.noAvailableForMachine")}</div>
       ) : (
         <ul className="divide-y divide-border">
           {items.map((wo) => (
@@ -1136,7 +1136,7 @@ function AvailableWorkOrdersCard({
                 type="button"
                 onClick={() => setDetailsWO(wo)}
                 className="min-w-0 flex-1 text-left cursor-pointer hover:opacity-80 transition-opacity bg-transparent border-0 p-0"
-                title="Prikaži detalje radnog naloga"
+                title={t("shopFloor.showWoDetails")}
               >
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="font-semibold truncate">{wo.brojNaloga}</span>
@@ -1149,7 +1149,7 @@ function AvailableWorkOrdersCard({
                 {(wo.narucilac || wo.planiranaKolicina != null) && (
                   <div className="text-xs text-muted-foreground mt-0.5">
                     {wo.narucilac && <span className="mr-2">{wo.narucilac}</span>}
-                    {wo.planiranaKolicina != null && <span>{wo.planiranaKolicina.toLocaleString("sr")} kom</span>}
+                    {wo.planiranaKolicina != null && <span>{t("shopFloor.qtyKom", { count: wo.planiranaKolicina })}</span>}
                   </div>
                 )}
               </button>
@@ -1159,7 +1159,7 @@ function AvailableWorkOrdersCard({
                 className="shrink-0"
               >
                 <Play className="size-4" />
-                {wo.statusNaloga === "Pauziran" ? "Nastavi" : "Pokreni"}
+                {wo.statusNaloga === "Pauziran" ? t("shopFloor.resume") : t("shopFloor.start")}
               </Button>
             </li>
           ))}
@@ -1193,26 +1193,30 @@ function AvailableWorkOrdersCard({
       <Dialog open={!!confirmWO} onOpenChange={(v) => { if (!v) { setConfirmWO(null); setStartInput(""); } }}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{confirmWO?.statusNaloga === "Pauziran" ? "Nastavak naloga" : "Pokretanje naloga"}</DialogTitle>
+            <DialogTitle>{confirmWO?.statusNaloga === "Pauziran" ? t("dialogs.start.confirmResumeTitle") : t("dialogs.start.confirmRunTitle")}</DialogTitle>
             <DialogDescription>
-              {confirmWO?.statusNaloga === "Pauziran"
-                ? <>Da li ste sigurni da želite da nastavite nalog <strong>{confirmWO?.brojNaloga}</strong>?</>
-                : <>Da li ste sigurni da želite da pokrenete nalog <strong>{confirmWO?.brojNaloga}</strong>?</>}
+              {confirmWO ? (
+                <Trans
+                  i18nKey={confirmWO.statusNaloga === "Pauziran" ? "dialogs.start.confirmResumeDesc" : "dialogs.start.confirmRunDesc"}
+                  values={{ broj: confirmWO.brojNaloga }}
+                  components={{ strong: <strong /> }}
+                />
+              ) : null}
             </DialogDescription>
           </DialogHeader>
           {confirmWO && confirmWO.statusNaloga !== "Pauziran" && (
             <div className="space-y-2">
-              <Label>Start (opciono)</Label>
+              <Label>{t("dialogs.start.startOptional")}</Label>
               <Input type="datetime-local" value={startInput} onChange={(e) => setStartInput(e.target.value)} className="h-11" />
-              <p className="text-xs text-muted-foreground">Ostavite prazno da se vreme postavi automatski.</p>
+              <p className="text-xs text-muted-foreground">{t("dialogs.start.leaveEmpty")}</p>
             </div>
           )}
           <DialogFooter>
-            <Button variant="outline" size="touch" onClick={() => { setConfirmWO(null); setStartInput(""); }} disabled={startPending}>Otkaži</Button>
+            <Button variant="outline" size="touch" onClick={() => { setConfirmWO(null); setStartInput(""); }} disabled={startPending}>{t("common.cancel")}</Button>
             <AsyncButton
               size="touch"
               pending={startPending}
-              pendingLabel={confirmWO?.statusNaloga === "Pauziran" ? "Nastavljam..." : "Pokrećem..."}
+              pendingLabel={confirmWO?.statusNaloga === "Pauziran" ? t("dialogs.start.resumingLabel") : t("dialogs.start.runningLabel")}
               onClick={() => {
                 if (!confirmWO) return;
                 const iso =
@@ -1225,7 +1229,7 @@ function AvailableWorkOrdersCard({
               }}
               className="min-w-28"
             >
-              {confirmWO?.statusNaloga === "Pauziran" ? "Nastavi" : "Pokreni"}
+              {confirmWO?.statusNaloga === "Pauziran" ? t("dialogs.start.resume") : t("dialogs.start.run")}
             </AsyncButton>
           </DialogFooter>
         </DialogContent>
