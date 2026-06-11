@@ -2,9 +2,11 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { zodValidator, fallback } from "@tanstack/zod-adapter";
 import { z } from "zod";
 import { getDashboardFn, type MachineDashboardRow } from "@/lib/api/dashboard.functions";
+import { formatNumber, formatDateTime } from "@/lib/i18n/format";
 import {
   pauseWorkOrderFn,
   resumeWorkOrderFn,
@@ -58,6 +60,7 @@ const statusColorVar: Record<string, string> = {
 };
 
 function MonitoringPage() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const call = useServerFn(getDashboardFn);
@@ -66,6 +69,8 @@ function MonitoringPage() {
   const callStopBatch = useServerFn(stopWorkOrderWithBatchFn);
   const callScrap = useServerFn(logScrapFn);
   const callStart = useServerFn(startWorkOrderFn);
+
+
 
 
   const { data, isLoading, isError, error, refetch, isFetching } = useQuery({
@@ -100,7 +105,7 @@ function MonitoringPage() {
       setDetailsFor(m);
       setDetailsTab(search.tab);
     } else {
-      toast.error("Radni nalog više nije aktivan ni na jednoj mašini.");
+      toast.error(t("monitoring.woNoLongerActive"));
     }
     navigate({ search: {}, replace: true });
   }, [search.wo, search.tab, data?.machines, navigate]);
@@ -117,7 +122,7 @@ function MonitoringPage() {
 
   const onErr = (e: Error) => {
     if (e?.message?.startsWith("KONFLIKT:")) {
-      toast.error(e.message.replace(/^KONFLIKT:\s*/, "Konflikt: ") + " Osvežavam stanje…");
+      toast.error(e.message.replace(/^KONFLIKT:\s*/, t("shopFloor.conflictPrefix")) + t("monitoring.conflictRefresh"));
       invalidateDash();
       setConfirmAct(null);
       setStopFor(null);
@@ -137,19 +142,19 @@ function MonitoringPage() {
   const clearBusy = () => { setBusyCard(null); };
   const pauseM = useMutation({
     mutationFn: callPause,
-    onSuccess: () => { setConfirmAct(null); toast.success("Pauza uspešna"); },
+    onSuccess: () => { setConfirmAct(null); toast.success(t("monitoring.successPause")); },
     onError: (e) => { clearBusy(); onErr(e as Error); },
     onSettled: (_d, _e, v) => invalidateTwice(ctxFromVars(v, confirmAct?.m.monitoringId)),
   });
   const resumeM = useMutation({
     mutationFn: callResume,
-    onSuccess: () => { setConfirmAct(null); toast.success("Nastavak uspešan"); },
+    onSuccess: () => { setConfirmAct(null); toast.success(t("monitoring.successResume")); },
     onError: (e) => { clearBusy(); onErr(e as Error); },
     onSettled: (_d, _e, v) => invalidateTwice(ctxFromVars(v, confirmAct?.m.monitoringId)),
   });
   const stopM = useMutation({
     mutationFn: callStopBatch,
-    onSuccess: () => { setStopFor(null); toast.success("Nalog zatvoren"); },
+    onSuccess: () => { setStopFor(null); toast.success(t("monitoring.successStop")); },
     onError: (e) => { clearBusy(); onErr(e as Error); },
     onSettled: (_d, _e, v) => invalidateTwice(ctxFromVars(v, stopFor?.monitoringId)),
   });
@@ -158,12 +163,12 @@ function MonitoringPage() {
     onMutate: async (v) => {
       const woSnap = await patchWoHistoryInsert(queryClient, v.data.radniNalogId, {
         tip: "skart",
-        opis: `Škart: ${v.data.kolicinaSkarta} kom${v.data.komentar ? ` — ${v.data.komentar}` : ""}`,
+        opis: `${t("monitoring.scrapLabel")}: ${v.data.kolicinaSkarta} ${t("monitoring.kom")}${v.data.komentar ? ` — ${v.data.komentar}` : ""}`,
         operator: user?.imeIPrezime,
       });
       return { woSnap };
     },
-    onSuccess: () => { setScrapFor(null); toast.success("Škart upisan"); },
+    onSuccess: () => { setScrapFor(null); toast.success(t("monitoring.successScrap")); },
     onError: (e, _v, ctx) => {
       clearBusy();
       rollback(queryClient, ctx?.woSnap);
@@ -193,7 +198,7 @@ function MonitoringPage() {
     onMutate: async () => {
       await queryClient.cancelQueries({ queryKey: ["dashboard"] });
     },
-    onSuccess: () => { setStartFor(null); toast.success("Nalog pokrenut"); },
+    onSuccess: () => { setStartFor(null); toast.success(t("monitoring.successStart")); },
     onError: (e) => {
       clearBusy();
       onErr(e as Error);
@@ -257,45 +262,47 @@ function MonitoringPage() {
   return (
     <div className="p-4 md:p-6 max-w-7xl mx-auto space-y-4">
       <header className="hidden lg:flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Monitoring</h1>
+        <h1 className="text-2xl font-semibold">{t("monitoring.title")}</h1>
         {data && (
           <div className="text-sm text-muted-foreground flex items-center gap-2">
             <span className="inline-block size-2 rounded-full bg-primary" />
-            Proizvodnih linija <span className="font-semibold text-foreground">{data.kpis.total}</span>
+            {t("monitoring.linesLabel")} <span className="font-semibold text-foreground">{data.kpis.total}</span>
           </div>
         )}
       </header>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3">
-        <KpiCard label="U radu" value={data?.kpis.uRadu ?? 0} color="var(--color-status-running)" active={filter === "uRadu"} onClick={() => setFilter(filter === "uRadu" ? "all" : "uRadu")} />
-        <KpiCard label="Zastoj" value={data?.kpis.zastoj ?? 0} color="var(--color-status-downtime)" active={filter === "zastoj"} onClick={() => setFilter(filter === "zastoj" ? "all" : "zastoj")} />
-        <KpiCard label="Nema signala" value={data?.kpis.nemaSig ?? 0} color="var(--color-status-nosignal)" active={filter === "nemaSig"} onClick={() => setFilter(filter === "nemaSig" ? "all" : "nemaSig")} />
-        <KpiCard label="OFF" value={data?.kpis.off ?? 0} color="var(--color-status-off)" active={filter === "off"} onClick={() => setFilter(filter === "off" ? "all" : "off")} />
+        <KpiCard label={t("monitoring.running")} value={data?.kpis.uRadu ?? 0} color="var(--color-status-running)" active={filter === "uRadu"} onClick={() => setFilter(filter === "uRadu" ? "all" : "uRadu")} />
+        <KpiCard label={t("monitoring.downtime")} value={data?.kpis.zastoj ?? 0} color="var(--color-status-downtime)" active={filter === "zastoj"} onClick={() => setFilter(filter === "zastoj" ? "all" : "zastoj")} />
+        <KpiCard label={t("monitoring.noSignal")} value={data?.kpis.nemaSig ?? 0} color="var(--color-status-nosignal)" active={filter === "nemaSig"} onClick={() => setFilter(filter === "nemaSig" ? "all" : "nemaSig")} />
+        <KpiCard label={t("monitoring.off")} value={data?.kpis.off ?? 0} color="var(--color-status-off)" active={filter === "off"} onClick={() => setFilter(filter === "off" ? "all" : "off")} />
       </div>
 
 
       <div className="flex items-center justify-between">
         <div className="text-sm text-muted-foreground">
-          {filter === "all" ? `${filtered.length} mašina` : `${filtered.length} od ${machines.length} mašina`}
+          {filter === "all"
+            ? t("monitoring.machineCount", { count: filtered.length })
+            : t("monitoring.machineCountFiltered", { count: filtered.length, total: machines.length })}
         </div>
         <div className="flex items-center gap-2">
           {filter !== "all" && (
-            <Button variant="ghost" size="sm" onClick={() => setFilter("all")}>Poništi filter</Button>
+            <Button variant="ghost" size="sm" onClick={() => setFilter("all")}>{t("monitoring.clearFilter")}</Button>
           )}
           <Button variant="ghost" size="sm" onClick={() => refetch()}>
-            <RefreshCw className={`size-4 mr-2 ${isFetching ? "animate-spin" : ""}`} /> Osveži
+            <RefreshCw className={`size-4 mr-2 ${isFetching ? "animate-spin" : ""}`} /> {t("monitoring.refresh")}
           </Button>
         </div>
       </div>
 
-      {isLoading && <div className="text-muted-foreground">Učitavanje...</div>}
+      {isLoading && <div className="text-muted-foreground">{t("monitoring.loading")}</div>}
       {isError && !isLoading && (
         <div className="rounded-lg border border-destructive/40 bg-destructive/10 p-4 text-sm flex items-center justify-between gap-3">
           <div className="text-destructive">
-            Greška pri učitavanju podataka sa Airtable: {(error as Error)?.message ?? "nepoznata greška"}
+            {t("monitoring.loadError", { msg: (error as Error)?.message ?? t("monitoring.unknownError") })}
           </div>
           <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isFetching}>
-            <RefreshCw className={`size-4 mr-2 ${isFetching ? "animate-spin" : ""}`} /> Pokušaj ponovo
+            <RefreshCw className={`size-4 mr-2 ${isFetching ? "animate-spin" : ""}`} /> {t("monitoring.retry")}
           </Button>
         </div>
       )}
@@ -323,7 +330,7 @@ function MonitoringPage() {
         ))}
         {!isLoading && filtered.length === 0 && (
           <div className="rounded-lg border border-dashed border-border p-10 text-center text-muted-foreground">
-            Nema mašina za prikaz.
+            {t("monitoring.noMachinesShow")}
           </div>
         )}
       </div>
@@ -339,7 +346,7 @@ function MonitoringPage() {
           title={startFor.nazivLinije}
           pending={startM.isPending}
           onSubmit={(args) => {
-            beginCardBusy(startFor.monitoringId, "Pokretanje naloga…");
+            beginCardBusy(startFor.monitoringId, t("monitoring.busyStart"));
             startM.mutate({ ...args, monitoringId: startFor.monitoringId, resursId: startFor.resursiId });
           }}
         />
@@ -357,11 +364,11 @@ function MonitoringPage() {
           onSubmitted={({ ongoing, grupaNaziv }) => {
             if (!downtimeFor) return;
             if (ongoing && grupaNaziv) {
-              beginCardBusy(downtimeFor.monitoringId, "Definisanje zastoja…");
+              beginCardBusy(downtimeFor.monitoringId, t("monitoring.busyDtDefine"));
             } else if (!ongoing) {
-              beginCardBusy(downtimeFor.monitoringId, "Podela zastoja…");
+              beginCardBusy(downtimeFor.monitoringId, t("monitoring.busyDtSplit"));
             } else {
-              beginCardBusy(downtimeFor.monitoringId, "Čuvanje…");
+              beginCardBusy(downtimeFor.monitoringId, t("monitoring.busySaving"));
             }
           }}
         />
@@ -398,7 +405,7 @@ function MonitoringPage() {
             };
             beginCardBusy(
               confirmAct.m.monitoringId,
-              confirmAct.kind === "pause" ? "Pauziranje…" : "Nastavljanje…",
+              confirmAct.kind === "pause" ? t("monitoring.busyPause") : t("monitoring.busyResume"),
             );
             if (confirmAct.kind === "pause") pauseM.mutate(args);
             else resumeM.mutate(args);
@@ -413,7 +420,7 @@ function MonitoringPage() {
           brojNaloga={stopFor.brojNaloga}
           pending={stopM.isPending}
           onConfirm={(payload) => {
-            beginCardBusy(stopFor.monitoringId, "Zatvaranje naloga…");
+            beginCardBusy(stopFor.monitoringId, t("monitoring.busyStop"));
             stopM.mutate({
               data: {
                 radniNalogId: stopFor.radniNalogId ?? "",
@@ -433,7 +440,7 @@ function MonitoringPage() {
           onOpenChange={(v) => !v && setScrapFor(null)}
           pending={scrapM.isPending}
           onConfirm={(payload) => {
-            beginCardBusy(scrapFor.monitoringId, "Upis škarta…");
+            beginCardBusy(scrapFor.monitoringId, t("monitoring.busyScrap"));
             scrapM.mutate({
               data: {
                 radniNalogId: scrapFor.radniNalogId ?? "",
@@ -492,6 +499,8 @@ function MachineRow({
   onInspect: () => void;
   onScrap: () => void;
 }) {
+  const { t } = useTranslation();
+
 
   const fkey = statusToFilter(m.statusMasine);
   const color = statusColorVar[fkey];
@@ -531,52 +540,52 @@ function MachineRow({
         <Button
           variant="outline"
           size="sm"
-          aria-label="Unos škarta"
+          aria-label={t("monitoring.scrapEntry")}
           className="border-[color:var(--color-status-downtime)] text-[color:var(--color-status-downtime)]"
           onClick={onScrap}
         >
-          <PackageMinus className={`size-4 ${ico}`} /> <span className={lbl}>Unos škarta</span>
+          <PackageMinus className={`size-4 ${ico}`} /> <span className={lbl}>{t("monitoring.scrapEntry")}</span>
         </Button>
       )}
       {showInspect && (
-        <Button variant="outline" size="sm" aria-label="Inspekcija" onClick={onInspect}>
-          <ClipboardCheck className={`size-4 ${ico}`} /> <span className={lbl}>Inspekcija</span>
+        <Button variant="outline" size="sm" aria-label={t("monitoring.inspection")} onClick={onInspect}>
+          <ClipboardCheck className={`size-4 ${ico}`} /> <span className={lbl}>{t("monitoring.inspection")}</span>
         </Button>
       )}
       {showDowntime && (
         <Button
           variant="outline"
           size="sm"
-          aria-label="Prijavi zastoj"
+          aria-label={t("monitoring.reportDowntime")}
           className="border-[color:var(--color-status-downtime)] text-[color:var(--color-status-downtime)]"
           onClick={onDowntime}
         >
-          <AlertTriangle className={`size-4 ${ico}`} /> <span className={lbl}>Prijavi zastoj</span>
+          <AlertTriangle className={`size-4 ${ico}`} /> <span className={lbl}>{t("monitoring.reportDowntime")}</span>
         </Button>
       )}
       {showStart && (
-        <Button size="sm" aria-label="Pokreni" onClick={onStart}>
-          <Play className={`size-4 ${ico}`} /> <span className={lbl}>Pokreni</span>
+        <Button size="sm" aria-label={t("monitoring.run")} onClick={onStart}>
+          <Play className={`size-4 ${ico}`} /> <span className={lbl}>{t("monitoring.run")}</span>
         </Button>
       )}
       {showResume && (
-        <Button size="sm" aria-label="Nastavi" onClick={onResume}>
-          <Play className={`size-4 ${ico}`} /> <span className={lbl}>Nastavi</span>
+        <Button size="sm" aria-label={t("monitoring.resume")} onClick={onResume}>
+          <Play className={`size-4 ${ico}`} /> <span className={lbl}>{t("monitoring.resume")}</span>
         </Button>
       )}
       {showPause && (
-        <Button variant="outline" size="sm" aria-label="Pauziraj" onClick={onPause}>
+        <Button variant="outline" size="sm" aria-label={t("monitoring.pause")} onClick={onPause}>
           <Pause className="size-4" />
         </Button>
       )}
       {showStop && (
         <Button
           size="sm"
-          aria-label="STOP"
+          aria-label={t("monitoring.stop")}
           onClick={onStop}
           className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
         >
-          <Square className={`size-4 fill-current ${ico}`} /> <span className={lbl}>STOP</span>
+          <Square className={`size-4 fill-current ${ico}`} /> <span className={lbl}>{t("monitoring.stop")}</span>
         </Button>
       )}
     </>
@@ -590,29 +599,29 @@ function MachineRow({
 
   const stats = !isZastoj ? (
     <>
-      <Stat label="Planiran ciklus" value={m.projektovanCiklusSek != null ? `${fmtSec(m.projektovanCiklusSek)} s` : "—"} />
-      <Stat label="Trenutni ciklus" value={m.trenutniCiklusSek != null ? `${m.trenutniCiklusSek.toLocaleString("sr", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} s` : "—"} />
+      <Stat label={t("monitoring.plannedCycle")} value={m.projektovanCiklusSek != null ? `${fmtSec(m.projektovanCiklusSek)} s` : "—"} />
+      <Stat label={t("monitoring.currentCycle")} value={m.trenutniCiklusSek != null ? `${formatNumber(m.trenutniCiklusSek, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} s` : "—"} />
       <Stat
-        label="Performanse"
+        label={t("monitoring.performance")}
         value={m.performanse != null ? `${(m.performanse * 100).toFixed(1)}%` : "—"}
         valueColor={perfColor(m.performanse)}
       />
-      <Stat label="Preostalo vreme" value={m.procenjenoTrajanje || "—"} />
+      <Stat label={t("monitoring.remainingTime")} value={m.procenjenoTrajanje || "—"} />
     </>
   ) : (
     <>
       <div className="col-span-2 min-w-0">
-        <div className="text-xs text-muted-foreground uppercase">Zastoj</div>
-        <div className="font-semibold truncate">{m.grupaZastoja || "Nedefinisan zastoj"}</div>
+        <div className="text-xs text-muted-foreground uppercase">{t("monitoring.downtime")}</div>
+        <div className="font-semibold truncate">{m.grupaZastoja || t("monitoring.undefinedDowntime")}</div>
         {m.tipZastojaDetail && <div className="text-xs text-muted-foreground truncate">{m.tipZastojaDetail}</div>}
       </div>
-      <Stat label="Trajanje" value={m.trajanjeZastoja || "—"} />
+      <Stat label={t("monitoring.duration")} value={m.trajanjeZastoja || "—"} />
     </>
   );
 
   return (
     <div className="relative rounded-xl border border-border bg-card overflow-hidden border-l-4" style={{ borderLeftColor: color }}>
-      <LoadingOverlay show={!!busy} label={busyLabel ?? "Osvežavanje…"} />
+      <LoadingOverlay show={!!busy} label={busyLabel ?? t("monitoring.busyRefresh")} />
 
       {/* Top row: machine + stats + actions */}
       <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4 px-4 py-2.5">
@@ -645,7 +654,7 @@ function MachineRow({
         <div className="border-t border-border px-4 py-3 space-y-2">
           <div className="grid grid-cols-12 gap-4 items-start">
             <div className="col-span-12 md:col-span-2">
-              <div className="text-xs text-muted-foreground uppercase">Radni nalog</div>
+              <div className="text-xs text-muted-foreground uppercase">{t("monitoring.workOrder")}</div>
               <button
                 onClick={onOpenDetails}
                 className="font-semibold underline underline-offset-2 hover:text-primary text-left"
@@ -661,12 +670,12 @@ function MachineRow({
               {m.narucilac && <div className="text-xs text-muted-foreground truncate">{m.narucilac}</div>}
             </div>
             <div className="col-span-12 md:col-span-3 md:text-right">
-              <div className="text-xs text-muted-foreground uppercase">Aktivni posao</div>
+              <div className="text-xs text-muted-foreground uppercase">{t("monitoring.activeWork")}</div>
               {m.vremeOtvaranjaNaloga && (
-                <div className="text-xs">Počeo: {fmtDateTime(m.vremeOtvaranjaNaloga)}</div>
+                <div className="text-xs">{t("monitoring.started", { when: formatDateTime(m.vremeOtvaranjaNaloga) })}</div>
               )}
               {m.ciklusiTotal != null && (
-                <div className="text-xs">Proizvodnja: {m.ciklusiTotal.toLocaleString("sr")} ciklusa</div>
+                <div className="text-xs">{t("monitoring.production", { count: formatNumber(m.ciklusiTotal) })}</div>
               )}
             </div>
           </div>
@@ -695,22 +704,22 @@ function MachineRow({
           <div>
             <button onClick={onToggle} className="text-primary text-sm inline-flex items-center gap-1 hover:underline">
               {expanded ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
-              {expanded ? "Sakrij detalje" : "Prikaži detalje"}
+              {expanded ? t("monitoring.hideDetails") : t("monitoring.showDetails")}
             </button>
           </div>
 
           {expanded && (
             <div className="grid grid-cols-2 md:grid-cols-6 gap-4 pt-2 border-t border-border">
-              <Stat label="Planirana količina" value={`${(m.planiranaKolicina ?? 0).toLocaleString("sr")} kom`} />
-              <Stat label="Proizvedeno" value={`${goodQty.toLocaleString("sr")} kom`} />
+              <Stat label={t("monitoring.plannedQty")} value={`${formatNumber(m.planiranaKolicina ?? 0)} ${t("monitoring.kom")}`} />
+              <Stat label={t("monitoring.produced")} value={`${formatNumber(goodQty)} ${t("monitoring.kom")}`} />
               <Stat
-                label="Realizacija"
+                label={t("monitoring.realization")}
                 value={`${realizacijaPct.toFixed(1)}%`}
                 valueColor={overproduction ? "var(--color-status-downtime)" : undefined}
               />
-              <Stat label="Škart" value={`${(m.skart ?? 0).toLocaleString("sr")} kom`} valueColor="var(--color-status-nosignal)" />
-              <Stat label="Procenat škarta" value={m.procenatSkarta != null ? `${(m.procenatSkarta * 100).toFixed(1)}%` : "—"} />
-              <Stat label="Preostalo" value={`${(m.preostaloZaProizvodnju ?? 0).toLocaleString("sr")} kom`} />
+              <Stat label={t("monitoring.scrapLabel")} value={`${formatNumber(m.skart ?? 0)} ${t("monitoring.kom")}`} valueColor="var(--color-status-nosignal)" />
+              <Stat label={t("monitoring.scrapPct")} value={m.procenatSkarta != null ? `${(m.procenatSkarta * 100).toFixed(1)}%` : "—"} />
+              <Stat label={t("monitoring.remaining")} value={`${formatNumber(m.preostaloZaProizvodnju ?? 0)} ${t("monitoring.kom")}`} />
             </div>
           )}
         </div>
@@ -718,7 +727,7 @@ function MachineRow({
 
       {!m.brojNaloga && !isZastoj && (
         <div className="border-t border-border px-4 py-3">
-          <div className="text-sm text-muted-foreground italic">Nema aktivnog naloga na ovoj mašini.</div>
+          <div className="text-sm text-muted-foreground italic">{t("monitoring.noActiveOnMachine")}</div>
         </div>
       )}
 
@@ -767,7 +776,7 @@ function RealizationBar({
           className="h-full flex items-center justify-end pr-2 text-white whitespace-nowrap"
           style={{ width: `${goodW}%`, background: goodBg }}
         >
-          {good.toLocaleString("sr")}
+          {good.toLocaleString()}
         </div>
       )}
       {remW > 0 && (
@@ -775,7 +784,7 @@ function RealizationBar({
           className="h-full flex items-center justify-end pr-2 text-muted-foreground whitespace-nowrap"
           style={{ width: `${remW}%` }}
         >
-          {remaining.toLocaleString("sr")}
+          {remaining.toLocaleString()}
         </div>
       )}
       {scrap > 0 && (
@@ -783,7 +792,7 @@ function RealizationBar({
           className="absolute left-0 top-0 h-full flex items-center justify-start pl-2 text-white whitespace-nowrap pointer-events-none"
           style={{ width: `${scrapW}%`, minWidth: "fit-content", background: "#F59E0B" }}
         >
-          {scrap.toLocaleString("sr")} ({pctTxt})
+          {scrap.toLocaleString()} ({pctTxt})
         </div>
       )}
     </div>

@@ -14,6 +14,7 @@ import { Clipboard, Boxes, ShieldAlert, Clock, AlertTriangle } from "lucide-reac
 import WorkOrderDetailsDialog from "@/components/work-order/WorkOrderDetailsDialog";
 import type { MachineDashboardRow } from "@/lib/api/dashboard.functions";
 import { useAuth } from "@/context/AuthContext";
+import { formatDateTime } from "@/lib/i18n/format";
 
 export const Route = createFileRoute("/_auth/istorija")({
   head: () => ({ meta: [{ title: "Istorija — MES Shop Floor" }] }),
@@ -34,10 +35,7 @@ function fromDateInput(s: string, end = false): string {
 }
 function fmtDateTime(s?: string): string {
   if (!s) return "—";
-  try {
-    const d = new Date(s);
-    return `${d.toLocaleDateString("sr-RS")} ${d.toLocaleTimeString("sr-RS", { hour: "2-digit", minute: "2-digit" })}`;
-  } catch { return s; }
+  return formatDateTime(s);
 }
 function fmtDuration(min: number): string {
   if (!min) return "0min";
@@ -95,10 +93,11 @@ function qualityBadge(s?: string, kind: "general" | "ok" = "general") {
 }
 
 function ColSearch({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const { t } = useTranslation();
   return (
     <input
       type="text"
-      placeholder="Pretraži…"
+      placeholder={t("istorija.searchPh")}
       value={value}
       onChange={(e) => onChange(e.target.value)}
       className="w-full h-8 px-2 text-xs rounded border border-input bg-background"
@@ -217,9 +216,9 @@ function IstorijaPage() {
           </label>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <Button size="sm" variant="outline" onClick={() => { const td = new Date(); setFrom(toDateInput(td)); setTo(toDateInput(td)); }}>{t("istorija.preset.today", { defaultValue: "Danas" })}</Button>
-          <Button size="sm" variant="outline" onClick={() => setPreset(7)}>{t("istorija.preset.7d", { defaultValue: "7 dana" })}</Button>
-          <Button size="sm" variant="outline" onClick={() => setPreset(30)}>{t("istorija.preset.30d", { defaultValue: "30 dana" })}</Button>
+          <Button size="sm" variant="outline" onClick={() => { const td = new Date(); setFrom(toDateInput(td)); setTo(toDateInput(td)); }}>{t("istorija.preset.today")}</Button>
+          <Button size="sm" variant="outline" onClick={() => setPreset(7)}>{t("istorija.preset.7d")}</Button>
+          <Button size="sm" variant="outline" onClick={() => setPreset(30)}>{t("istorija.preset.30d")}</Button>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <Select value={resursId || "__all"} onValueChange={(v) => setResursId(v === "__all" ? "" : v)}>
@@ -232,14 +231,14 @@ function IstorijaPage() {
             </SelectContent>
           </Select>
           <Select value={status || "__all"} onValueChange={(v) => setStatus(v === "__all" ? "" : v)}>
-            <SelectTrigger><SelectValue placeholder="Svi statusi" /></SelectTrigger>
+            <SelectTrigger><SelectValue placeholder={t("istorija.allStatuses")} /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="__all">Svi statusi</SelectItem>
-              <SelectItem value="U toku">U toku</SelectItem>
-              <SelectItem value="Pauziran">Pauziran</SelectItem>
-              <SelectItem value="Potvrđen">Potvrđen</SelectItem>
-              <SelectItem value="Završen">Završen</SelectItem>
-              <SelectItem value="Arhiviran">Arhiviran</SelectItem>
+              <SelectItem value="__all">{t("istorija.allStatuses")}</SelectItem>
+              <SelectItem value="U toku">{t("istorija.statusUToku")}</SelectItem>
+              <SelectItem value="Pauziran">{t("istorija.statusPauziran")}</SelectItem>
+              <SelectItem value="Potvrđen">{t("istorija.statusPotvrdjen")}</SelectItem>
+              <SelectItem value="Završen">{t("istorija.statusZavrsen")}</SelectItem>
+              <SelectItem value="Arhiviran">{t("istorija.statusArhiviran")}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -254,10 +253,10 @@ function IstorijaPage() {
           </>
         ) : (
           <>
-            <KpiCard icon={<Clipboard className="size-5" />} label="Radni nalozi" value={String(data?.kpis.radniNalozi ?? 0)} tone="primary" />
-            <KpiCard icon={<Boxes className="size-5" />} label="Ukupno proiz." value={`${data?.kpis.ukupnoProiz ?? 0} kom`} tone="success" />
-            <KpiCard icon={<ShieldAlert className="size-5" />} label="Ukupno škarta" value={`${data?.kpis.ukupnoSkart ?? 0} kom`} tone="warning" />
-            <KpiCard icon={<Clock className="size-5" />} label="Zastoji ukupno" value={fmtDuration(data?.kpis.zastojiTotalMin ?? 0)} sub={`${data?.kpis.zastojiCount ?? 0} događaja`} tone="danger" />
+            <KpiCard icon={<Clipboard className="size-5" />} label={t("istorija.kpi.radniNalozi")} value={String(data?.kpis.radniNalozi ?? 0)} tone="primary" />
+            <KpiCard icon={<Boxes className="size-5" />} label={t("istorija.kpi.ukupnoProiz")} value={`${data?.kpis.ukupnoProiz ?? 0} ${t("istorija.kpi.kom")}`} tone="success" />
+            <KpiCard icon={<ShieldAlert className="size-5" />} label={t("istorija.kpi.ukupnoSkart")} value={`${data?.kpis.ukupnoSkart ?? 0} ${t("istorija.kpi.kom")}`} tone="warning" />
+            <KpiCard icon={<Clock className="size-5" />} label={t("istorija.kpi.zastoji")} value={fmtDuration(data?.kpis.zastojiTotalMin ?? 0)} sub={t("istorija.kpi.events", { count: data?.kpis.zastojiCount ?? 0 })} tone="danger" />
           </>
         )}
       </div>
@@ -265,7 +264,7 @@ function IstorijaPage() {
 
       {error && (
         <div className="rounded-lg border border-destructive/50 bg-destructive/10 text-destructive px-3 py-2 text-sm mb-3">
-          Greška pri učitavanju istorije: {(error as Error).message}
+          {t("istorija.loadError", { msg: (error as Error).message })}
         </div>
       )}
 
@@ -287,7 +286,7 @@ function IstorijaPage() {
 
         {data?.truncated[tab === "rn" ? "radniNalozi" : tab === "inspekcija" ? "inspekcije" : tab] && (
           <div className="flex items-center gap-2 px-3 py-2 text-xs text-amber-700 bg-amber-50 border-b border-amber-200">
-            <AlertTriangle className="size-3.5" /> Prikazano je prvih 100 zapisa. Suzite opseg datuma ili filtere.
+            <AlertTriangle className="size-3.5" /> {t("istorija.truncated")}
           </div>
         )}
 
@@ -323,9 +322,10 @@ function Th({ children, className = "" }: { children?: React.ReactNode; classNam
 function Td({ children, className = "" }: { children?: React.ReactNode; className?: string }) {
   return <td className={`px-3 py-2.5 align-middle ${className}`}>{children}</td>;
 }
-function EmptyRow({ cols, text = "Nema podataka" }: { cols: number; text?: string }) {
+function EmptyRow({ cols, text }: { cols: number; text?: string }) {
+  const { t } = useTranslation();
   return (
-    <tr><td colSpan={cols} className="px-3 py-10 text-center text-muted-foreground">{text}</td></tr>
+    <tr><td colSpan={cols} className="px-3 py-10 text-center text-muted-foreground">{text ?? t("istorija.noData")}</td></tr>
   );
 }
 
@@ -364,15 +364,16 @@ function RnTable({
   isLoading: boolean;
   onOpen: (r: any) => void;
 } & TableSearchProps) {
+  const { t } = useTranslation();
   const s = { tab, colSearch, setColSearch };
   return (
     <TableShell>
       <thead className="bg-muted/30">
         <tr>
-          <Th>Datum</Th><Th>Radni nalog</Th><Th>Mašina</Th><Th>Artikal</Th><Th>Narucilac</Th>
-          <Th className="text-right">Plan</Th><Th className="text-right">Proizv.</Th><Th className="text-right">Škart</Th>
-          <Th className="text-right">Realiz.</Th><Th className="text-right">Perf.</Th>
-          <Th>Trajanje</Th><Th>Status</Th>
+          <Th>{t("istorija.cols.date")}</Th><Th>{t("istorija.cols.rn")}</Th><Th>{t("istorija.cols.machine")}</Th><Th>{t("istorija.cols.artikal")}</Th><Th>{t("istorija.cols.narucilac")}</Th>
+          <Th className="text-right">{t("istorija.cols.plan")}</Th><Th className="text-right">{t("istorija.cols.produced")}</Th><Th className="text-right">{t("istorija.cols.scrap")}</Th>
+          <Th className="text-right">{t("istorija.cols.realization")}</Th><Th className="text-right">{t("istorija.cols.performance")}</Th>
+          <Th>{t("istorija.cols.duration")}</Th><Th>{t("istorija.cols.status")}</Th>
         </tr>
         <tr>
           <Td></Td>
@@ -420,13 +421,14 @@ function ZastojiTable({
   rows: any[];
   isLoading: boolean;
 } & TableSearchProps) {
+  const { t } = useTranslation();
   const s = { tab, colSearch, setColSearch };
   return (
     <TableShell>
       <thead className="bg-muted/30">
         <tr>
-          <Th>ID zapisa</Th><Th>Mašina</Th><Th>Start</Th><Th>Kraj</Th>
-          <Th>Grupa</Th><Th>Tip</Th><Th className="text-right">Trajanje</Th><Th>Radni nalog</Th><Th>Komentar</Th>
+          <Th>{t("istorija.cols.idZapisa")}</Th><Th>{t("istorija.cols.machine")}</Th><Th>{t("istorija.cols.start")}</Th><Th>{t("istorija.cols.end")}</Th>
+          <Th>{t("istorija.cols.group")}</Th><Th>{t("istorija.cols.type")}</Th><Th className="text-right">{t("istorija.cols.duration")}</Th><Th>{t("istorija.cols.rn")}</Th><Th>{t("istorija.cols.comment")}</Th>
         </tr>
         <tr>
           <Td><ColSearchCell field="idZapisa" {...s} /></Td>
@@ -470,13 +472,14 @@ function SkartTable({
   rows: any[];
   isLoading: boolean;
 } & TableSearchProps) {
+  const { t } = useTranslation();
   const s = { tab, colSearch, setColSearch };
   return (
     <TableShell>
       <thead className="bg-muted/30">
         <tr>
-          <Th>Datum i vreme</Th><Th>Radni nalog</Th><Th>Mašina</Th><Th>Artikal</Th><Th>Kategorija</Th>
-          <Th className="text-right">Količina</Th><Th>Operater</Th>
+          <Th>{t("istorija.cols.dateTime")}</Th><Th>{t("istorija.cols.rn")}</Th><Th>{t("istorija.cols.machine")}</Th><Th>{t("istorija.cols.artikal")}</Th><Th>{t("istorija.cols.category")}</Th>
+          <Th className="text-right">{t("istorija.cols.qty")}</Th><Th>{t("istorija.cols.operator")}</Th>
         </tr>
         <tr>
           <Td></Td>
@@ -517,14 +520,15 @@ function InspekcijaTable({
   rows: any[];
   isLoading: boolean;
 } & TableSearchProps) {
+  const { t } = useTranslation();
   const s = { tab, colSearch, setColSearch };
   return (
     <TableShell>
       <thead className="bg-muted/30">
         <tr>
-          <Th>Datum i vreme</Th><Th>Radni nalog</Th><Th>Mašina</Th>
-          <Th>Vizuelno</Th><Th>Funkcionalno</Th><Th>Int. kvalitet</Th><Th>Ocena</Th>
-          <Th>Komentar</Th><Th>Kreirao</Th>
+          <Th>{t("istorija.cols.dateTime")}</Th><Th>{t("istorija.cols.rn")}</Th><Th>{t("istorija.cols.machine")}</Th>
+          <Th>{t("istorija.cols.vizuelno")}</Th><Th>{t("istorija.cols.funkcionalno")}</Th><Th>{t("istorija.cols.integralni")}</Th><Th>{t("istorija.cols.ocena")}</Th>
+          <Th>{t("istorija.cols.comment")}</Th><Th>{t("istorija.cols.creator")}</Th>
         </tr>
         <tr>
           <Td></Td>

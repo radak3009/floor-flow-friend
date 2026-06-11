@@ -13,6 +13,7 @@ import { useAuth } from "@/context/AuthContext";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 
 export const Route = createFileRoute("/_auth/podesavanja/role")({
   component: RoleIDozvolePage,
@@ -22,50 +23,51 @@ const norm = (s?: string | null) => (s ?? "").trim().toLowerCase();
 
 const SECTIONS: { title: string; fields: { key: PermissionField; label: string }[] }[] = [
   {
-    title: "Pregled mašina",
+    title: "view",
     fields: [
-      { key: "viewAssignedMachines", label: "Pregled dodeljenih mašina" },
-      { key: "viewAllFactoryMachines", label: "Pregled svih mašina u fabrici" },
+      { key: "viewAssignedMachines", label: "viewAssignedMachines" },
+      { key: "viewAllFactoryMachines", label: "viewAllFactoryMachines" },
     ],
   },
   {
-    title: "Radni nalozi",
+    title: "wo",
     fields: [
-      { key: "startWorkOrder", label: "Pokretanje naloga" },
-      { key: "pauseWorkOrder", label: "Pauziranje naloga" },
-      { key: "resumeWorkOrder", label: "Nastavak naloga" },
-      { key: "stopWorkOrder", label: "Zatvaranje naloga" },
-      { key: "resetStart", label: "Pomeri start" },
+      { key: "startWorkOrder", label: "startWorkOrder" },
+      { key: "pauseWorkOrder", label: "pauseWorkOrder" },
+      { key: "resumeWorkOrder", label: "resumeWorkOrder" },
+      { key: "stopWorkOrder", label: "stopWorkOrder" },
+      { key: "resetStart", label: "resetStart" },
     ],
   },
   {
-    title: "Evidentiranje",
+    title: "logging",
     fields: [
-      { key: "logScrap", label: "Unos škarta" },
-      { key: "deleteScrap", label: "Brisanje škarta" },
-      { key: "logDowntime", label: "Prijava zastoja" },
-      { key: "confirmBatch", label: "Potvrda serije" },
-      { key: "performInspection", label: "Inspekcija" },
-      { key: "viewHistory", label: "Pregled istorije" },
+      { key: "logScrap", label: "logScrap" },
+      { key: "deleteScrap", label: "deleteScrap" },
+      { key: "logDowntime", label: "logDowntime" },
+      { key: "confirmBatch", label: "confirmBatch" },
+      { key: "performInspection", label: "performInspection" },
+      { key: "viewHistory", label: "viewHistory" },
     ],
   },
   {
-    title: "Administracija",
+    title: "admin",
     fields: [
-      { key: "viewReports", label: "Pregled izveštaja" },
-      { key: "manageUsers", label: "Upravljanje korisnicima" },
-      { key: "manageSettings", label: "Sistemska podešavanja" },
-      { key: "manageReasonCodes", label: "Upravljanje šifrarnicima" },
-      { key: "manageFactoryScope", label: "Podešavanja fabrike" },
+      { key: "viewReports", label: "viewReports" },
+      { key: "manageUsers", label: "manageUsers" },
+      { key: "manageSettings", label: "manageSettings" },
+      { key: "manageReasonCodes", label: "manageReasonCodes" },
+      { key: "manageFactoryScope", label: "manageFactoryScope" },
     ],
   },
   {
-    title: "Komunikacija",
-    fields: [{ key: "canComment", label: "Komentari" }],
+    title: "comm",
+    fields: [{ key: "canComment", label: "canComment" }],
   },
 ];
 
 function RoleIDozvolePage() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const callerRole = norm(user?.roleName);
   const isSuper = callerRole === "super admin";
@@ -114,9 +116,9 @@ function RoleIDozvolePage() {
     },
     onError: (e: any, _v, ctx) => {
       if (ctx?.prev) qc.setQueryData(["settings", "rolePermissions"], ctx.prev);
-      toast.error(e?.message || "Greška pri izmeni permisije");
+      toast.error(e?.message || t("settings.roles.permError"));
     },
-    onSuccess: () => toast.success("Permisija ažurirana"),
+    onSuccess: () => toast.success(t("settings.roles.permUpdated")),
     onSettled: () => qc.invalidateQueries({ queryKey: ["settings", "rolePermissions"] }),
   });
 
@@ -124,9 +126,9 @@ function RoleIDozvolePage() {
     <div className="p-4 md:p-6 max-w-4xl mx-auto">
       <div className="flex items-center gap-3 mb-6">
         <Link to="/podesavanja" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
-          <ArrowLeft className="size-4" /> Nazad
+          <ArrowLeft className="size-4" /> {t("settings.roles.back")}
         </Link>
-        <h1 className="text-xl font-semibold uppercase tracking-wide">Role i dozvole</h1>
+        <h1 className="text-xl font-semibold uppercase tracking-wide">{t("settings.roles.title")}</h1>
       </div>
 
       {q.isLoading ? (
@@ -147,7 +149,7 @@ function RoleIDozvolePage() {
             </button>
           ))}
           {!visibleRoles.length && (
-            <div className="text-sm text-muted-foreground">Nema rola za prikaz.</div>
+            <div className="text-sm text-muted-foreground">{t("settings.roles.noRoles")}</div>
           )}
         </div>
       )}
@@ -158,12 +160,12 @@ function RoleIDozvolePage() {
           {SECTIONS.map((section) => (
             <div key={section.title} className="rounded-xl border border-border bg-card overflow-hidden">
               <div className="px-4 py-2 text-xs uppercase tracking-wider text-muted-foreground bg-muted/40 border-b border-border">
-                {section.title}
+                {t(`settings.roles.sections.${section.title}`)}
               </div>
               <div className="divide-y divide-border">
                 {section.fields.map((f) => (
                   <div key={f.key} className="flex items-center justify-between px-4 py-3">
-                    <div className="text-sm">{f.label}</div>
+                    <div className="text-sm">{t(`settings.roles.fields.${f.label}`)}</div>
                     <Switch
                       checked={active.permissions[f.key]}
                       disabled={mut.isPending}

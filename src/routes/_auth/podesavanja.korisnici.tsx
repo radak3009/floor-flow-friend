@@ -12,6 +12,7 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 
 const searchSchema = z.object({
   page: fallback(z.number().int().min(1), 1).default(1),
@@ -35,6 +36,7 @@ function initials(name: string): string {
 }
 
 function KorisniciPage() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const callerRole = norm(user?.roleName);
   const isSuper = callerRole === "super admin";
@@ -102,29 +104,29 @@ function KorisniciPage() {
     mutationFn: async (vars: { userId: string; roleId: string }) =>
       updateRole({ data: { userId: vars.userId, roleId: vars.roleId, currentUserId: user!.id } }),
     onSuccess: () => {
-      toast.success("Uloga ažurirana");
+      toast.success(t("settings.users.roleUpdated"));
       qc.invalidateQueries({ queryKey: ["settings", "users"] });
     },
-    onError: (e: any) => toast.error(e?.message || "Greška pri ažuriranju uloge"),
+    onError: (e: any) => toast.error(e?.message || t("settings.users.roleError")),
   });
 
   const activeMut = useMutation({
     mutationFn: async (vars: { userId: string; aktivan: boolean }) =>
       toggleActive({ data: { userId: vars.userId, aktivan: vars.aktivan, currentUserId: user!.id } }),
     onSuccess: () => {
-      toast.success("Status korisnika ažuriran");
+      toast.success(t("settings.users.statusUpdated"));
       qc.invalidateQueries({ queryKey: ["settings", "users"] });
     },
-    onError: (e: any) => toast.error(e?.message || "Greška pri promeni statusa"),
+    onError: (e: any) => toast.error(e?.message || t("settings.users.statusError")),
   });
 
   return (
     <div className="p-4 md:p-6 max-w-4xl mx-auto">
       <div className="flex items-center gap-3 mb-4">
         <Link to="/podesavanja" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
-          <ArrowLeft className="size-4" /> Nazad
+          <ArrowLeft className="size-4" /> {t("settings.users.back")}
         </Link>
-        <h1 className="text-xl font-semibold uppercase tracking-wide">Korisnici</h1>
+        <h1 className="text-xl font-semibold uppercase tracking-wide">{t("settings.users.title")}</h1>
       </div>
 
 
@@ -136,12 +138,12 @@ function KorisniciPage() {
             setSearch(e.target.value);
             navigate({ search: (prev: { page?: number; pageSize?: number }) => ({ ...prev, page: 1 }) });
           }}
-          placeholder="Pretraži po imenu ili ID-u…"
+          placeholder={t("settings.users.searchPh")}
           className="pl-9 h-11"
         />
       </div>
       <div className="text-sm text-muted-foreground mb-4">
-        {usersQ.isLoading ? "…" : `${totalCount} korisnika`}
+        {usersQ.isLoading ? "…" : t("settings.users.count", { count: totalCount })}
       </div>
 
       <div className="space-y-3">
@@ -154,7 +156,7 @@ function KorisniciPage() {
         )}
         {!usersQ.isLoading && paginated.length === 0 && (
           <div className="rounded-lg border border-dashed border-border p-8 text-center text-muted-foreground">
-            Nema korisnika
+            {t("settings.users.none")}
           </div>
         )}
         {paginated.map((u) => {
@@ -206,7 +208,7 @@ function KorisniciPage() {
                     u.aktivan ? "bg-primary/15 text-primary" : "bg-muted text-muted-foreground"
                   }`}
                 >
-                  {u.aktivan ? "Aktivan" : "Neaktivan"}
+                  {u.aktivan ? t("settings.users.active") : t("settings.users.inactive")}
                 </span>
               </div>
             </div>
@@ -218,7 +220,7 @@ function KorisniciPage() {
       {!usersQ.isLoading && totalCount > 0 && (
         <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <span>Prikaži:</span>
+            <span>{t("settings.users.perPage")}</span>
             <Select value={String(pageSize)} onValueChange={(v) => setPageSize(Number(v))}>
               <SelectTrigger className="h-8 w-20">
                 <SelectValue />
@@ -232,7 +234,7 @@ function KorisniciPage() {
               </SelectContent>
             </Select>
             <span>
-              {startIndex + 1}–{Math.min(startIndex + pageSize, totalCount)} od {totalCount}
+              {t("settings.users.range", { from: startIndex + 1, to: Math.min(startIndex + pageSize, totalCount), total: totalCount })}
             </span>
           </div>
 
