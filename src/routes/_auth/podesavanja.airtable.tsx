@@ -28,7 +28,7 @@ function isSuperAdminUser(roleName: string | undefined): boolean {
 }
 
 function AirtableSettings() {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const { user } = useAuth();
   const qc = useQueryClient();
   const getStatus = useServerFn(getAirtableConfigStatusFn);
@@ -151,7 +151,7 @@ function AirtableSettings() {
                 </div>
                 {s.updatedAt && (
                   <div className="text-xs text-muted-foreground">
-                    {t("settings.airtable.updatedAt", { when: formatDateTime(s.updatedAt, i18n.language) })}
+                    {t("settings.airtable.updatedAt", { when: formatDateTime(s.updatedAt) })}
                   </div>
                 )}
               </div>
