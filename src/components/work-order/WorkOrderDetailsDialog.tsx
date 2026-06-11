@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
+import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -24,27 +25,16 @@ import type { MachineDashboardRow } from "@/lib/api/dashboard.functions";
 import CommentThread from "@/components/comments/CommentThread";
 import ScrapDeleteButton from "@/components/work-order/ScrapDeleteButton";
 import { useAuth } from "@/context/AuthContext";
+import { formatDate, formatDateTime, formatNumber } from "@/lib/i18n/format";
 
 
-function fmtDate(s?: string): string | undefined {
-  if (!s) return undefined;
-  try { return new Date(s).toLocaleDateString("sr-RS"); } catch { return s; }
-}
-function fmtDateTime(s?: string): string {
-  if (!s) return "";
-  try {
-    const d = new Date(s);
-    return `${d.toLocaleDateString("sr-RS")} ${d.toLocaleTimeString("sr-RS", { hour: "2-digit", minute: "2-digit" })}`;
-  } catch { return s; }
-}
 function fmtDateTimeParts(s?: string): { date: string; time: string } {
   if (!s) return { date: "", time: "" };
   try {
     const d = new Date(s);
-    return {
-      date: d.toLocaleDateString("sr-RS"),
-      time: d.toLocaleTimeString("sr-RS", { hour: "2-digit", minute: "2-digit" }),
-    };
+    const dt = formatDateTime(d);
+    const [date, ...rest] = dt.split(" ");
+    return { date, time: rest.join(" ") };
   } catch { return { date: s, time: "" }; }
 }
 
@@ -107,29 +97,30 @@ function PromeneList({ items, canDelete, userId, radniNalogId }: { items: Promen
 
 
 function InspekcijaList({ items }: { items: InspekcijaRow[] }) {
+  const { t } = useTranslation();
   return (
     <ul className="divide-y divide-border rounded-lg border border-border">
       {items.map((it) => (
         <li key={it.id} className="px-3 py-2.5 text-sm space-y-1">
           <div className="grid grid-cols-[1fr_auto] gap-3 items-start">
             <span className="font-medium min-w-0 break-words">
-              Komad #{it.brojIspitanogKomada ?? "—"}
+              {t("workOrder.details.piece", { n: it.brojIspitanogKomada ?? "—" })}
               {it.ukupnaOcena && <span className="ml-2 text-xs text-muted-foreground">({it.ukupnaOcena})</span>}
             </span>
-            <span className="text-xs text-muted-foreground shrink-0 whitespace-pre-line text-right">{fmtDateTime(it.createdAt)}</span>
+            <span className="text-xs text-muted-foreground shrink-0 whitespace-pre-line text-right">{formatDateTime(it.createdAt)}</span>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
-            {it.vizuelno && <div>Vizuelno: <span className="text-foreground">{it.vizuelno}</span></div>}
-            {it.funkcionalno && <div>Funkcionalno: <span className="text-foreground">{it.funkcionalno}</span></div>}
-            {it.integralniKvalitet && <div>Integralni: <span className="text-foreground">{it.integralniKvalitet}</span></div>}
-            {it.odstupanjeOdInstrukcija && <div>Odstupanje: <span className="text-foreground">{it.odstupanjeOdInstrukcija}</span></div>}
-            {it.masaKomadaG != null && <div>Masa (g): <span className="text-foreground">{it.masaKomadaG.toLocaleString("sr", { maximumFractionDigits: 3 })}</span></div>}
-            {it.masaUlivkaKg != null && <div>Masa ulivka (kg): <span className="text-foreground">{it.masaUlivkaKg.toLocaleString("sr", { maximumFractionDigits: 3 })}</span></div>}
-            {it.materijal?.length ? <div>Materijal: <span className="text-foreground">{it.materijal.join(", ")}</span></div> : null}
-            {it.kolicinaNeusaglasenih != null && <div>Neusaglašeno: <span className="text-foreground">{it.kolicinaNeusaglasenih}</span></div>}
+            {it.vizuelno && <div>{t("workOrder.details.vizuelno")}: <span className="text-foreground">{it.vizuelno}</span></div>}
+            {it.funkcionalno && <div>{t("workOrder.details.funkcionalno")}: <span className="text-foreground">{it.funkcionalno}</span></div>}
+            {it.integralniKvalitet && <div>{t("workOrder.details.integralni")}: <span className="text-foreground">{it.integralniKvalitet}</span></div>}
+            {it.odstupanjeOdInstrukcija && <div>{t("workOrder.details.odstupanje")}: <span className="text-foreground">{it.odstupanjeOdInstrukcija}</span></div>}
+            {it.masaKomadaG != null && <div>{t("workOrder.details.masaGShort")}: <span className="text-foreground">{formatNumber(it.masaKomadaG, { maximumFractionDigits: 3 })}</span></div>}
+            {it.masaUlivkaKg != null && <div>{t("workOrder.details.masaUlivka")}: <span className="text-foreground">{formatNumber(it.masaUlivkaKg, { maximumFractionDigits: 3 })}</span></div>}
+            {it.materijal?.length ? <div>{t("workOrder.details.materijal")}: <span className="text-foreground">{it.materijal.join(", ")}</span></div> : null}
+            {it.kolicinaNeusaglasenih != null && <div>{t("workOrder.details.neusagl")}: <span className="text-foreground">{it.kolicinaNeusaglasenih}</span></div>}
           </div>
-          {it.uzrokOdstupanja && <div className="text-xs"><span className="text-muted-foreground">Uzrok: </span>{it.uzrokOdstupanja}</div>}
-          {it.komentar && <div className="text-xs"><span className="text-muted-foreground">Komentar: </span>{it.komentar}</div>}
+          {it.uzrokOdstupanja && <div className="text-xs"><span className="text-muted-foreground">{t("workOrder.details.uzrok")} </span>{it.uzrokOdstupanja}</div>}
+          {it.komentar && <div className="text-xs"><span className="text-muted-foreground">{t("workOrder.details.komentar")} </span>{it.komentar}</div>}
           {it.operator && <div className="text-xs text-muted-foreground break-words">{it.operator}</div>}
         </li>
       ))}
@@ -140,6 +131,7 @@ function InspekcijaList({ items }: { items: InspekcijaRow[] }) {
 type WoTab = "skart" | "inspekcija" | "promene" | "chat";
 
 export function WorkOrderDetailsContent({ m, defaultTab = "skart" }: { m: MachineDashboardRow; defaultTab?: WoTab }) {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const callHistory = useServerFn(getWorkOrderHistoryFn);
   const callInspections = useServerFn(getInspectionsForWorkOrderFn);
@@ -183,10 +175,10 @@ export function WorkOrderDetailsContent({ m, defaultTab = "skart" }: { m: Machin
     },
     onError: (e: any, _vars, ctx) => {
       rollback(qc, ctx?.snap ?? null);
-      toast.error(e?.message || "Greška pri pomeranju starta");
+      toast.error(e?.message || t("dialogs.pomeriStart.error"));
     },
     onSuccess: () => {
-      toast.success("Start pomeren");
+      toast.success(t("dialogs.pomeriStart.success"));
       setPomeriOpen(false);
       setMovingFrom(m.vremeOtvaranjaNaloga ?? "");
     },
@@ -194,7 +186,6 @@ export function WorkOrderDetailsContent({ m, defaultTab = "skart" }: { m: Machin
       invalidateAfterAction(qc, { monitoringId: m.monitoringId, radniNalogId: m.radniNalogId });
     },
   });
-  // Clear "moving" indicator once Airtable reports a new value different from the previous one.
   useEffect(() => {
     if (movingFrom === null) return;
     if (m.vremeOtvaranjaNaloga && m.vremeOtvaranjaNaloga !== movingFrom) {
@@ -207,24 +198,24 @@ export function WorkOrderDetailsContent({ m, defaultTab = "skart" }: { m: Machin
   return (
     <div className="space-y-4">
       <div className="divide-y divide-border rounded-lg border border-border">
-        <DetailRow label="Radni nalog" value={m.brojNaloga} />
-        <DetailRow label="Mašina / Linija" value={m.nazivLinije} />
-        <DetailRow label="Alat" value={m.alat} tooltip />
-        <DetailRow label="Artikal" value={m.artikalNaziv} tooltip />
-        <DetailRow label="Naručilac" value={m.narucilac} tooltip />
-        <DetailRow label="Šifra artikla" value={m.sifraArtikla} />
-        <DetailRow label="Planiran start" value={fmtDate(m.planiranStart)} />
-        <DetailRow label="Planiran kraj" value={fmtDate(m.planiranKraj)} />
+        <DetailRow label={t("workOrder.details.rn")} value={m.brojNaloga} />
+        <DetailRow label={t("workOrder.details.machine")} value={m.nazivLinije} />
+        <DetailRow label={t("workOrder.details.alat")} value={m.alat} tooltip />
+        <DetailRow label={t("workOrder.details.artikal")} value={m.artikalNaziv} tooltip />
+        <DetailRow label={t("workOrder.details.narucilac")} value={m.narucilac} tooltip />
+        <DetailRow label={t("workOrder.details.sifra")} value={m.sifraArtikla} />
+        <DetailRow label={t("workOrder.details.planStart")} value={m.planiranStart ? formatDate(m.planiranStart) : undefined} />
+        <DetailRow label={t("workOrder.details.planEnd")} value={m.planiranKraj ? formatDate(m.planiranKraj) : undefined} />
         <div className="flex items-center justify-between gap-3 px-3 py-2.5 text-sm">
           <div className="text-muted-foreground flex items-center gap-2">
-            <span>Počeo</span>
+            <span>{t("workOrder.details.started")}</span>
             {canResetStart && (
               <AsyncButton
                 size="sm"
                 pending={pomeriMut.isPending}
                 onClick={() => setPomeriOpen(true)}
               >
-                Pomeri start
+                {t("dialogs.pomeriStart.btn")}
               </AsyncButton>
             )}
           </div>
@@ -232,35 +223,35 @@ export function WorkOrderDetailsContent({ m, defaultTab = "skart" }: { m: Machin
             {isMoving ? (
               <span className="inline-flex items-center gap-1.5 text-muted-foreground italic">
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                Premešta se…
+                {t("dialogs.pomeriStart.moving")}
               </span>
             ) : (
-              m.vremeOtvaranjaNaloga ? fmtDateTime(m.vremeOtvaranjaNaloga) : "—"
+              m.vremeOtvaranjaNaloga ? formatDateTime(m.vremeOtvaranjaNaloga) : "—"
             )}
           </div>
         </div>
-        <DetailRow label="Planirana količina" value={m.planiranaKolicina != null ? m.planiranaKolicina.toLocaleString("sr") : undefined} />
-        <DetailRow label="Proizvedeno" value={(m.dobroProizvedeno ?? m.ispravnoProizvedeno) != null ? (m.dobroProizvedeno ?? m.ispravnoProizvedeno ?? 0).toLocaleString("sr") : undefined} />
-        <DetailRow label="Škart" value={m.skart != null ? m.skart.toLocaleString("sr") : undefined} />
-        <DetailRow label="Gnezda (kaviteta)" value={m.brojKaviteta != null ? String(m.brojKaviteta) : undefined} />
-        <DetailRow label="Masa/kom (g)" value={m.masaKomadaG != null ? m.masaKomadaG.toLocaleString("sr", { maximumFractionDigits: 3 }) : undefined} />
+        <DetailRow label={t("workOrder.details.plannedQty")} value={m.planiranaKolicina != null ? formatNumber(m.planiranaKolicina) : undefined} />
+        <DetailRow label={t("workOrder.details.produced")} value={(m.dobroProizvedeno ?? m.ispravnoProizvedeno) != null ? formatNumber(m.dobroProizvedeno ?? m.ispravnoProizvedeno ?? 0) : undefined} />
+        <DetailRow label={t("workOrder.details.scrap")} value={m.skart != null ? formatNumber(m.skart) : undefined} />
+        <DetailRow label={t("workOrder.details.kavitet")} value={m.brojKaviteta != null ? String(m.brojKaviteta) : undefined} />
+        <DetailRow label={t("workOrder.details.masaG")} value={m.masaKomadaG != null ? formatNumber(m.masaKomadaG, { maximumFractionDigits: 3 }) : undefined} />
       </div>
 
       <AlertDialog open={pomeriOpen} onOpenChange={setPomeriOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Pomeri start naloga</AlertDialogTitle>
+            <AlertDialogTitle>{t("dialogs.pomeriStart.title")}</AlertDialogTitle>
             <AlertDialogDescription>
-              Ova akcija postaviće početak naloga iza poslednjeg zatvorenog posla!
+              {t("dialogs.pomeriStart.desc")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={pomeriMut.isPending}>Otkaži</AlertDialogCancel>
+            <AlertDialogCancel disabled={pomeriMut.isPending}>{t("common.cancel")}</AlertDialogCancel>
             <AlertDialogAction
               disabled={pomeriMut.isPending}
               onClick={(e) => { e.preventDefault(); pomeriMut.mutate(); }}
             >
-              Potvrdi
+              {t("common.confirm")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -269,35 +260,35 @@ export function WorkOrderDetailsContent({ m, defaultTab = "skart" }: { m: Machin
 
       <Tabs defaultValue={defaultTab}>
         <TabsList className="grid grid-cols-4 w-full">
-          <TabsTrigger value="skart" className="text-[11px] sm:text-sm px-1 sm:px-3"><span className="sm:hidden">Škart ({skartItems.length})</span><span className="hidden sm:inline">Škart ({skartItems.length})</span></TabsTrigger>
-          <TabsTrigger value="inspekcija" className="text-[11px] sm:text-sm px-1 sm:px-3"><span className="sm:hidden">Insp. ({inspekcije.length})</span><span className="hidden sm:inline">Inspekcija ({inspekcije.length})</span></TabsTrigger>
-          <TabsTrigger value="promene" className="text-[11px] sm:text-sm px-1 sm:px-3"><span className="sm:hidden">Prom. ({promene.length})</span><span className="hidden sm:inline">Promene ({promene.length})</span></TabsTrigger>
-          <TabsTrigger value="chat" className="text-[11px] sm:text-sm px-1 sm:px-3">Chat</TabsTrigger>
+          <TabsTrigger value="skart" className="text-[11px] sm:text-sm px-1 sm:px-3"><span className="sm:hidden">{t("workOrder.details.tabs.scrapShort", { count: skartItems.length })}</span><span className="hidden sm:inline">{t("workOrder.details.tabs.scrap", { count: skartItems.length })}</span></TabsTrigger>
+          <TabsTrigger value="inspekcija" className="text-[11px] sm:text-sm px-1 sm:px-3"><span className="sm:hidden">{t("workOrder.details.tabs.inspShort", { count: inspekcije.length })}</span><span className="hidden sm:inline">{t("workOrder.details.tabs.insp", { count: inspekcije.length })}</span></TabsTrigger>
+          <TabsTrigger value="promene" className="text-[11px] sm:text-sm px-1 sm:px-3"><span className="sm:hidden">{t("workOrder.details.tabs.changesShort", { count: promene.length })}</span><span className="hidden sm:inline">{t("workOrder.details.tabs.changes", { count: promene.length })}</span></TabsTrigger>
+          <TabsTrigger value="chat" className="text-[11px] sm:text-sm px-1 sm:px-3">{t("workOrder.details.tabs.chat")}</TabsTrigger>
         </TabsList>
         <TabsContent value="skart">
           {skartItems.length === 0 ? (
-            <div className="p-6 text-center text-sm text-muted-foreground">Nema unosa škarta</div>
+            <div className="p-6 text-center text-sm text-muted-foreground">{t("workOrder.details.noScrap")}</div>
           ) : <PromeneList items={skartItems} canDelete={canDeleteScrap} userId={user?.id} radniNalogId={m.radniNalogId} />}
         </TabsContent>
         <TabsContent value="inspekcija">
           {inspQ.isLoading ? (
-            <div className="p-6 text-center text-sm text-muted-foreground">Učitavanje...</div>
+            <div className="p-6 text-center text-sm text-muted-foreground">{t("common.loadingDots")}</div>
           ) : inspekcije.length === 0 ? (
-            <div className="p-6 text-center text-sm text-muted-foreground">Nema unosa inspekcije</div>
+            <div className="p-6 text-center text-sm text-muted-foreground">{t("workOrder.details.noInspections")}</div>
           ) : <InspekcijaList items={inspekcije} />}
         </TabsContent>
         <TabsContent value="promene">
           {historyQ.isLoading ? (
-            <div className="p-6 text-center text-sm text-muted-foreground">Učitavanje...</div>
+            <div className="p-6 text-center text-sm text-muted-foreground">{t("common.loadingDots")}</div>
           ) : promene.length === 0 ? (
-            <div className="p-6 text-center text-sm text-muted-foreground">Nema promena naloga</div>
+            <div className="p-6 text-center text-sm text-muted-foreground">{t("workOrder.details.noChanges")}</div>
           ) : <PromeneList items={promene} />}
         </TabsContent>
         <TabsContent value="chat">
           {m.radniNalogId ? (
             <CommentThread entityType="work_order" entityId={m.radniNalogId} entityLabel={m.brojNaloga || m.radniNalogId} />
           ) : (
-            <div className="p-6 text-center text-sm text-muted-foreground">Nalog nije aktivan.</div>
+            <div className="p-6 text-center text-sm text-muted-foreground">{t("workOrder.details.noActive")}</div>
           )}
         </TabsContent>
       </Tabs>
@@ -313,15 +304,15 @@ export default function WorkOrderDetailsDialog({
   m: MachineDashboardRow | null;
   defaultTab?: WoTab;
 }) {
+  const { t } = useTranslation();
   return (
     <Sheet open={open && !!m?.brojNaloga} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
         <SheetHeader className="px-0">
-          <SheetTitle className="uppercase tracking-wide text-sm">Detalji o radnom nalogu</SheetTitle>
+          <SheetTitle className="uppercase tracking-wide text-sm">{t("workOrder.details.sheetTitle")}</SheetTitle>
         </SheetHeader>
         {m && <WorkOrderDetailsContent m={m} defaultTab={defaultTab} />}
       </SheetContent>
     </Sheet>
   );
 }
-

@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
+import { useTranslation } from "react-i18next";
+import { Trans } from "react-i18next";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { AsyncButton } from "@/components/ui/async-button";
@@ -45,7 +47,7 @@ function ColoredSelect({ value, onValueChange, options, placeholder, disabled }:
   return (
     <Select value={value} onValueChange={onValueChange} disabled={disabled}>
       <SelectTrigger className="h-11">
-        {value ? <OptionBadge label={value} /> : <span className="text-muted-foreground">{placeholder ?? "Izaberi..."}</span>}
+        {value ? <OptionBadge label={value} /> : <span className="text-muted-foreground">{placeholder ?? "—"}</span>}
       </SelectTrigger>
       <SelectContent>
         {options.map((o) => (<SelectItem key={o} value={o} className="py-1.5"><OptionBadge label={o} /></SelectItem>))}
@@ -69,6 +71,7 @@ interface Props {
 }
 
 export default function InspectionModal({ open, onOpenChange, radniNalogId, userId, brojNaloga, monitoringId, resursId }: Props) {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
 
   const [brojIspitanog, setBrojIspitanog] = useState("");
@@ -127,7 +130,7 @@ export default function InspectionModal({ open, onOpenChange, radniNalogId, user
       );
       return enqueue(
         "logInspection",
-        `Inspekcija — ${brojNaloga ?? ""}`.trim(),
+        `${t("inspection.title")} — ${brojNaloga ?? ""}`.trim(),
         {
           radniNalogId,
           userId,
@@ -147,10 +150,10 @@ export default function InspectionModal({ open, onOpenChange, radniNalogId, user
       );
     },
     onSuccess: (res) => {
-      toast.success(res.queued ? "Sačuvano lokalno — biće poslato kad se konekcija vrati" : "Inspekcija sačuvana");
+      toast.success(res.queued ? t("shopFloor.savedLocally") : t("inspection.savedToast"));
       onOpenChange(false);
     },
-    onError: (e: Error) => toast.error(e.message || "Greška"),
+    onError: (e: Error) => toast.error(e.message || t("common.error")),
     onSettled: () => invalidateAfterActionDelayed(queryClient, { radniNalogId, monitoringId, resursId }),
   });
 
@@ -158,31 +161,33 @@ export default function InspectionModal({ open, onOpenChange, radniNalogId, user
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Inspekcija</DialogTitle>
+          <DialogTitle>{t("inspection.title")}</DialogTitle>
           <DialogDescription>
-            {brojNaloga ? <>Radni nalog <strong>{brojNaloga}</strong></> : "Unos inspekcije proizvoda."}
+            {brojNaloga
+              ? <Trans i18nKey="inspection.descWith" values={{ broj: brojNaloga }} components={{ strong: <strong /> }} />
+              : t("inspection.descNone")}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label>Broj ispitanog komada *</Label>
+              <Label>{t("inspection.brojIspitanog")}</Label>
               <Input type="number" min={1} value={brojIspitanog} onChange={(e) => setBrojIspitanog(e.target.value)} className="h-11" />
             </div>
             <div className="space-y-1.5">
-              <Label>Masa komada (g)</Label>
+              <Label>{t("inspection.masaG")}</Label>
               <Input type="number" min={0} step="0.01" value={masaG} onChange={(e) => setMasaG(e.target.value)} className="h-11" />
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <Label>Masa ulivka (kg)</Label>
+            <Label>{t("inspection.masaUlivka")}</Label>
             <Input type="number" min={0} step="0.01" value={masaUlivkaKg} onChange={(e) => setMasaUlivkaKg(e.target.value)} className="h-11" />
           </div>
 
           <div className="space-y-1.5">
-            <Label>Materijal</Label>
+            <Label>{t("inspection.materijal")}</Label>
             <Popover open={materijalOpen} onOpenChange={setMaterijalOpen}>
               <PopoverTrigger asChild>
                 <Button
@@ -193,17 +198,17 @@ export default function InspectionModal({ open, onOpenChange, radniNalogId, user
                   className="w-full justify-between h-11 font-normal"
                 >
                   <span className={cn("truncate", materijal.length === 0 && "text-muted-foreground")}>
-                    {materijal.length === 0 ? "Izaberi..." : `${materijal.length} izabrano`}
+                    {materijal.length === 0 ? t("inspection.materijalPlaceholder") : t("inspection.materijalSelected", { count: materijal.length })}
                   </span>
                   <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
                 <Command>
-                  <CommandInput placeholder="Pretraži materijal..." />
+                  <CommandInput placeholder={t("inspection.materijalSearch")} />
                   <CommandList>
                     <CommandEmpty>
-                      {materijalOptionsQ.isLoading ? "Učitavanje..." : "Nema rezultata."}
+                      {materijalOptionsQ.isLoading ? t("common.loadingDots") : t("common.noResults")}
                     </CommandEmpty>
                     <CommandGroup>
                       {materijalOptions.map((opt) => {
@@ -239,7 +244,7 @@ export default function InspectionModal({ open, onOpenChange, radniNalogId, user
                         type="button"
                         onClick={() => setMaterijal((prev) => prev.filter((x) => x !== id))}
                         className="hover:text-destructive"
-                        aria-label={`Ukloni ${label}`}
+                        aria-label={t("inspection.removeMaterijal", { label })}
                       >
                         <X className="h-3 w-3" />
                       </button>
@@ -252,43 +257,43 @@ export default function InspectionModal({ open, onOpenChange, radniNalogId, user
 
 
           <div className="space-y-1.5">
-            <Label>Vizuelno *</Label>
-            <ColoredSelect value={vizuelno} onValueChange={(v) => setVizuelno(v as Kvalitet)} options={KVALITET_OPTIONS} />
+            <Label>{t("inspection.vizuelno")}</Label>
+            <ColoredSelect value={vizuelno} onValueChange={(v) => setVizuelno(v as Kvalitet)} options={KVALITET_OPTIONS} placeholder={t("inspection.pickColored")} />
           </div>
 
 
           <div className="space-y-1.5">
-            <Label>Funkcionalno *</Label>
-            <ColoredSelect value={funkcionalno} onValueChange={(v) => setFunkcionalno(v as Kvalitet)} options={KVALITET_OPTIONS} />
+            <Label>{t("inspection.funkcionalno")}</Label>
+            <ColoredSelect value={funkcionalno} onValueChange={(v) => setFunkcionalno(v as Kvalitet)} options={KVALITET_OPTIONS} placeholder={t("inspection.pickColored")} />
           </div>
 
           <div className="space-y-1.5">
-            <Label>Integralni kvalitet *</Label>
-            <ColoredSelect value={integralni} onValueChange={(v) => setIntegralni(v as Kvalitet)} options={KVALITET_NA_OPTIONS} />
+            <Label>{t("inspection.integralni")}</Label>
+            <ColoredSelect value={integralni} onValueChange={(v) => setIntegralni(v as Kvalitet)} options={KVALITET_NA_OPTIONS} placeholder={t("inspection.pickColored")} />
           </div>
 
           <div className="space-y-1.5">
-            <Label>Odstupanje od instrukcija *</Label>
-            <ColoredSelect value={odstupanje} onValueChange={(v) => setOdstupanje(v as Odstupanje)} options={ODSTUPANJE_OPTIONS} />
+            <Label>{t("inspection.odstupanje")}</Label>
+            <ColoredSelect value={odstupanje} onValueChange={(v) => setOdstupanje(v as Odstupanje)} options={ODSTUPANJE_OPTIONS} placeholder={t("inspection.pickColored")} />
           </div>
 
           <div className="space-y-1.5">
-            <Label>Količina neusaglašenih</Label>
+            <Label>{t("inspection.kolicinaNeu")}</Label>
             <Input type="number" min={0} value={kolicinaNeu} onChange={(e) => setKolicinaNeu(e.target.value)} className="h-11" />
           </div>
 
           <div className="space-y-1.5">
-            <Label>Uzrok odstupanja</Label>
+            <Label>{t("inspection.uzrok")}</Label>
             <Textarea rows={2} value={uzrok} onChange={(e) => setUzrok(e.target.value)} />
           </div>
 
           <div className="space-y-1.5">
-            <Label>Komentar</Label>
+            <Label>{t("inspection.komentar")}</Label>
             <Textarea rows={2} value={komentar} onChange={(e) => setKomentar(e.target.value)} />
           </div>
 
           <div className="space-y-1.5">
-            <Label>Prilog</Label>
+            <Label>{t("inspection.prilog")}</Label>
             <Input
               type="file"
               multiple
@@ -305,20 +310,20 @@ export default function InspectionModal({ open, onOpenChange, radniNalogId, user
                       className="text-destructive hover:underline"
                       onClick={() => setFiles((prev) => prev.filter((_, j) => j !== i))}
                     >
-                      Ukloni
+                      {t("inspection.remove")}
                     </button>
                   </li>
                 ))}
               </ul>
             )}
-            <p className="text-xs text-muted-foreground">Maks. 5 MB po fajlu.</p>
+            <p className="text-xs text-muted-foreground">{t("inspection.maxFile")}</p>
           </div>
         </div>
 
         <DialogFooter>
-          <Button variant="outline" size="touch" onClick={() => onOpenChange(false)}>Otkaži</Button>
-          <AsyncButton size="touch" pending={m.isPending} pendingLabel="Čuvanje..." onClick={() => m.mutate()} disabled={!valid} className="min-w-28">
-            Sačuvaj
+          <Button variant="outline" size="touch" onClick={() => onOpenChange(false)}>{t("common.cancel")}</Button>
+          <AsyncButton size="touch" pending={m.isPending} pendingLabel={t("inspection.savingDots")} onClick={() => m.mutate()} disabled={!valid} className="min-w-28">
+            {t("common.save")}
           </AsyncButton>
         </DialogFooter>
       </DialogContent>

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
+import { useTranslation } from "react-i18next";
 import { X } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -28,6 +29,7 @@ export default function ScrapDeleteButton({
   userId: string;
   radniNalogId?: string;
 }) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [razlog, setRazlog] = useState("");
   const queryClient = useQueryClient();
@@ -40,13 +42,13 @@ export default function ScrapDeleteButton({
       return { woSnap };
     },
     onSuccess: () => {
-      toast.success("Škart obrisan");
+      toast.success(t("dialogs.scrapDelete.successToast"));
       setOpen(false);
       setRazlog("");
     },
     onError: (e: Error, _v, ctx) => {
       rollback(queryClient, ctx?.woSnap);
-      toast.error(e.message || "Brisanje nije uspelo");
+      toast.error(e.message || t("dialogs.scrapDelete.errorToast"));
     },
     onSettled: () => invalidateAfterActionDelayed(queryClient, { radniNalogId }),
   });
@@ -60,7 +62,7 @@ export default function ScrapDeleteButton({
         variant="ghost"
         className="size-7 text-muted-foreground hover:text-destructive"
         onClick={(e) => { e.stopPropagation(); setOpen(true); }}
-        title="Obriši škart"
+        title={t("dialogs.scrapDelete.iconAria")}
       >
         <X className="size-4" />
       </Button>
@@ -68,29 +70,29 @@ export default function ScrapDeleteButton({
       <AlertDialog open={open} onOpenChange={(v) => { if (!m.isPending) setOpen(v); }}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Brisanje škart zapisa</AlertDialogTitle>
+            <AlertDialogTitle>{t("dialogs.scrapDelete.title")}</AlertDialogTitle>
             <AlertDialogDescription>
-              Da li sigurno želite da obrišete ovaj škart? Unesite razlog brisanja (min. 3 karaktera).
+              {t("dialogs.scrapDelete.desc")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className="space-y-1.5">
-            <Label htmlFor="razlog-brisanja">Razlog brisanja</Label>
+            <Label htmlFor="razlog-brisanja">{t("dialogs.scrapDelete.reasonLabel")}</Label>
             <Textarea
               id="razlog-brisanja"
               rows={3}
               value={razlog}
               onChange={(e) => setRazlog(e.target.value)}
-              placeholder="Npr. duplo evidentiran zapis"
+              placeholder={t("dialogs.scrapDelete.reasonPh")}
             />
           </div>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={m.isPending}>Otkaži</AlertDialogCancel>
+            <AlertDialogCancel disabled={m.isPending}>{t("common.cancel")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={(e) => { e.preventDefault(); if (valid) m.mutate(); }}
               disabled={!valid || m.isPending}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {m.isPending ? "Brisanje..." : "Obriši"}
+              {m.isPending ? t("dialogs.scrapDelete.deleting") : t("dialogs.scrapDelete.delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
