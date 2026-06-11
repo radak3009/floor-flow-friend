@@ -35,10 +35,7 @@ function fromDateInput(s: string, end = false): string {
 }
 function fmtDateTime(s?: string): string {
   if (!s) return "—";
-  try {
-    const d = new Date(s);
-    return `${d.toLocaleDateString("sr-RS")} ${d.toLocaleTimeString("sr-RS", { hour: "2-digit", minute: "2-digit" })}`;
-  } catch { return s; }
+  return formatDateTime(s);
 }
 function fmtDuration(min: number): string {
   if (!min) return "0min";
