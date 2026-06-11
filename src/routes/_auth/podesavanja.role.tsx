@@ -149,7 +149,7 @@ function RoleIDozvolePage() {
             </button>
           ))}
           {!visibleRoles.length && (
-            <div className="text-sm text-muted-foreground">Nema rola za prikaz.</div>
+            <div className="text-sm text-muted-foreground">{t("settings.roles.noRoles")}</div>
           )}
         </div>
       )}
