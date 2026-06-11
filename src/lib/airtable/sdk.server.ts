@@ -45,6 +45,12 @@ function lookupCaseInsensitive<T>(map: Record<string, T>, key: string): T | unde
   return actualKey ? map[actualKey] : undefined;
 }
 
+function findCaseInsensitiveKey<T>(map: Record<string, T>, key: string): string | undefined {
+  if (Object.prototype.hasOwnProperty.call(map, key)) return key;
+  const lower = key.toLowerCase();
+  return Object.keys(map).find((k) => k.toLowerCase() === lower);
+}
+
 function tableIdForCtx(ctx: ActiveContext, table: TableName): string | undefined {
   return lookupCaseInsensitive(ctx.tables, table);
 }
@@ -146,12 +152,21 @@ async function getContext(): Promise<ActiveContext> {
   const cfg = await loadActiveConfig();
   const staticFields = STATIC_FIELDS as unknown as Record<string, Record<string, string>>;
   if (cfg && cfg.tables && cfg.fields && Object.keys(cfg.tables).length > 0) {
-    // Merge static fields as fallback (override wins). Ensures fields added
-    // to schema.ts post-regen still resolve without forcing a re-regenerate.
+    // Merge static fields as fallback, but canonicalize table keys by case.
+    // Runtime regen often stores e.g. `kontaktOsobe`, while code calls
+    // `KontaktOsobe`; if both keys remain separate, the static field IDs win
+    // and reads/writes target wrong fields in the active base.
     const merged: Record<string, Record<string, string>> = {};
-    const allTables = new Set([...Object.keys(staticFields), ...Object.keys(cfg.fields)]);
-    for (const t of allTables) {
-      merged[t] = { ...(staticFields[t] ?? {}), ...(cfg.fields[t] ?? {}) };
+    const consumedCfgTables = new Set<string>();
+    for (const staticTable of Object.keys(staticFields)) {
+      const cfgTable = findCaseInsensitiveKey(cfg.fields, staticTable);
+      if (cfgTable) consumedCfgTables.add(cfgTable);
+      merged[staticTable] = { ...(staticFields[staticTable] ?? {}), ...(cfgTable ? cfg.fields[cfgTable] ?? {} : {}) };
+    }
+    for (const [cfgTable, cfgFieldMap] of Object.entries(cfg.fields)) {
+      if (!consumedCfgTables.has(cfgTable)) {
+        merged[cfgTable] = cfgFieldMap;
+      }
     }
     return {
       mode: "direct",
