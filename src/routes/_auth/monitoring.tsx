@@ -105,7 +105,7 @@ function MonitoringPage() {
       setDetailsFor(m);
       setDetailsTab(search.tab);
     } else {
-      toast.error("Radni nalog više nije aktivan ni na jednoj mašini.");
+      toast.error(t("monitoring.woNoLongerActive"));
     }
     navigate({ search: {}, replace: true });
   }, [search.wo, search.tab, data?.machines, navigate]);
