@@ -330,7 +330,7 @@ function MonitoringPage() {
         ))}
         {!isLoading && filtered.length === 0 && (
           <div className="rounded-lg border border-dashed border-border p-10 text-center text-muted-foreground">
-            Nema mašina za prikaz.
+            {t("monitoring.noMachinesShow")}
           </div>
         )}
       </div>
