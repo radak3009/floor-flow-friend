@@ -262,45 +262,47 @@ function MonitoringPage() {
   return (
     <div className="p-4 md:p-6 max-w-7xl mx-auto space-y-4">
       <header className="hidden lg:flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Monitoring</h1>
+        <h1 className="text-2xl font-semibold">{t("monitoring.title")}</h1>
         {data && (
           <div className="text-sm text-muted-foreground flex items-center gap-2">
             <span className="inline-block size-2 rounded-full bg-primary" />
-            Proizvodnih linija <span className="font-semibold text-foreground">{data.kpis.total}</span>
+            {t("monitoring.linesLabel")} <span className="font-semibold text-foreground">{data.kpis.total}</span>
           </div>
         )}
       </header>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3">
-        <KpiCard label="U radu" value={data?.kpis.uRadu ?? 0} color="var(--color-status-running)" active={filter === "uRadu"} onClick={() => setFilter(filter === "uRadu" ? "all" : "uRadu")} />
-        <KpiCard label="Zastoj" value={data?.kpis.zastoj ?? 0} color="var(--color-status-downtime)" active={filter === "zastoj"} onClick={() => setFilter(filter === "zastoj" ? "all" : "zastoj")} />
-        <KpiCard label="Nema signala" value={data?.kpis.nemaSig ?? 0} color="var(--color-status-nosignal)" active={filter === "nemaSig"} onClick={() => setFilter(filter === "nemaSig" ? "all" : "nemaSig")} />
-        <KpiCard label="OFF" value={data?.kpis.off ?? 0} color="var(--color-status-off)" active={filter === "off"} onClick={() => setFilter(filter === "off" ? "all" : "off")} />
+        <KpiCard label={t("monitoring.running")} value={data?.kpis.uRadu ?? 0} color="var(--color-status-running)" active={filter === "uRadu"} onClick={() => setFilter(filter === "uRadu" ? "all" : "uRadu")} />
+        <KpiCard label={t("monitoring.downtime")} value={data?.kpis.zastoj ?? 0} color="var(--color-status-downtime)" active={filter === "zastoj"} onClick={() => setFilter(filter === "zastoj" ? "all" : "zastoj")} />
+        <KpiCard label={t("monitoring.noSignal")} value={data?.kpis.nemaSig ?? 0} color="var(--color-status-nosignal)" active={filter === "nemaSig"} onClick={() => setFilter(filter === "nemaSig" ? "all" : "nemaSig")} />
+        <KpiCard label={t("monitoring.off")} value={data?.kpis.off ?? 0} color="var(--color-status-off)" active={filter === "off"} onClick={() => setFilter(filter === "off" ? "all" : "off")} />
       </div>
 
 
       <div className="flex items-center justify-between">
         <div className="text-sm text-muted-foreground">
-          {filter === "all" ? `${filtered.length} mašina` : `${filtered.length} od ${machines.length} mašina`}
+          {filter === "all"
+            ? t("monitoring.machineCount", { count: filtered.length })
+            : t("monitoring.machineCountFiltered", { count: filtered.length, total: machines.length })}
         </div>
         <div className="flex items-center gap-2">
           {filter !== "all" && (
-            <Button variant="ghost" size="sm" onClick={() => setFilter("all")}>Poništi filter</Button>
+            <Button variant="ghost" size="sm" onClick={() => setFilter("all")}>{t("monitoring.clearFilter")}</Button>
           )}
           <Button variant="ghost" size="sm" onClick={() => refetch()}>
-            <RefreshCw className={`size-4 mr-2 ${isFetching ? "animate-spin" : ""}`} /> Osveži
+            <RefreshCw className={`size-4 mr-2 ${isFetching ? "animate-spin" : ""}`} /> {t("monitoring.refresh")}
           </Button>
         </div>
       </div>
 
-      {isLoading && <div className="text-muted-foreground">Učitavanje...</div>}
+      {isLoading && <div className="text-muted-foreground">{t("monitoring.loading")}</div>}
       {isError && !isLoading && (
         <div className="rounded-lg border border-destructive/40 bg-destructive/10 p-4 text-sm flex items-center justify-between gap-3">
           <div className="text-destructive">
-            Greška pri učitavanju podataka sa Airtable: {(error as Error)?.message ?? "nepoznata greška"}
+            {t("monitoring.loadError", { msg: (error as Error)?.message ?? t("monitoring.unknownError") })}
           </div>
           <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isFetching}>
-            <RefreshCw className={`size-4 mr-2 ${isFetching ? "animate-spin" : ""}`} /> Pokušaj ponovo
+            <RefreshCw className={`size-4 mr-2 ${isFetching ? "animate-spin" : ""}`} /> {t("monitoring.retry")}
           </Button>
         </div>
       )}
