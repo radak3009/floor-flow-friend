@@ -472,13 +472,14 @@ function SkartTable({
   rows: any[];
   isLoading: boolean;
 } & TableSearchProps) {
+  const { t } = useTranslation();
   const s = { tab, colSearch, setColSearch };
   return (
     <TableShell>
       <thead className="bg-muted/30">
         <tr>
-          <Th>Datum i vreme</Th><Th>Radni nalog</Th><Th>Mašina</Th><Th>Artikal</Th><Th>Kategorija</Th>
-          <Th className="text-right">Količina</Th><Th>Operater</Th>
+          <Th>{t("istorija.cols.dateTime")}</Th><Th>{t("istorija.cols.rn")}</Th><Th>{t("istorija.cols.machine")}</Th><Th>{t("istorija.cols.artikal")}</Th><Th>{t("istorija.cols.category")}</Th>
+          <Th className="text-right">{t("istorija.cols.qty")}</Th><Th>{t("istorija.cols.operator")}</Th>
         </tr>
         <tr>
           <Td></Td>
