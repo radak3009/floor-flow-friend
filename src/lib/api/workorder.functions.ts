@@ -306,8 +306,10 @@ export interface AvailableWorkOrder {
   artikalNaziv?: string;
   planiranaKolicina?: number;
   bukingSort?: number | string;
+  planiranStart?: string;
   narucilac?: string;
 }
+
 
 const STARTABLE_STATUSES = ["Potvrđen", "Spreman", "Pauziran"];
 
