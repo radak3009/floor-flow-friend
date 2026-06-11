@@ -415,7 +415,7 @@ export interface DropdownTip { id: string; naziv: string; nameEn?: string; grupa
 
 export const getDropdownDataFn = createServerFn({ method: "GET" }).handler(
   async (): Promise<{ grupe: DropdownGrupa[]; grupeZastoj: DropdownGrupa[]; tipovi: DropdownTip[] }> => {
-    return sharedMemoize("dropdown-data:v2", 10 * 60_000, async () => {
+    return sharedMemoize("dropdown-data:v3", 10 * 60_000, async () => {
       const [gRes, gzRes, tRes] = await Promise.all([
         Grupe.findAll({ filters: { tip: "Škart" }, limit: 500 }),
         Grupe.findAll({ filters: { tip: "Zastoj" }, limit: 500 }),
