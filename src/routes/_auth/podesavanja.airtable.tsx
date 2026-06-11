@@ -3,11 +3,13 @@ import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { ChevronLeft, Database, Eye, EyeOff, KeyRound, RotateCw, ShieldAlert, Trash2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
+import { formatDateTime } from "@/lib/i18n/format";
 import {
   getAirtableConfigStatusFn,
   saveAirtableCredentialsFn,
@@ -17,7 +19,7 @@ import {
 } from "@/lib/airtable/config.functions";
 
 export const Route = createFileRoute("/_auth/podesavanja/airtable")({
-  head: () => ({ meta: [{ title: "Airtable konfiguracija — Podešavanja" }] }),
+  head: () => ({ meta: [{ title: "Airtable — Settings" }] }),
   component: AirtableSettings,
 });
 
@@ -26,6 +28,7 @@ function isSuperAdminUser(roleName: string | undefined): boolean {
 }
 
 function AirtableSettings() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const qc = useQueryClient();
   const getStatus = useServerFn(getAirtableConfigStatusFn);
@@ -53,33 +56,33 @@ function AirtableSettings() {
   const saveM = useMutation({
     mutationFn: async () => saveCreds({ data: { currentUserId: user!.id, pat: pat.trim(), baseId: baseId.trim() } }),
     onSuccess: (res) => {
-      toast.success(`Konekcija OK. Pronađeno ${res.tableCount} tabela.`);
+      toast.success(t("settings.airtable.saveOk", { count: res.tableCount }));
       setPat("");
       qc.invalidateQueries({ queryKey: ["airtable-config-status"] });
     },
-    onError: (e: any) => toast.error(e?.message ?? "Greška pri čuvanju"),
+    onError: (e: any) => toast.error(e?.message ?? t("settings.airtable.saveErr")),
   });
 
   const regenM = useMutation({
     mutationFn: async () => regen({ data: { currentUserId: user!.id } }),
     onSuccess: (res) => {
       setDiff(res);
-      toast.success(`Mapa regenerisana: ${res.tableCount} tabela, ${res.fieldCount} polja.`);
+      toast.success(t("settings.airtable.regenOk", { tables: res.tableCount, fields: res.fieldCount }));
       qc.invalidateQueries({ queryKey: ["airtable-config-status"] });
     },
-    onError: (e: any) => toast.error(e?.message ?? "Greška pri regeneraciji"),
+    onError: (e: any) => toast.error(e?.message ?? t("settings.airtable.regenErr")),
   });
 
   const clearM = useMutation({
     mutationFn: async () => clearCfg({ data: { currentUserId: user!.id } }),
     onSuccess: () => {
-      toast.success("Vraćeno na originalnu konfiguraciju.");
+      toast.success(t("settings.airtable.resetOk"));
       setDiff(null);
       setPat("");
       setBaseId("");
       qc.invalidateQueries({ queryKey: ["airtable-config-status"] });
     },
-    onError: (e: any) => toast.error(e?.message ?? "Greška"),
+    onError: (e: any) => toast.error(e?.message ?? t("settings.airtable.genericErr")),
   });
 
   if (!user) return null;
@@ -89,9 +92,9 @@ function AirtableSettings() {
         <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-6 flex items-start gap-3">
           <ShieldAlert className="size-5 text-destructive shrink-0 mt-0.5" />
           <div>
-            <div className="font-semibold">Pristup zabranjen</div>
+            <div className="font-semibold">{t("settings.airtable.accessDeniedTitle")}</div>
             <div className="text-sm text-muted-foreground mt-1">
-              Samo Super Admin može da menja Airtable konfiguraciju.
+              {t("settings.airtable.accessDeniedDesc")}
             </div>
           </div>
         </div>
@@ -105,21 +108,21 @@ function AirtableSettings() {
     <div className="p-4 md:p-6 max-w-3xl mx-auto space-y-6">
       <div className="flex items-center gap-2">
         <Link to="/podesavanja" className="text-sm text-muted-foreground hover:text-foreground inline-flex items-center gap-1">
-          <ChevronLeft className="size-4" /> Podešavanja
+          <ChevronLeft className="size-4" /> {t("settings.airtable.back")}
         </Link>
       </div>
       <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold uppercase tracking-wide">Airtable baza</h1>
+          <h1 className="text-xl font-semibold uppercase tracking-wide">{t("settings.airtable.title")}</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Poveži aplikaciju sa drugom Airtable bazom unosom PAT-a i Base ID-ja, pa regeneriši mapu tabela i polja.
+            {t("settings.airtable.desc")}
           </p>
         </div>
         <Link
           to="/podesavanja/airtable/mapiranje"
           className="inline-flex items-center gap-1.5 text-sm px-3 py-2 rounded-lg border border-border hover:bg-muted/50 font-medium"
         >
-          Mapiranje polja (pre/posle) →
+          {t("settings.airtable.mappingLink")}
         </Link>
       </div>
 
@@ -130,26 +133,25 @@ function AirtableSettings() {
             <Database className="size-5" />
           </div>
           <div className="flex-1 min-w-0">
-            <div className="font-semibold">Trenutna konfiguracija</div>
-            {statusQ.isLoading && <div className="text-sm text-muted-foreground mt-1">Učitavanje…</div>}
+            <div className="font-semibold">{t("settings.airtable.currentTitle")}</div>
+            {statusQ.isLoading && <div className="text-sm text-muted-foreground mt-1">{t("settings.airtable.loading")}</div>}
             {s && !s.hasOverride && (
               <div className="text-sm text-muted-foreground mt-1">
-                Aktivna je <span className="font-medium text-foreground">originalna</span> konfiguracija
-                (Lovable konektor + statički schema.ts).
+                {t("settings.airtable.originalActive")}
               </div>
             )}
             {s && s.hasOverride && (
               <div className="text-sm mt-1 space-y-1">
                 <div>
-                  Override aktivan · Base ID: <code className="text-xs bg-muted px-1.5 py-0.5 rounded">{s.baseId}</code>
+                  {t("settings.airtable.overrideActive")} <code className="text-xs bg-muted px-1.5 py-0.5 rounded">{s.baseId}</code>
                 </div>
                 <div className="text-muted-foreground">
-                  Mapa: {s.tablesCount} tabela, {s.fieldsCount} polja
-                  {!s.hasTablesMap && <span className="text-amber-600"> · ⚠ mapa nije regenerisana (koristi se statička)</span>}
+                  {t("settings.airtable.mapInfo", { tables: s.tablesCount, fields: s.fieldsCount })}
+                  {!s.hasTablesMap && <span className="text-amber-600">{t("settings.airtable.mapNotRegenerated")}</span>}
                 </div>
                 {s.updatedAt && (
                   <div className="text-xs text-muted-foreground">
-                    Ažurirano: {new Date(s.updatedAt).toLocaleString("sr-RS")}
+                    {t("settings.airtable.updatedAt", { when: formatDateTime(s.updatedAt) })}
                   </div>
                 )}
               </div>
@@ -160,12 +162,12 @@ function AirtableSettings() {
               variant="outline"
               size="sm"
               onClick={() => {
-                if (confirm("Vratiti na originalnu konfiguraciju? Sačuvana PAT i mapa biće obrisani.")) clearM.mutate();
+                if (confirm(t("settings.airtable.resetConfirm"))) clearM.mutate();
               }}
               disabled={clearM.isPending}
             >
               <Trash2 className="size-4 mr-1.5" />
-              Reset
+              {t("settings.airtable.reset")}
             </Button>
           )}
         </div>
@@ -178,16 +180,20 @@ function AirtableSettings() {
             <KeyRound className="size-5" />
           </div>
           <div>
-            <div className="font-semibold">1. Unesi credentijale druge organizacije</div>
+            <div className="font-semibold">{t("settings.airtable.step1Title")}</div>
             <p className="text-sm text-muted-foreground mt-0.5">
-              PAT kreiraj na <a href="https://airtable.com/create/tokens" target="_blank" rel="noreferrer" className="underline">airtable.com/create/tokens</a> sa scope-ovima: <code>data.records:read</code>, <code>data.records:write</code>, <code>schema.bases:read</code> i dodatim Base-om.
+              {t("settings.airtable.step1HintPrefix")}
+              <a href="https://airtable.com/create/tokens" target="_blank" rel="noreferrer" className="underline">
+                {t("settings.airtable.step1HintLink")}
+              </a>
+              {t("settings.airtable.step1HintSuffix")}
             </p>
           </div>
         </div>
 
         <div className="space-y-3">
           <div>
-            <Label htmlFor="baseId">Base ID</Label>
+            <Label htmlFor="baseId">{t("settings.airtable.baseId")}</Label>
             <Input
               id="baseId"
               value={baseId}
@@ -199,14 +205,14 @@ function AirtableSettings() {
             />
           </div>
           <div>
-            <Label htmlFor="pat">Personal Access Token (PAT)</Label>
+            <Label htmlFor="pat">{t("settings.airtable.pat")}</Label>
             <div className="relative mt-1">
               <Input
                 id="pat"
                 type={showPat ? "text" : "password"}
                 value={pat}
                 onChange={(e) => setPat(e.target.value)}
-                placeholder={s?.hasOverride ? "Unesi novi PAT samo ako menjaš" : "pat...xxxxxxx.xxxxxxx"}
+                placeholder={s?.hasOverride ? t("settings.airtable.patPlaceholderHas") : t("settings.airtable.patPlaceholderNew")}
                 autoComplete="off"
                 spellCheck={false}
                 className="font-mono pr-10"
@@ -215,19 +221,19 @@ function AirtableSettings() {
                 type="button"
                 onClick={() => setShowPat((v) => !v)}
                 className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                aria-label={showPat ? "Sakrij" : "Prikaži"}
+                aria-label={showPat ? t("settings.airtable.hidePat") : t("settings.airtable.showPat")}
               >
                 {showPat ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
               </button>
             </div>
-            <p className="text-xs text-muted-foreground mt-1">PAT se šifrovan čuva u Lovable Cloud bazi i nikad se ne vraća klijentu.</p>
+            <p className="text-xs text-muted-foreground mt-1">{t("settings.airtable.patNote")}</p>
           </div>
           <div className="flex justify-end">
             <Button
               onClick={() => saveM.mutate()}
               disabled={saveM.isPending || !pat.trim() || !baseId.trim()}
             >
-              {saveM.isPending ? "Testiranje…" : "Testiraj i sačuvaj"}
+              {saveM.isPending ? t("settings.airtable.testing") : t("settings.airtable.testSave")}
             </Button>
           </div>
         </div>
@@ -240,9 +246,9 @@ function AirtableSettings() {
             <RotateCw className="size-5" />
           </div>
           <div>
-            <div className="font-semibold">2. Regeneriši mapu tabela i polja</div>
+            <div className="font-semibold">{t("settings.airtable.step2Title")}</div>
             <p className="text-sm text-muted-foreground mt-0.5">
-              Povuče sve tabele i polja iz Airtable Metadata API i sačuva ih u bazi. Pokreni odmah nakon koraka 1, i svaki put kada se šema baze promeni.
+              {t("settings.airtable.step2Hint")}
             </p>
           </div>
         </div>
@@ -251,30 +257,30 @@ function AirtableSettings() {
           disabled={regenM.isPending || !s?.hasOverride}
           variant="secondary"
         >
-          {regenM.isPending ? "Regeneracija…" : "Regeneriši mapu"}
+          {regenM.isPending ? t("settings.airtable.regenerating") : t("settings.airtable.regenerate")}
         </Button>
 
         {diff && (
           <div className="rounded-lg bg-muted/40 p-4 space-y-3 text-sm">
             <div className="font-medium">
-              ✓ {diff.tableCount} tabela · {diff.fieldCount} polja
+              {t("settings.airtable.diffSummary", { tables: diff.tableCount, fields: diff.fieldCount })}
             </div>
             {diff.addedTables.length > 0 && (
               <div>
-                <div className="text-xs uppercase text-muted-foreground mb-1">Dodate tabele (van šeme):</div>
+                <div className="text-xs uppercase text-muted-foreground mb-1">{t("settings.airtable.addedTables")}</div>
                 <div className="flex flex-wrap gap-1">
-                  {diff.addedTables.map((t) => (
-                    <span key={t} className="text-xs bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 px-1.5 py-0.5 rounded">+{t}</span>
+                  {diff.addedTables.map((tn) => (
+                    <span key={tn} className="text-xs bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 px-1.5 py-0.5 rounded">+{tn}</span>
                   ))}
                 </div>
               </div>
             )}
             {diff.removedTables.length > 0 && (
               <div>
-                <div className="text-xs uppercase text-muted-foreground mb-1">Nedostaju tabele (postoje u originalnoj):</div>
+                <div className="text-xs uppercase text-muted-foreground mb-1">{t("settings.airtable.removedTables")}</div>
                 <div className="flex flex-wrap gap-1">
-                  {diff.removedTables.map((t) => (
-                    <span key={t} className="text-xs bg-destructive/10 text-destructive px-1.5 py-0.5 rounded">−{t}</span>
+                  {diff.removedTables.map((tn) => (
+                    <span key={tn} className="text-xs bg-destructive/10 text-destructive px-1.5 py-0.5 rounded">−{tn}</span>
                   ))}
                 </div>
               </div>
@@ -282,18 +288,18 @@ function AirtableSettings() {
             {(Object.keys(diff.addedFieldsByTable).length > 0 || Object.keys(diff.removedFieldsByTable).length > 0) && (
               <details className="text-xs">
                 <summary className="cursor-pointer text-muted-foreground hover:text-foreground">
-                  Razlike po poljima ({Object.keys(diff.addedFieldsByTable).length + Object.keys(diff.removedFieldsByTable).length} tabela)
+                  {t("settings.airtable.fieldDiffs", { count: Object.keys(diff.addedFieldsByTable).length + Object.keys(diff.removedFieldsByTable).length })}
                 </summary>
                 <div className="mt-2 space-y-2">
-                  {Object.entries(diff.addedFieldsByTable).map(([t, fs]) => (
-                    <div key={`a-${t}`}>
-                      <span className="font-mono">{t}</span>{" "}
+                  {Object.entries(diff.addedFieldsByTable).map(([tn, fs]) => (
+                    <div key={`a-${tn}`}>
+                      <span className="font-mono">{tn}</span>{" "}
                       <span className="text-emerald-600">+{fs.join(", ")}</span>
                     </div>
                   ))}
-                  {Object.entries(diff.removedFieldsByTable).map(([t, fs]) => (
-                    <div key={`r-${t}`}>
-                      <span className="font-mono">{t}</span>{" "}
+                  {Object.entries(diff.removedFieldsByTable).map(([tn, fs]) => (
+                    <div key={`r-${tn}`}>
+                      <span className="font-mono">{tn}</span>{" "}
                       <span className="text-destructive">−{fs.join(", ")}</span>
                     </div>
                   ))}
@@ -301,7 +307,7 @@ function AirtableSettings() {
               </details>
             )}
             {diff.removedTables.length === 0 && Object.keys(diff.removedFieldsByTable).length === 0 && (
-              <div className="text-xs text-muted-foreground">Sve tabele/polja iz originalne šeme postoje u novoj bazi. Aplikacija je spremna.</div>
+              <div className="text-xs text-muted-foreground">{t("settings.airtable.allOk")}</div>
             )}
           </div>
         )}

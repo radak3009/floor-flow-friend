@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { ArrowLeft, Upload, RotateCcw, Save } from "lucide-react";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "@/context/AuthContext";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -24,6 +25,7 @@ export const Route = createFileRoute("/_auth/podesavanja/pwa")({
 const norm = (s?: string | null) => (s ?? "").trim().toLowerCase();
 
 function PwaSettingsPage() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const navigate = useNavigate();
   const roleName = norm(user?.roleName);
@@ -63,7 +65,7 @@ function PwaSettingsPage() {
 
   const saveMut = useMutation({
     mutationFn: async () => {
-      if (!user) throw new Error("Nema sesije.");
+      if (!user) throw new Error(t("settings.pwa.noSession"));
       return updateCfg({
         data: {
           currentUserId: user.id,
@@ -75,7 +77,7 @@ function PwaSettingsPage() {
       });
     },
     onSuccess: () => {
-      toast.success("Sačuvano.");
+      toast.success(t("settings.pwa.saved"));
       qc.invalidateQueries({ queryKey: ["pwa-config"] });
     },
     onError: (e: Error) => toast.error(e.message),
@@ -83,17 +85,17 @@ function PwaSettingsPage() {
 
   const uploadMut = useMutation({
     mutationFn: async (file: File) => {
-      if (!user) throw new Error("Nema sesije.");
+      if (!user) throw new Error(t("settings.pwa.noSession"));
       const [b192, b512] = await Promise.all([
-        resizeToDataUrl(file, 192),
-        resizeToDataUrl(file, 512),
+        resizeToDataUrl(file, 192, t),
+        resizeToDataUrl(file, 512, t),
       ]);
       return uploadIcons({
         data: { currentUserId: user.id, icon192Base64: b192, icon512Base64: b512 },
       });
     },
     onSuccess: (r) => {
-      toast.success("Ikonica je sačuvana.");
+      toast.success(t("settings.pwa.iconSaved"));
       setIconPreview(r.icon512Url);
       qc.invalidateQueries({ queryKey: ["pwa-config"] });
     },
@@ -102,11 +104,11 @@ function PwaSettingsPage() {
 
   const resetMut = useMutation({
     mutationFn: async () => {
-      if (!user) throw new Error("Nema sesije.");
+      if (!user) throw new Error(t("settings.pwa.noSession"));
       return resetCfg({ data: { currentUserId: user.id } });
     },
     onSuccess: () => {
-      toast.success("Vraćeno na podrazumevano.");
+      toast.success(t("settings.pwa.resetSuccess"));
       qc.invalidateQueries({ queryKey: ["pwa-config"] });
     },
     onError: (e: Error) => toast.error(e.message),
@@ -121,14 +123,13 @@ function PwaSettingsPage() {
           to="/podesavanja"
           className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
         >
-          <ArrowLeft className="size-4" /> Nazad
+          <ArrowLeft className="size-4" /> {t("settings.pwa.back")}
         </Link>
       </div>
       <div>
-        <h1 className="text-xl font-semibold uppercase tracking-wide">PWA aplikacija</h1>
+        <h1 className="text-xl font-semibold uppercase tracking-wide">{t("settings.pwa.title")}</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Postavi ime i ikonicu koja se vidi kada se aplikacija doda na home screen mobilnog
-          telefona ili tableta.
+          {t("settings.pwa.desc")}
         </p>
       </div>
 
@@ -138,18 +139,18 @@ function PwaSettingsPage() {
         <>
           <Card>
             <CardHeader>
-              <CardTitle>Ime i boja</CardTitle>
+              <CardTitle>{t("settings.pwa.nameColorTitle")}</CardTitle>
               <CardDescription>
-                Ime se prikazuje pri instalaciji. Kratko ime ide ispod ikonice na home screen-u.
+                {t("settings.pwa.nameColorDesc")}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="name">Ime aplikacije</Label>
+                <Label htmlFor="name">{t("settings.pwa.name")}</Label>
                 <Input id="name" value={name} onChange={(e) => setName(e.target.value)} maxLength={60} />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="short">Kratko ime (max 12 karaktera preporučeno)</Label>
+                <Label htmlFor="short">{t("settings.pwa.shortName")}</Label>
                 <Input
                   id="short"
                   value={shortName}
@@ -159,7 +160,7 @@ function PwaSettingsPage() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="theme">Boja teme</Label>
+                  <Label htmlFor="theme">{t("settings.pwa.themeColor")}</Label>
                   <div className="flex items-center gap-2">
                     <input
                       id="theme"
@@ -176,7 +177,7 @@ function PwaSettingsPage() {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="bg">Boja pozadine</Label>
+                  <Label htmlFor="bg">{t("settings.pwa.bgColor")}</Label>
                   <div className="flex items-center gap-2">
                     <input
                       id="bg"
@@ -195,17 +196,16 @@ function PwaSettingsPage() {
               </div>
               <Button onClick={() => saveMut.mutate()} disabled={saveMut.isPending}>
                 <Save className="size-4 mr-2" />
-                {saveMut.isPending ? "Čuvam..." : "Sačuvaj"}
+                {saveMut.isPending ? t("settings.pwa.saving") : t("settings.pwa.save")}
               </Button>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
-              <CardTitle>Ikonica</CardTitle>
+              <CardTitle>{t("settings.pwa.iconTitle")}</CardTitle>
               <CardDescription>
-                Preporučeno: kvadratna PNG/JPG slika 512×512 px. Automatski se kreiraju 192 i 512
-                varijante.
+                {t("settings.pwa.iconDesc")}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -215,14 +215,14 @@ function PwaSettingsPage() {
                   style={{ background: backgroundColor }}
                 >
                   {iconPreview ? (
-                    <img src={iconPreview} alt="ikonica" className="size-full object-cover" />
+                    <img src={iconPreview} alt={t("settings.pwa.iconTitle")} className="size-full object-cover" />
                   ) : (
-                    <span className="text-xs text-muted-foreground">nema</span>
+                    <span className="text-xs text-muted-foreground">{t("settings.pwa.noIcon")}</span>
                   )}
                 </div>
                 <div className="text-sm">
                   <div className="font-medium">{shortName || "—"}</div>
-                  <div className="text-muted-foreground text-xs">prikaz na home screen-u</div>
+                  <div className="text-muted-foreground text-xs">{t("settings.pwa.homeScreenHint")}</div>
                 </div>
               </div>
               <input
@@ -243,7 +243,7 @@ function PwaSettingsPage() {
                   disabled={uploadMut.isPending}
                 >
                   <Upload className="size-4 mr-2" />
-                  {uploadMut.isPending ? "Otpremam..." : "Promeni ikonicu"}
+                  {uploadMut.isPending ? t("settings.pwa.uploading") : t("settings.pwa.changeIcon")}
                 </Button>
                 <Button
                   variant="ghost"
@@ -251,16 +251,14 @@ function PwaSettingsPage() {
                   disabled={resetMut.isPending}
                 >
                   <RotateCcw className="size-4 mr-2" />
-                  Vrati na podrazumevano
+                  {t("settings.pwa.resetIcon")}
                 </Button>
               </div>
             </CardContent>
           </Card>
 
           <div className="rounded-md border bg-muted/40 p-3 text-xs text-muted-foreground">
-            Napomena: iOS i Android pamte ime i ikonicu u trenutku kada se aplikacija doda na home
-            screen. Postojeći korisnici treba da uklone i ponovo dodaju aplikaciju da bi videli
-            promene.
+            {t("settings.pwa.note")}
           </div>
         </>
       )}
@@ -268,14 +266,13 @@ function PwaSettingsPage() {
   );
 }
 
-async function resizeToDataUrl(file: File, size: number): Promise<string> {
+async function resizeToDataUrl(file: File, size: number, t: (k: string) => string): Promise<string> {
   const bmp = await createImageBitmap(file);
   const canvas = document.createElement("canvas");
   canvas.width = size;
   canvas.height = size;
   const ctx = canvas.getContext("2d");
-  if (!ctx) throw new Error("Canvas nije podržan.");
-  // cover fit (centered crop)
+  if (!ctx) throw new Error(t("settings.pwa.canvasErr"));
   const ratio = Math.max(size / bmp.width, size / bmp.height);
   const w = bmp.width * ratio;
   const h = bmp.height * ratio;
