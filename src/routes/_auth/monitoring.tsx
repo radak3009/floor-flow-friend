@@ -499,6 +499,8 @@ function MachineRow({
   onInspect: () => void;
   onScrap: () => void;
 }) {
+  const { t } = useTranslation();
+
 
   const fkey = statusToFilter(m.statusMasine);
   const color = statusColorVar[fkey];
