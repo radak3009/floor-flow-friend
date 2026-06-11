@@ -249,7 +249,7 @@ async function buildAirtableDashboard(): Promise<{ machines: MachineDashboardRow
       startZastoja: pickStr(m.start),
       startNaloga: pickStr(m.start),
       vremeOtvaranjaNaloga: pickStr(wo?.vremeOtvaranjaNaloga),
-      procenjenoTrajanje: pickStr(m.procenjenoTrajanjeDhmin),
+      procenjenoTrajanje: pickStr(m.procenjenoTrajanjeDhmin) ?? pickStr((m as Record<string, unknown>).procenjenoTrajanjeDHMin),
       hasAvailableOrders: resursiId ? availableResursiIds.has(resursiId) : false,
     };
   });

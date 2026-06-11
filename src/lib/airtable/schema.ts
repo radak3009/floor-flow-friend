@@ -196,7 +196,7 @@ export const FIELDS = {
     "statusNaloga": "fldArxjsJtOHgA9fB",
     "artikal": "fldLvmxRFg7kDALB2",
     "kupac": "fldM4Qpt1NAnqgCJy",
-    "procenjenoTrajanjeDhmin": "fld3xmikPgeA5aW9w",
+    "procenjenoTrajanjeDhmin": "fldkrIEzZj5pPQ67m",
     "recordIdFromProizvodnaLinija": "fldDxH8vgyKprbPTP",
     "noMonitoring": "fldxMkGJCnwBl6QbU",
     "brojKaviteta": "fldAHxM6RlBKU0100"
