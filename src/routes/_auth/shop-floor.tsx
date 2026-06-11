@@ -2,7 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { useTranslation } from "react-i18next";
+import { useTranslation, Trans } from "react-i18next";
+import { formatDateTime, formatNumber, pickName } from "@/lib/i18n/format";
 import { getDashboardFn, type DashboardResult, type MachineDashboardRow } from "@/lib/api/dashboard.functions";
 import {
   getWorkOrderHistoryFn,
@@ -327,7 +328,8 @@ function ShopFloorPage() {
 
       {m && m.brojNaloga && (
         <div className="relative rounded-xl border border-border bg-card overflow-hidden">
-          <LoadingOverlay show={overlayShow} label="Učitavam podatke..." />
+          <LoadingOverlay show={overlayShow} label={t("shopFloor.loadingData")} />
+
 
           <div className="p-4 md:p-5 grid gap-4">
             <div className="grid gap-4">
@@ -426,7 +428,7 @@ function ShopFloorPage() {
 
       {showAvailableList && m?.resursiId && (
         <div className="relative">
-          <LoadingOverlay show={overlayShow} label="Učitavam podatke..." />
+          <LoadingOverlay show={overlayShow} label={t("shopFloor.loadingData")} />
           <AvailableWorkOrdersCard
             resursId={m.resursiId}
             machine={m}
@@ -451,7 +453,7 @@ function ShopFloorPage() {
 
       {!selected && !isLoading && machines.length === 0 && (
         <div className="rounded-lg border border-dashed border-border p-12 text-center text-muted-foreground">
-          Nema dostupnih mašina.
+          {t("shopFloor.noMachines")}
         </div>
       )}
 
@@ -465,11 +467,11 @@ function ShopFloorPage() {
       {isError && !data && (
         <div className="rounded-lg border border-destructive/40 bg-destructive/10 p-4 text-sm flex items-center justify-between gap-3">
           <div className="text-destructive">
-            {t("common.loadError", { defaultValue: "Greška pri učitavanju podataka" })}: {(error as Error)?.message ?? "—"}
+            {t("common.loadError")}: {(error as Error)?.message ?? "—"}
           </div>
           <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isFetching}>
             <RefreshCw className={`size-4 mr-2 ${isFetching ? "animate-spin" : ""}`} />
-            {t("common.retry", { defaultValue: "Pokušaj ponovo" })}
+            {t("common.retry")}
           </Button>
         </div>
       )}
@@ -477,7 +479,7 @@ function ShopFloorPage() {
       {m?.radniNalogId && perms?.viewHistory && (
         <div className="mt-6 rounded-xl border border-border bg-card overflow-hidden">
           <div className="px-4 py-3 border-b border-border">
-            <h2 className="text-base font-semibold">Istorija</h2>
+            <h2 className="text-base font-semibold">{t("shopFloor.history")}</h2>
           </div>
           <HistoryList key={m.radniNalogId} items={history.data?.items || []} loading={history.isLoading} />
         </div>
@@ -592,19 +594,20 @@ function Kpi({ label, value, accent }: { label: string; value: number; accent?: 
         className="text-base sm:text-xl md:text-2xl font-semibold tabular-nums whitespace-nowrap"
         style={accent ? { color: accent } : undefined}
       >
-        {value.toLocaleString("sr")}
+        {formatNumber(value)}
       </div>
     </div>
   );
 }
 
 function ProductionBar({ good, scrap, target }: { good: number; scrap: number; target: number }) {
+  const { t } = useTranslation();
   const goodPct = target > 0 ? Math.min(100, (good / target) * 100) : 0;
   const scrapPct = good > 0 ? Math.min(100, (scrap / good) * 100) : 0;
   return (
     <div className="space-y-3">
-      <BarRow label="Dobro proizvedeno" pct={goodPct} color="var(--color-status-running)" />
-      <BarRow label="Škart" pct={scrapPct} color="var(--color-status-downtime)" thin />
+      <BarRow label={t("shopFloor.goodProduced")} pct={goodPct} color="var(--color-status-running)" />
+      <BarRow label={t("shopFloor.scrap")} pct={scrapPct} color="var(--color-status-downtime)" thin />
     </div>
   );
 }
@@ -645,12 +648,13 @@ function BigActionButton({
 }
 
 function HistoryList({ items, loading }: { items: PromenaRow[]; loading: boolean }) {
+  const { t } = useTranslation();
   const PAGE_SIZE = 10;
   const [page, setPage] = useState(0);
-  if (loading) return <div className="p-4 text-sm text-muted-foreground">Učitavanje...</div>;
+  if (loading) return <div className="p-4 text-sm text-muted-foreground">{t("common.loadingDots")}</div>;
   const VISIBLE_TIPS: PromenaRow["tip"][] = ["start", "pauza", "nastavak", "stop", "skart"];
   const filtered = items.filter((it) => VISIBLE_TIPS.includes(it.tip));
-  if (filtered.length === 0) return <div className="p-6 text-sm text-muted-foreground text-center">Nema promena</div>;
+  if (filtered.length === 0) return <div className="p-6 text-sm text-muted-foreground text-center">{t("shopFloor.noChanges")}</div>;
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const safePage = Math.min(page, totalPages - 1);
   const slice = filtered.slice(safePage * PAGE_SIZE, safePage * PAGE_SIZE + PAGE_SIZE);
@@ -674,7 +678,7 @@ function HistoryList({ items, loading }: { items: PromenaRow[]; loading: boolean
       {filtered.length > PAGE_SIZE && (
         <div className="flex items-center justify-between gap-3 px-4 py-3 border-t border-border">
           <div className="text-xs text-muted-foreground">
-            Strana {safePage + 1} od {totalPages} · {filtered.length} zapisa
+            {t("shopFloor.pageInfo", { page: safePage + 1, total: totalPages, count: filtered.length })}
           </div>
           <div className="flex items-center gap-2">
             <Button
@@ -722,14 +726,7 @@ function tipColor(t: PromenaRow["tip"]): string {
 
 function fmtDateTime(s?: string): string {
   if (!s) return "";
-  try {
-    const d = new Date(s);
-    const date = d.toLocaleDateString("sr-RS");
-    const time = d.toLocaleTimeString("sr-RS", { hour: "2-digit", minute: "2-digit" });
-    return `${date}\n${time}`;
-  } catch {
-    return s;
-  }
+  return formatDateTime(s).replace(" ", "\n");
 }
 
 
@@ -754,36 +751,39 @@ function PauseConfirmDialog({
   onConfirm: (komentar?: string) => void;
   pending: boolean;
 }) {
+  const { t } = useTranslation();
   const [komentar, setKomentar] = useState("");
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) setKomentar(""); onOpenChange(v); }}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Pauziranje radnog naloga</DialogTitle>
+          <DialogTitle>{t("dialogs.pause.title")}</DialogTitle>
           <DialogDescription>
-            Pauzirati radni nalog {brojNaloga ? <strong>{brojNaloga}</strong> : ""}?
+            {brojNaloga
+              ? <Trans i18nKey="dialogs.pause.descWith" values={{ broj: brojNaloga }} components={{ strong: <strong /> }} />
+              : t("dialogs.pause.descNone")}
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-2">
-          <Label htmlFor="pause-komentar">Komentar (opciono)</Label>
+          <Label htmlFor="pause-komentar">{t("dialogs.commentLabel")}</Label>
           <Textarea
             id="pause-komentar"
             value={komentar}
             onChange={(e) => setKomentar(e.target.value)}
             rows={3}
-            placeholder="Razlog pauze..."
+            placeholder={t("dialogs.pause.commentPh")}
           />
         </div>
         <DialogFooter>
-          <Button variant="outline" size="touch" onClick={() => onOpenChange(false)}>Otkaži</Button>
+          <Button variant="outline" size="touch" onClick={() => onOpenChange(false)}>{t("common.cancel")}</Button>
           <AsyncButton
             size="touch"
             pending={pending}
-            pendingLabel="Pauziram..."
+            pendingLabel={t("dialogs.pause.btnPending")}
             onClick={() => onConfirm(komentar.trim() || undefined)}
             className="min-w-28"
           >
-            Pauziraj
+            {t("dialogs.pause.btn")}
           </AsyncButton>
         </DialogFooter>
       </DialogContent>
@@ -808,6 +808,7 @@ function StopWithBatchDialog({
   onConfirm: (payload: StopPayload) => void;
   pending: boolean;
 }) {
+  const { t } = useTranslation();
   const [dobro, setDobro] = useState<string>("0");
   const [skart, setSkart] = useState<string>("");
   const [grupa, setGrupa] = useState<string>("");
@@ -826,15 +827,17 @@ function StopWithBatchDialog({
     <Dialog open={open} onOpenChange={(v) => { if (!v) reset(); onOpenChange(v); }}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Zatvaranje radnog naloga</DialogTitle>
+          <DialogTitle>{t("dialogs.stop.title")}</DialogTitle>
           <DialogDescription>
-            {brojNaloga ? <>Zatvori nalog <strong>{brojNaloga}</strong> i upiši konačno proizvedenu količinu.</> : "Upiši konačno proizvedenu količinu."}
+            {brojNaloga
+              ? <Trans i18nKey="dialogs.stop.descWithLong" values={{ broj: brojNaloga }} components={{ strong: <strong /> }} />
+              : t("dialogs.stop.descNoneLong")}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="stop-dobro" className="text-base">Dobro proizvedeno</Label>
+            <Label htmlFor="stop-dobro" className="text-base">{t("dialogs.stop.goodProduced")}</Label>
             <Input
               id="stop-dobro"
               type="number"
@@ -847,7 +850,7 @@ function StopWithBatchDialog({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="stop-skart">Škart (opciono)</Label>
+            <Label htmlFor="stop-skart">{t("dialogs.stop.scrapOpt")}</Label>
             <Input
               id="stop-skart"
               type="number"
@@ -865,7 +868,7 @@ function StopWithBatchDialog({
           )}
 
           <div className="space-y-2">
-            <Label htmlFor="stop-komentar">Komentar (opciono)</Label>
+            <Label htmlFor="stop-komentar">{t("dialogs.commentLabel")}</Label>
             <Textarea
               id="stop-komentar"
               value={komentar}
@@ -876,11 +879,11 @@ function StopWithBatchDialog({
         </div>
 
         <DialogFooter>
-          <Button variant="outline" size="touch" onClick={() => onOpenChange(false)}>Otkaži</Button>
+          <Button variant="outline" size="touch" onClick={() => onOpenChange(false)}>{t("common.cancel")}</Button>
           <AsyncButton
             size="touch"
             pending={pending}
-            pendingLabel="Zatvaram..."
+            pendingLabel={t("dialogs.stop.btnPending")}
             onClick={() => onConfirm({
               dobroProizvedeno: dobroNum,
               kolicinaSkarta: hasSkart ? skartNum : undefined,
@@ -891,7 +894,7 @@ function StopWithBatchDialog({
             disabled={!valid}
             className="min-w-28 bg-destructive text-destructive-foreground hover:bg-destructive/90"
           >
-            Zatvori nalog
+            {t("dialogs.stop.btn")}
           </AsyncButton>
         </DialogFooter>
       </DialogContent>
@@ -914,6 +917,7 @@ function ScrapDialog({
   onConfirm: (payload: ScrapPayload) => void;
   pending: boolean;
 }) {
+  const { t } = useTranslation();
   const [skart, setSkart] = useState<string>("");
   const [grupa, setGrupa] = useState<string>("");
   const [tip, setTip] = useState<string>("");
@@ -928,13 +932,13 @@ function ScrapDialog({
     <Dialog open={open} onOpenChange={(v) => { if (!v) reset(); onOpenChange(v); }}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Upis škarta</DialogTitle>
-          <DialogDescription>Unesite količinu i klasifikaciju škarta.</DialogDescription>
+          <DialogTitle>{t("dialogs.scrap.title")}</DialogTitle>
+          <DialogDescription>{t("dialogs.scrap.desc")}</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="scrap-kol" className="text-base">Količina škarta</Label>
+            <Label htmlFor="scrap-kol" className="text-base">{t("dialogs.scrap.qty")}</Label>
             <Input
               id="scrap-kol"
               type="number"
@@ -950,7 +954,7 @@ function ScrapDialog({
           <ScrapGroupTypeSelectors grupa={grupa} setGrupa={setGrupa} tip={tip} setTip={setTip} />
 
           <div className="space-y-2">
-            <Label htmlFor="scrap-komentar">Komentar (opciono)</Label>
+            <Label htmlFor="scrap-komentar">{t("dialogs.commentLabel")}</Label>
             <Textarea
               id="scrap-komentar"
               value={komentar}
@@ -961,11 +965,11 @@ function ScrapDialog({
         </div>
 
         <DialogFooter>
-          <Button variant="outline" size="touch" onClick={() => onOpenChange(false)}>Otkaži</Button>
+          <Button variant="outline" size="touch" onClick={() => onOpenChange(false)}>{t("common.cancel")}</Button>
           <AsyncButton
             size="touch"
             pending={pending}
-            pendingLabel="Upisujem..."
+            pendingLabel={t("dialogs.scrap.btnPending")}
             onClick={() => onConfirm({
               kolicinaSkarta: skartNum,
               grupaSkartaId: grupa,
@@ -975,7 +979,7 @@ function ScrapDialog({
             disabled={!valid}
             className="min-w-28"
           >
-            Upiši škart
+            {t("dialogs.scrap.btn")}
           </AsyncButton>
         </DialogFooter>
       </DialogContent>
@@ -988,6 +992,7 @@ function ScrapGroupTypeSelectors({
 }: {
   grupa: string; setGrupa: (v: string) => void; tip: string; setTip: (v: string) => void;
 }) {
+  const { t, i18n } = useTranslation();
   const callDropdown = useServerFn(getDropdownDataFn);
   const q = useQuery({
     queryKey: ["dropdown-data"],
@@ -996,37 +1001,37 @@ function ScrapGroupTypeSelectors({
   });
   const grupe = q.data?.grupe || [];
   const tipoviAll = q.data?.tipovi || [];
-  const tipovi = grupa ? tipoviAll.filter((t) => t.grupaId === grupa) : [];
+  const tipovi = grupa ? tipoviAll.filter((x) => x.grupaId === grupa) : [];
 
   return (
     <div className="grid grid-cols-1 gap-3">
       <div className="space-y-2">
-        <Label>Grupa škarta</Label>
+        <Label>{t("dialogs.scrap.groupLabel")}</Label>
         <Select
           value={grupa}
           onValueChange={(v) => { setGrupa(v); setTip(""); }}
           disabled={q.isLoading}
         >
           <SelectTrigger className="h-12">
-            <SelectValue placeholder={q.isLoading ? "Učitavanje..." : "Izaberite grupu"} />
+            <SelectValue placeholder={q.isLoading ? t("common.loadingDots") : t("dialogs.scrap.pickGroup")} />
           </SelectTrigger>
           <SelectContent>
             {grupe.map((g) => (
-              <SelectItem key={g.id} value={g.id}>{g.naziv}</SelectItem>
+              <SelectItem key={g.id} value={g.id}>{pickName(g, i18n.language)}</SelectItem>
             ))}
           </SelectContent>
         </Select>
       </div>
 
       <div className="space-y-2">
-        <Label>Tip škarta</Label>
+        <Label>{t("dialogs.scrap.typeLabel")}</Label>
         <Select value={tip} onValueChange={setTip} disabled={!grupa || tipovi.length === 0}>
           <SelectTrigger className="h-12">
-            <SelectValue placeholder={!grupa ? "Prvo izaberite grupu" : tipovi.length === 0 ? "Nema tipova za izabranu grupu" : "Izaberite tip"} />
+            <SelectValue placeholder={!grupa ? t("dialogs.scrap.pickGroupFirst") : tipovi.length === 0 ? t("dialogs.scrap.noTypesForGroup") : t("dialogs.scrap.pickType")} />
           </SelectTrigger>
           <SelectContent>
-            {tipovi.map((t) => (
-              <SelectItem key={t.id} value={t.id}>{t.naziv}</SelectItem>
+            {tipovi.map((x) => (
+              <SelectItem key={x.id} value={x.id}>{pickName(x, i18n.language)}</SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -1037,6 +1042,7 @@ function ScrapGroupTypeSelectors({
 
 // ============= Downtime info card =============
 function DowntimeInfoCard({ m }: { m: MachineDashboardRow }) {
+  const { t: tDt } = useTranslation();
   return (
     <div className="mb-4 rounded-xl border border-border bg-card overflow-hidden border-l-4" style={{ borderLeftColor: "var(--color-status-downtime)" }}>
       <div className="grid grid-cols-1 md:grid-cols-[1fr_1.4fr_auto] gap-3 md:gap-4 items-center p-4">
@@ -1050,17 +1056,17 @@ function DowntimeInfoCard({ m }: { m: MachineDashboardRow }) {
               className="mt-1 text-xs"
               style={{ background: "var(--color-status-downtime)", color: "var(--color-destructive-foreground, white)" }}
             >
-              <AlertOctagon className="size-3" /> Zastoj
+              <AlertOctagon className="size-3" /> {tDt("monitoring.downtime")}
             </Badge>
           </div>
         </div>
         <div className="min-w-0">
-          <div className="text-xs uppercase tracking-wider text-muted-foreground">Zastoj</div>
+          <div className="text-xs uppercase tracking-wider text-muted-foreground">{tDt("monitoring.downtime")}</div>
           <div className="font-semibold truncate">{m.grupaZastoja || "—"}</div>
           <div className="text-xs text-muted-foreground truncate">{m.tipZastojaDetail || ""}</div>
         </div>
         <div className="min-w-0">
-          <div className="text-xs uppercase tracking-wider text-muted-foreground">Trajanje</div>
+          <div className="text-xs uppercase tracking-wider text-muted-foreground">{tDt("monitoring.duration")}</div>
           <div className="font-semibold">{m.trajanjeZastoja || "—"}</div>
         </div>
       </div>
@@ -1077,6 +1083,7 @@ function AvailableWorkOrdersCard({
   startPending: boolean;
   onStart: (wo: AvailableWorkOrder, startTimeIso: string | undefined) => void;
 }) {
+  const { t } = useTranslation();
   const callAvail = useServerFn(getAvailableWorkOrdersFn);
   const [confirmWO, setConfirmWO] = useState<AvailableWorkOrder | null>(null);
   const [detailsWO, setDetailsWO] = useState<AvailableWorkOrder | null>(null);
@@ -1103,9 +1110,9 @@ function AvailableWorkOrdersCard({
       <div className="flex items-center justify-between px-4 border-b border-border my-0 py-[16px] gap-0">
         <div className="flex items-center gap-2">
           <ListChecks className="size-4 text-primary" />
-          <h2 className="text-base font-semibold">Dostupni radni nalozi</h2>
+          <h2 className="text-base font-semibold">{t("shopFloor.availableWorkOrders")}</h2>
         </div>
-        <Button variant="ghost" size="icon" onClick={() => q.refetch()} disabled={q.isFetching} title="Osveži">
+        <Button variant="ghost" size="icon" onClick={() => q.refetch()} disabled={q.isFetching} title={t("shopFloor.refreshTitle")}>
           <RefreshCw className={`size-4 ${q.isFetching ? "animate-spin" : ""}`} />
         </Button>
       </div>
@@ -1113,14 +1120,14 @@ function AvailableWorkOrdersCard({
       <div className="px-4 pt-3">
         <div className="border-b-2 border-primary pb-2 inline-flex items-center gap-2 text-primary text-sm font-medium">
           <Play className="size-4" />
-          Pokretanje ({items.length})
+          {t("shopFloor.startList", { count: items.length })}
         </div>
       </div>
 
       {q.isLoading ? (
-        <div className="p-6 text-sm text-muted-foreground text-center">Učitavanje...</div>
+        <div className="p-6 text-sm text-muted-foreground text-center">{t("common.loadingDots")}</div>
       ) : items.length === 0 ? (
-        <div className="p-6 text-sm text-muted-foreground text-center">Nema dostupnih radnih naloga za ovu mašinu.</div>
+        <div className="p-6 text-sm text-muted-foreground text-center">{t("shopFloor.noAvailableForMachine")}</div>
       ) : (
         <ul className="divide-y divide-border">
           {items.map((wo) => (
@@ -1129,7 +1136,7 @@ function AvailableWorkOrdersCard({
                 type="button"
                 onClick={() => setDetailsWO(wo)}
                 className="min-w-0 flex-1 text-left cursor-pointer hover:opacity-80 transition-opacity bg-transparent border-0 p-0"
-                title="Prikaži detalje radnog naloga"
+                title={t("shopFloor.showWoDetails")}
               >
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="font-semibold truncate">{wo.brojNaloga}</span>
@@ -1142,7 +1149,7 @@ function AvailableWorkOrdersCard({
                 {(wo.narucilac || wo.planiranaKolicina != null) && (
                   <div className="text-xs text-muted-foreground mt-0.5">
                     {wo.narucilac && <span className="mr-2">{wo.narucilac}</span>}
-                    {wo.planiranaKolicina != null && <span>{wo.planiranaKolicina.toLocaleString("sr")} kom</span>}
+                    {wo.planiranaKolicina != null && <span>{t("shopFloor.qtyKom", { count: wo.planiranaKolicina })}</span>}
                   </div>
                 )}
               </button>
@@ -1152,7 +1159,7 @@ function AvailableWorkOrdersCard({
                 className="shrink-0"
               >
                 <Play className="size-4" />
-                {wo.statusNaloga === "Pauziran" ? "Nastavi" : "Pokreni"}
+                {wo.statusNaloga === "Pauziran" ? t("shopFloor.resume") : t("shopFloor.start")}
               </Button>
             </li>
           ))}
@@ -1186,26 +1193,30 @@ function AvailableWorkOrdersCard({
       <Dialog open={!!confirmWO} onOpenChange={(v) => { if (!v) { setConfirmWO(null); setStartInput(""); } }}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{confirmWO?.statusNaloga === "Pauziran" ? "Nastavak naloga" : "Pokretanje naloga"}</DialogTitle>
+            <DialogTitle>{confirmWO?.statusNaloga === "Pauziran" ? t("dialogs.start.confirmResumeTitle") : t("dialogs.start.confirmRunTitle")}</DialogTitle>
             <DialogDescription>
-              {confirmWO?.statusNaloga === "Pauziran"
-                ? <>Da li ste sigurni da želite da nastavite nalog <strong>{confirmWO?.brojNaloga}</strong>?</>
-                : <>Da li ste sigurni da želite da pokrenete nalog <strong>{confirmWO?.brojNaloga}</strong>?</>}
+              {confirmWO ? (
+                <Trans
+                  i18nKey={confirmWO.statusNaloga === "Pauziran" ? "dialogs.start.confirmResumeDesc" : "dialogs.start.confirmRunDesc"}
+                  values={{ broj: confirmWO.brojNaloga }}
+                  components={{ strong: <strong /> }}
+                />
+              ) : null}
             </DialogDescription>
           </DialogHeader>
           {confirmWO && confirmWO.statusNaloga !== "Pauziran" && (
             <div className="space-y-2">
-              <Label>Start (opciono)</Label>
+              <Label>{t("dialogs.start.startOptional")}</Label>
               <Input type="datetime-local" value={startInput} onChange={(e) => setStartInput(e.target.value)} className="h-11" />
-              <p className="text-xs text-muted-foreground">Ostavite prazno da se vreme postavi automatski.</p>
+              <p className="text-xs text-muted-foreground">{t("dialogs.start.leaveEmpty")}</p>
             </div>
           )}
           <DialogFooter>
-            <Button variant="outline" size="touch" onClick={() => { setConfirmWO(null); setStartInput(""); }} disabled={startPending}>Otkaži</Button>
+            <Button variant="outline" size="touch" onClick={() => { setConfirmWO(null); setStartInput(""); }} disabled={startPending}>{t("common.cancel")}</Button>
             <AsyncButton
               size="touch"
               pending={startPending}
-              pendingLabel={confirmWO?.statusNaloga === "Pauziran" ? "Nastavljam..." : "Pokrećem..."}
+              pendingLabel={confirmWO?.statusNaloga === "Pauziran" ? t("dialogs.start.resumingLabel") : t("dialogs.start.runningLabel")}
               onClick={() => {
                 if (!confirmWO) return;
                 const iso =
@@ -1218,7 +1229,7 @@ function AvailableWorkOrdersCard({
               }}
               className="min-w-28"
             >
-              {confirmWO?.statusNaloga === "Pauziran" ? "Nastavi" : "Pokreni"}
+              {confirmWO?.statusNaloga === "Pauziran" ? t("dialogs.start.resume") : t("dialogs.start.run")}
             </AsyncButton>
           </DialogFooter>
         </DialogContent>

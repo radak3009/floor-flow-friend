@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
+import { useTranslation } from "react-i18next";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { AsyncButton } from "@/components/ui/async-button";
@@ -8,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { formatNumber } from "@/lib/i18n/format";
 
 import {
   getAvailableWorkOrdersFn,
@@ -55,11 +57,11 @@ export default function StartWorkOrderDialog({
   pending,
   onSubmit,
 }: StartWorkOrderDialogProps) {
+  const { t } = useTranslation();
   const callAvail = useServerFn(getAvailableWorkOrdersFn);
   const [picked, setPicked] = useState<string>("");
   const [startInput, setStartInput] = useState<string>("");
 
-  // Reset lokalnog stanja kada se dialog zatvori
   useEffect(() => {
     if (!open) {
       setPicked("");
@@ -97,20 +99,20 @@ export default function StartWorkOrderDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>
-            {title ? `Pokreni radni nalog — ${title}` : "Pokretanje radnog naloga"}
+            {title ? t("dialogs.start.titleWithMachine", { title }) : t("dialogs.start.title")}
           </DialogTitle>
-          <DialogDescription>Izaberite radni nalog za ovu mašinu.</DialogDescription>
+          <DialogDescription>{t("dialogs.start.selectForMachine")}</DialogDescription>
         </DialogHeader>
         <div className="space-y-2">
-          <Label>Radni nalog</Label>
+          <Label>{t("dialogs.start.workOrder")}</Label>
           {q.isLoading ? (
-            <div className="text-sm text-muted-foreground">Učitavanje...</div>
+            <div className="text-sm text-muted-foreground">{t("common.loadingDots")}</div>
           ) : items.length === 0 ? (
-            <div className="text-sm text-muted-foreground">Nema dostupnih radnih naloga za ovu mašinu.</div>
+            <div className="text-sm text-muted-foreground">{t("dialogs.start.noAvailable")}</div>
           ) : (
             <Select value={picked} onValueChange={setPicked}>
               <SelectTrigger className="h-12 text-base">
-                <SelectValue placeholder="Izaberite radni nalog">
+                <SelectValue placeholder={t("dialogs.start.selectWO")}>
                   {selectedWO && (
                     <span className="flex items-center gap-2">
                       <span className="font-medium">{selectedWO.brojNaloga}</span>
@@ -136,30 +138,30 @@ export default function StartWorkOrderDialog({
             <div className="text-xs text-muted-foreground mt-1">
               {selectedWO.artikalNaziv}
               {selectedWO.planiranaKolicina != null &&
-                ` · Planirano: ${selectedWO.planiranaKolicina.toLocaleString("sr")}`}
+                ` · ${formatNumber(selectedWO.planiranaKolicina)}`}
             </div>
           )}
         </div>
         {!isPaused && (
           <div className="space-y-2">
-            <Label>Start (opciono)</Label>
+            <Label>{t("dialogs.start.startOptional")}</Label>
             <Input type="datetime-local" value={startInput} onChange={(e) => setStartInput(e.target.value)} className="h-11" />
-            <p className="text-xs text-muted-foreground">Ostavite prazno da se vreme postavi automatski.</p>
+            <p className="text-xs text-muted-foreground">{t("dialogs.start.leaveEmpty")}</p>
           </div>
         )}
         <DialogFooter>
           <Button variant="outline" size="touch" onClick={() => onOpenChange(false)} disabled={pending}>
-            Otkaži
+            {t("common.cancel")}
           </Button>
           <AsyncButton
             size="touch"
             pending={pending}
-            pendingLabel={isPaused ? "Nastavljam..." : "Pokrećem..."}
+            pendingLabel={isPaused ? t("dialogs.start.resumingLabel") : t("dialogs.start.runningLabel")}
             onClick={handleSubmit}
             disabled={!picked}
             className="min-w-28"
           >
-            {isPaused ? "Nastavi" : "Pokreni"}
+            {isPaused ? t("dialogs.start.resume") : t("dialogs.start.run")}
           </AsyncButton>
         </DialogFooter>
       </DialogContent>
