@@ -621,7 +621,7 @@ function MachineRow({
 
   return (
     <div className="relative rounded-xl border border-border bg-card overflow-hidden border-l-4" style={{ borderLeftColor: color }}>
-      <LoadingOverlay show={!!busy} label={busyLabel ?? "Osvežavanje…"} />
+      <LoadingOverlay show={!!busy} label={busyLabel ?? t("monitoring.busyRefresh")} />
 
       {/* Top row: machine + stats + actions */}
       <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4 px-4 py-2.5">
