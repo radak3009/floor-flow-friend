@@ -142,19 +142,19 @@ function MonitoringPage() {
   const clearBusy = () => { setBusyCard(null); };
   const pauseM = useMutation({
     mutationFn: callPause,
-    onSuccess: () => { setConfirmAct(null); toast.success("Pauza uspešna"); },
+    onSuccess: () => { setConfirmAct(null); toast.success(t("monitoring.successPause")); },
     onError: (e) => { clearBusy(); onErr(e as Error); },
     onSettled: (_d, _e, v) => invalidateTwice(ctxFromVars(v, confirmAct?.m.monitoringId)),
   });
   const resumeM = useMutation({
     mutationFn: callResume,
-    onSuccess: () => { setConfirmAct(null); toast.success("Nastavak uspešan"); },
+    onSuccess: () => { setConfirmAct(null); toast.success(t("monitoring.successResume")); },
     onError: (e) => { clearBusy(); onErr(e as Error); },
     onSettled: (_d, _e, v) => invalidateTwice(ctxFromVars(v, confirmAct?.m.monitoringId)),
   });
   const stopM = useMutation({
     mutationFn: callStopBatch,
-    onSuccess: () => { setStopFor(null); toast.success("Nalog zatvoren"); },
+    onSuccess: () => { setStopFor(null); toast.success(t("monitoring.successStop")); },
     onError: (e) => { clearBusy(); onErr(e as Error); },
     onSettled: (_d, _e, v) => invalidateTwice(ctxFromVars(v, stopFor?.monitoringId)),
   });
@@ -163,12 +163,12 @@ function MonitoringPage() {
     onMutate: async (v) => {
       const woSnap = await patchWoHistoryInsert(queryClient, v.data.radniNalogId, {
         tip: "skart",
-        opis: `Škart: ${v.data.kolicinaSkarta} kom${v.data.komentar ? ` — ${v.data.komentar}` : ""}`,
+        opis: `${t("monitoring.scrapLabel")}: ${v.data.kolicinaSkarta} ${t("monitoring.kom")}${v.data.komentar ? ` — ${v.data.komentar}` : ""}`,
         operator: user?.imeIPrezime,
       });
       return { woSnap };
     },
-    onSuccess: () => { setScrapFor(null); toast.success("Škart upisan"); },
+    onSuccess: () => { setScrapFor(null); toast.success(t("monitoring.successScrap")); },
     onError: (e, _v, ctx) => {
       clearBusy();
       rollback(queryClient, ctx?.woSnap);
