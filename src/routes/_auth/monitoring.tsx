@@ -311,8 +311,6 @@ function MonitoringPage() {
           <MachineRow
             key={m.monitoringId}
             m={m}
-            expanded={!!expanded[m.monitoringId]}
-            onToggle={() => setExpanded((p) => ({ ...p, [m.monitoringId]: !p[m.monitoringId] }))}
             perms={perms}
             busy={busyCard?.id === m.monitoringId && overlayShow}
             busyLabel={busyCard?.id === m.monitoringId ? busyCard.label : undefined}
