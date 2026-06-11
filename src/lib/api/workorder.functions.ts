@@ -398,17 +398,14 @@ export const getAvailableWorkOrdersFn = createServerFn({ method: "GET" })
       };
     });
 
-    items.sort((a, b) => {
-      const av = a.bukingSort;
-      const bv = b.bukingSort;
-      const aMissing = av == null || av === "";
-      const bMissing = bv == null || bv === "";
-      if (aMissing && bMissing) return (a.brojNaloga || "").localeCompare(b.brojNaloga || "", "sr");
-      if (aMissing) return 1;
-      if (bMissing) return -1;
-      if (typeof av === "number" && typeof bv === "number") return av - bv;
-      return String(av).localeCompare(String(bv), "sr", { numeric: true });
-    });
+    // Sortiranje isključivo po Buking sort (Date and time), Earliest → Latest.
+    const toTime = (v: unknown): number => {
+      if (v == null || v === "") return Number.POSITIVE_INFINITY;
+      if (typeof v === "number") return v;
+      const t = Date.parse(String(v));
+      return Number.isFinite(t) ? t : Number.POSITIVE_INFINITY;
+    };
+    items.sort((a, b) => toTime(a.bukingSort) - toTime(b.bukingSort));
 
     return { items };
     });
