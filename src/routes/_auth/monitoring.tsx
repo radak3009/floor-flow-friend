@@ -654,7 +654,7 @@ function MachineRow({
         <div className="border-t border-border px-4 py-3 space-y-2">
           <div className="grid grid-cols-12 gap-4 items-start">
             <div className="col-span-12 md:col-span-2">
-              <div className="text-xs text-muted-foreground uppercase">Radni nalog</div>
+              <div className="text-xs text-muted-foreground uppercase">{t("monitoring.workOrder")}</div>
               <button
                 onClick={onOpenDetails}
                 className="font-semibold underline underline-offset-2 hover:text-primary text-left"
@@ -670,12 +670,12 @@ function MachineRow({
               {m.narucilac && <div className="text-xs text-muted-foreground truncate">{m.narucilac}</div>}
             </div>
             <div className="col-span-12 md:col-span-3 md:text-right">
-              <div className="text-xs text-muted-foreground uppercase">Aktivni posao</div>
+              <div className="text-xs text-muted-foreground uppercase">{t("monitoring.activeWork")}</div>
               {m.vremeOtvaranjaNaloga && (
-                <div className="text-xs">Počeo: {fmtDateTime(m.vremeOtvaranjaNaloga)}</div>
+                <div className="text-xs">{t("monitoring.started", { when: formatDateTime(m.vremeOtvaranjaNaloga) })}</div>
               )}
               {m.ciklusiTotal != null && (
-                <div className="text-xs">Proizvodnja: {m.ciklusiTotal.toLocaleString("sr")} ciklusa</div>
+                <div className="text-xs">{t("monitoring.production", { count: formatNumber(m.ciklusiTotal) })}</div>
               )}
             </div>
           </div>
