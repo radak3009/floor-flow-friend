@@ -208,7 +208,7 @@ function KorisniciPage() {
                     u.aktivan ? "bg-primary/15 text-primary" : "bg-muted text-muted-foreground"
                   }`}
                 >
-                  {u.aktivan ? "Aktivan" : "Neaktivan"}
+                  {u.aktivan ? t("settings.users.active") : t("settings.users.inactive")}
                 </span>
               </div>
             </div>
