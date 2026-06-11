@@ -2,7 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { useTranslation } from "react-i18next";
+import { useTranslation, Trans } from "react-i18next";
+import { formatDateTime, formatNumber, pickName } from "@/lib/i18n/format";
 import { getDashboardFn, type DashboardResult, type MachineDashboardRow } from "@/lib/api/dashboard.functions";
 import {
   getWorkOrderHistoryFn,
@@ -1041,6 +1042,7 @@ function ScrapGroupTypeSelectors({
 
 // ============= Downtime info card =============
 function DowntimeInfoCard({ m }: { m: MachineDashboardRow }) {
+  const { t: tDt } = useTranslation();
   return (
     <div className="mb-4 rounded-xl border border-border bg-card overflow-hidden border-l-4" style={{ borderLeftColor: "var(--color-status-downtime)" }}>
       <div className="grid grid-cols-1 md:grid-cols-[1fr_1.4fr_auto] gap-3 md:gap-4 items-center p-4">
