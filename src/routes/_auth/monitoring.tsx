@@ -16,7 +16,7 @@ import {
 } from "@/lib/api/workorder.functions";
 import { invalidateAfterAction, patchWoHistoryInsert, rollback } from "@/lib/query/invalidate";
 
-import { Activity, ChevronDown, ChevronUp, RefreshCw, AlertTriangle, Pause, Play, Square, ClipboardCheck, PackageMinus } from "lucide-react";
+import { Activity, RefreshCw, AlertTriangle, Pause, Play, Square, ClipboardCheck, PackageMinus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
