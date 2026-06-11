@@ -13,6 +13,7 @@ import { useAuth } from "@/context/AuthContext";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 
 export const Route = createFileRoute("/_auth/podesavanja/role")({
   component: RoleIDozvolePage,
@@ -22,46 +23,46 @@ const norm = (s?: string | null) => (s ?? "").trim().toLowerCase();
 
 const SECTIONS: { title: string; fields: { key: PermissionField; label: string }[] }[] = [
   {
-    title: "Pregled mašina",
+    title: "view",
     fields: [
-      { key: "viewAssignedMachines", label: "Pregled dodeljenih mašina" },
-      { key: "viewAllFactoryMachines", label: "Pregled svih mašina u fabrici" },
+      { key: "viewAssignedMachines", label: "viewAssignedMachines" },
+      { key: "viewAllFactoryMachines", label: "viewAllFactoryMachines" },
     ],
   },
   {
-    title: "Radni nalozi",
+    title: "wo",
     fields: [
-      { key: "startWorkOrder", label: "Pokretanje naloga" },
-      { key: "pauseWorkOrder", label: "Pauziranje naloga" },
-      { key: "resumeWorkOrder", label: "Nastavak naloga" },
-      { key: "stopWorkOrder", label: "Zatvaranje naloga" },
-      { key: "resetStart", label: "Pomeri start" },
+      { key: "startWorkOrder", label: "startWorkOrder" },
+      { key: "pauseWorkOrder", label: "pauseWorkOrder" },
+      { key: "resumeWorkOrder", label: "resumeWorkOrder" },
+      { key: "stopWorkOrder", label: "stopWorkOrder" },
+      { key: "resetStart", label: "resetStart" },
     ],
   },
   {
-    title: "Evidentiranje",
+    title: "logging",
     fields: [
-      { key: "logScrap", label: "Unos škarta" },
-      { key: "deleteScrap", label: "Brisanje škarta" },
-      { key: "logDowntime", label: "Prijava zastoja" },
-      { key: "confirmBatch", label: "Potvrda serije" },
-      { key: "performInspection", label: "Inspekcija" },
-      { key: "viewHistory", label: "Pregled istorije" },
+      { key: "logScrap", label: "logScrap" },
+      { key: "deleteScrap", label: "deleteScrap" },
+      { key: "logDowntime", label: "logDowntime" },
+      { key: "confirmBatch", label: "confirmBatch" },
+      { key: "performInspection", label: "performInspection" },
+      { key: "viewHistory", label: "viewHistory" },
     ],
   },
   {
-    title: "Administracija",
+    title: "admin",
     fields: [
-      { key: "viewReports", label: "Pregled izveštaja" },
-      { key: "manageUsers", label: "Upravljanje korisnicima" },
-      { key: "manageSettings", label: "Sistemska podešavanja" },
-      { key: "manageReasonCodes", label: "Upravljanje šifrarnicima" },
-      { key: "manageFactoryScope", label: "Podešavanja fabrike" },
+      { key: "viewReports", label: "viewReports" },
+      { key: "manageUsers", label: "manageUsers" },
+      { key: "manageSettings", label: "manageSettings" },
+      { key: "manageReasonCodes", label: "manageReasonCodes" },
+      { key: "manageFactoryScope", label: "manageFactoryScope" },
     ],
   },
   {
-    title: "Komunikacija",
-    fields: [{ key: "canComment", label: "Komentari" }],
+    title: "comm",
+    fields: [{ key: "canComment", label: "canComment" }],
   },
 ];
 
