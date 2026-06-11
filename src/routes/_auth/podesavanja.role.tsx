@@ -116,9 +116,9 @@ function RoleIDozvolePage() {
     },
     onError: (e: any, _v, ctx) => {
       if (ctx?.prev) qc.setQueryData(["settings", "rolePermissions"], ctx.prev);
-      toast.error(e?.message || "Greška pri izmeni permisije");
+      toast.error(e?.message || t("settings.roles.permError"));
     },
-    onSuccess: () => toast.success("Permisija ažurirana"),
+    onSuccess: () => toast.success(t("settings.roles.permUpdated")),
     onSettled: () => qc.invalidateQueries({ queryKey: ["settings", "rolePermissions"] }),
   });
 
