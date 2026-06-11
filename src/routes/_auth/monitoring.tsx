@@ -776,7 +776,7 @@ function RealizationBar({
           className="h-full flex items-center justify-end pr-2 text-white whitespace-nowrap"
           style={{ width: `${goodW}%`, background: goodBg }}
         >
-          {good.toLocaleString("sr")}
+          {good.toLocaleString()}
         </div>
       )}
       {remW > 0 && (
@@ -784,7 +784,7 @@ function RealizationBar({
           className="h-full flex items-center justify-end pr-2 text-muted-foreground whitespace-nowrap"
           style={{ width: `${remW}%` }}
         >
-          {remaining.toLocaleString("sr")}
+          {remaining.toLocaleString()}
         </div>
       )}
       {scrap > 0 && (
@@ -792,7 +792,7 @@ function RealizationBar({
           className="absolute left-0 top-0 h-full flex items-center justify-start pl-2 text-white whitespace-nowrap pointer-events-none"
           style={{ width: `${scrapW}%`, minWidth: "fit-content", background: "#F59E0B" }}
         >
-          {scrap.toLocaleString("sr")} ({pctTxt})
+          {scrap.toLocaleString()} ({pctTxt})
         </div>
       )}
     </div>
