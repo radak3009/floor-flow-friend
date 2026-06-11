@@ -24,6 +24,7 @@ export interface MachineDashboardRow {
   procenatSkarta?: number;
   dobroProizvedeno?: number;
   preostaloZaProizvodnju?: number;
+  preostaloMaterijalaKg?: number;
   ciklusiTotal?: number;
   projektovanCiklusSek?: number;
   trenutniCiklusSek?: number;
