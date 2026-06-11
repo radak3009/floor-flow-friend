@@ -60,6 +60,7 @@ const statusColorVar: Record<string, string> = {
 };
 
 function MonitoringPage() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const call = useServerFn(getDashboardFn);
@@ -68,6 +69,8 @@ function MonitoringPage() {
   const callStopBatch = useServerFn(stopWorkOrderWithBatchFn);
   const callScrap = useServerFn(logScrapFn);
   const callStart = useServerFn(startWorkOrderFn);
+
+
 
 
   const { data, isLoading, isError, error, refetch, isFetching } = useQuery({
