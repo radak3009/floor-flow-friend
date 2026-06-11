@@ -421,13 +421,14 @@ function ZastojiTable({
   rows: any[];
   isLoading: boolean;
 } & TableSearchProps) {
+  const { t } = useTranslation();
   const s = { tab, colSearch, setColSearch };
   return (
     <TableShell>
       <thead className="bg-muted/30">
         <tr>
-          <Th>ID zapisa</Th><Th>Mašina</Th><Th>Start</Th><Th>Kraj</Th>
-          <Th>Grupa</Th><Th>Tip</Th><Th className="text-right">Trajanje</Th><Th>Radni nalog</Th><Th>Komentar</Th>
+          <Th>{t("istorija.cols.idZapisa")}</Th><Th>{t("istorija.cols.machine")}</Th><Th>{t("istorija.cols.start")}</Th><Th>{t("istorija.cols.end")}</Th>
+          <Th>{t("istorija.cols.group")}</Th><Th>{t("istorija.cols.type")}</Th><Th className="text-right">{t("istorija.cols.duration")}</Th><Th>{t("istorija.cols.rn")}</Th><Th>{t("istorija.cols.comment")}</Th>
         </tr>
         <tr>
           <Td><ColSearchCell field="idZapisa" {...s} /></Td>
