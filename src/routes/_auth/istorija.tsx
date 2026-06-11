@@ -364,15 +364,16 @@ function RnTable({
   isLoading: boolean;
   onOpen: (r: any) => void;
 } & TableSearchProps) {
+  const { t } = useTranslation();
   const s = { tab, colSearch, setColSearch };
   return (
     <TableShell>
       <thead className="bg-muted/30">
         <tr>
-          <Th>Datum</Th><Th>Radni nalog</Th><Th>Mašina</Th><Th>Artikal</Th><Th>Narucilac</Th>
-          <Th className="text-right">Plan</Th><Th className="text-right">Proizv.</Th><Th className="text-right">Škart</Th>
-          <Th className="text-right">Realiz.</Th><Th className="text-right">Perf.</Th>
-          <Th>Trajanje</Th><Th>Status</Th>
+          <Th>{t("istorija.cols.date")}</Th><Th>{t("istorija.cols.rn")}</Th><Th>{t("istorija.cols.machine")}</Th><Th>{t("istorija.cols.artikal")}</Th><Th>{t("istorija.cols.narucilac")}</Th>
+          <Th className="text-right">{t("istorija.cols.plan")}</Th><Th className="text-right">{t("istorija.cols.produced")}</Th><Th className="text-right">{t("istorija.cols.scrap")}</Th>
+          <Th className="text-right">{t("istorija.cols.realization")}</Th><Th className="text-right">{t("istorija.cols.performance")}</Th>
+          <Th>{t("istorija.cols.duration")}</Th><Th>{t("istorija.cols.status")}</Th>
         </tr>
         <tr>
           <Td></Td>
