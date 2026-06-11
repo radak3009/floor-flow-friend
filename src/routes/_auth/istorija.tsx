@@ -520,14 +520,15 @@ function InspekcijaTable({
   rows: any[];
   isLoading: boolean;
 } & TableSearchProps) {
+  const { t } = useTranslation();
   const s = { tab, colSearch, setColSearch };
   return (
     <TableShell>
       <thead className="bg-muted/30">
         <tr>
-          <Th>Datum i vreme</Th><Th>Radni nalog</Th><Th>Mašina</Th>
-          <Th>Vizuelno</Th><Th>Funkcionalno</Th><Th>Int. kvalitet</Th><Th>Ocena</Th>
-          <Th>Komentar</Th><Th>Kreirao</Th>
+          <Th>{t("istorija.cols.dateTime")}</Th><Th>{t("istorija.cols.rn")}</Th><Th>{t("istorija.cols.machine")}</Th>
+          <Th>{t("istorija.cols.vizuelno")}</Th><Th>{t("istorija.cols.funkcionalno")}</Th><Th>{t("istorija.cols.integralni")}</Th><Th>{t("istorija.cols.ocena")}</Th>
+          <Th>{t("istorija.cols.comment")}</Th><Th>{t("istorija.cols.creator")}</Th>
         </tr>
         <tr>
           <Td></Td>
