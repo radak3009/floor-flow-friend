@@ -36,6 +36,7 @@ function initials(name: string): string {
 }
 
 function KorisniciPage() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const callerRole = norm(user?.roleName);
   const isSuper = callerRole === "super admin";
