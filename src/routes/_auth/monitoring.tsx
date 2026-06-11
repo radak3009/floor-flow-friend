@@ -710,16 +710,16 @@ function MachineRow({
 
           {expanded && (
             <div className="grid grid-cols-2 md:grid-cols-6 gap-4 pt-2 border-t border-border">
-              <Stat label="Planirana količina" value={`${(m.planiranaKolicina ?? 0).toLocaleString("sr")} kom`} />
-              <Stat label="Proizvedeno" value={`${goodQty.toLocaleString("sr")} kom`} />
+              <Stat label={t("monitoring.plannedQty")} value={`${formatNumber(m.planiranaKolicina ?? 0)} ${t("monitoring.kom")}`} />
+              <Stat label={t("monitoring.produced")} value={`${formatNumber(goodQty)} ${t("monitoring.kom")}`} />
               <Stat
-                label="Realizacija"
+                label={t("monitoring.realization")}
                 value={`${realizacijaPct.toFixed(1)}%`}
                 valueColor={overproduction ? "var(--color-status-downtime)" : undefined}
               />
-              <Stat label="Škart" value={`${(m.skart ?? 0).toLocaleString("sr")} kom`} valueColor="var(--color-status-nosignal)" />
-              <Stat label="Procenat škarta" value={m.procenatSkarta != null ? `${(m.procenatSkarta * 100).toFixed(1)}%` : "—"} />
-              <Stat label="Preostalo" value={`${(m.preostaloZaProizvodnju ?? 0).toLocaleString("sr")} kom`} />
+              <Stat label={t("monitoring.scrapLabel")} value={`${formatNumber(m.skart ?? 0)} ${t("monitoring.kom")}`} valueColor="var(--color-status-nosignal)" />
+              <Stat label={t("monitoring.scrapPct")} value={m.procenatSkarta != null ? `${(m.procenatSkarta * 100).toFixed(1)}%` : "—"} />
+              <Stat label={t("monitoring.remaining")} value={`${formatNumber(m.preostaloZaProizvodnju ?? 0)} ${t("monitoring.kom")}`} />
             </div>
           )}
         </div>
@@ -727,7 +727,7 @@ function MachineRow({
 
       {!m.brojNaloga && !isZastoj && (
         <div className="border-t border-border px-4 py-3">
-          <div className="text-sm text-muted-foreground italic">Nema aktivnog naloga na ovoj mašini.</div>
+          <div className="text-sm text-muted-foreground italic">{t("monitoring.noActiveOnMachine")}</div>
         </div>
       )}
 
