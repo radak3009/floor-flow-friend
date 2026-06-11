@@ -156,7 +156,7 @@ function KorisniciPage() {
         )}
         {!usersQ.isLoading && paginated.length === 0 && (
           <div className="rounded-lg border border-dashed border-border p-8 text-center text-muted-foreground">
-            Nema korisnika
+            {t("settings.users.none")}
           </div>
         )}
         {paginated.map((u) => {
