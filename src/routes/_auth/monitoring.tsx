@@ -478,12 +478,10 @@ type Perms = ReturnType<typeof useAuth>["user"] extends infer U
   : undefined;
 
 function MachineRow({
-  m, expanded, onToggle, perms, busy, busyLabel,
+  m, perms, busy, busyLabel,
   onOpenDetails, onStart, onPause, onResume, onStop, onDowntime, onInspect, onScrap,
 }: {
   m: MachineDashboardRow;
-  expanded: boolean;
-  onToggle: () => void;
   perms: Perms | undefined;
   busy?: boolean;
   busyLabel?: string;
