@@ -220,7 +220,7 @@ function KorisniciPage() {
       {!usersQ.isLoading && totalCount > 0 && (
         <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <span>Prikaži:</span>
+            <span>{t("settings.users.perPage")}</span>
             <Select value={String(pageSize)} onValueChange={(v) => setPageSize(Number(v))}>
               <SelectTrigger className="h-8 w-20">
                 <SelectValue />
@@ -234,7 +234,7 @@ function KorisniciPage() {
               </SelectContent>
             </Select>
             <span>
-              {startIndex + 1}–{Math.min(startIndex + pageSize, totalCount)} od {totalCount}
+              {t("settings.users.range", { from: startIndex + 1, to: Math.min(startIndex + pageSize, totalCount), total: totalCount })}
             </span>
           </div>
 
