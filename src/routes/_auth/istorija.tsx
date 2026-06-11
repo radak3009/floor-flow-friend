@@ -286,7 +286,7 @@ function IstorijaPage() {
 
         {data?.truncated[tab === "rn" ? "radniNalozi" : tab === "inspekcija" ? "inspekcije" : tab] && (
           <div className="flex items-center gap-2 px-3 py-2 text-xs text-amber-700 bg-amber-50 border-b border-amber-200">
-            <AlertTriangle className="size-3.5" /> Prikazano je prvih 100 zapisa. Suzite opseg datuma ili filtere.
+            <AlertTriangle className="size-3.5" /> {t("istorija.truncated")}
           </div>
         )}
 
