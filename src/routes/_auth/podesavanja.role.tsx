@@ -67,6 +67,7 @@ const SECTIONS: { title: string; fields: { key: PermissionField; label: string }
 ];
 
 function RoleIDozvolePage() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const callerRole = norm(user?.roleName);
   const isSuper = callerRole === "super admin";
