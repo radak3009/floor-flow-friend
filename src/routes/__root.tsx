@@ -1,4 +1,4 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient } from "@tanstack/react-query";
 import {
   Outlet,
   Link,
@@ -140,7 +140,6 @@ function HtmlLangSync() {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
-  const [isClient, setIsClient] = useState(false);
   // Stabilan userBuster — pročitan sinhrono pri prvom renderu da ne bi
   // promena "anon" → userId restartovala persister restore.
   const [userBuster] = useState<string>(() => {
@@ -154,12 +153,16 @@ function RootComponent() {
     }
   });
   useEffect(() => {
-    setIsClient(true);
     registerServiceWorker();
   }, []);
 
   // Persister mora biti stabilan kroz rendere; svaki novi identitet
   // restartuje IndexedDB restore i zaglavljuje query-je (isRestoring).
+  // NAPOMENA: PersistQueryClientProvider se SADA renderuje uvek (i na
+  // serveru) — restore se ionako pokreće tek u useEffect-u (samo browser),
+  // a jedinstven provider eliminiše unmount/remount celog stabla
+  // (QueryClientProvider → PersistQueryClientProvider swap) koji je
+  // restartovao AuthProvider i restore i bio izvor "zaglavljenih" query-ja.
   const persister = useMemo(() => createIdbPersister(), []);
   const buildId = typeof __BUILD_ID__ !== "undefined" ? __BUILD_ID__ : "dev";
   const persistOptions = useMemo(
@@ -177,24 +180,6 @@ function RootComponent() {
     }),
     [persister, buildId, userBuster],
   );
-
-  // Persister koristi IndexedDB → samo u browseru.
-  // Na serveru (SSR) renderujemo običan QueryClientProvider bez persistencije.
-  if (!isClient) {
-    return (
-      <I18nextProvider i18n={i18n}>
-        <ThemeProvider>
-          <QueryClientProvider client={queryClient}>
-            <AuthProvider>
-              <HtmlLangSync />
-              <Outlet />
-              <Toaster position="top-center" richColors />
-            </AuthProvider>
-          </QueryClientProvider>
-        </ThemeProvider>
-      </I18nextProvider>
-    );
-  }
 
   return (
     <I18nextProvider i18n={i18n}>
