@@ -104,20 +104,20 @@ function KorisniciPage() {
     mutationFn: async (vars: { userId: string; roleId: string }) =>
       updateRole({ data: { userId: vars.userId, roleId: vars.roleId, currentUserId: user!.id } }),
     onSuccess: () => {
-      toast.success("Uloga ažurirana");
+      toast.success(t("settings.users.roleUpdated"));
       qc.invalidateQueries({ queryKey: ["settings", "users"] });
     },
-    onError: (e: any) => toast.error(e?.message || "Greška pri ažuriranju uloge"),
+    onError: (e: any) => toast.error(e?.message || t("settings.users.roleError")),
   });
 
   const activeMut = useMutation({
     mutationFn: async (vars: { userId: string; aktivan: boolean }) =>
       toggleActive({ data: { userId: vars.userId, aktivan: vars.aktivan, currentUserId: user!.id } }),
     onSuccess: () => {
-      toast.success("Status korisnika ažuriran");
+      toast.success(t("settings.users.statusUpdated"));
       qc.invalidateQueries({ queryKey: ["settings", "users"] });
     },
-    onError: (e: any) => toast.error(e?.message || "Greška pri promeni statusa"),
+    onError: (e: any) => toast.error(e?.message || t("settings.users.statusError")),
   });
 
   return (
