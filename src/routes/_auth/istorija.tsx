@@ -253,10 +253,10 @@ function IstorijaPage() {
           </>
         ) : (
           <>
-            <KpiCard icon={<Clipboard className="size-5" />} label="Radni nalozi" value={String(data?.kpis.radniNalozi ?? 0)} tone="primary" />
-            <KpiCard icon={<Boxes className="size-5" />} label="Ukupno proiz." value={`${data?.kpis.ukupnoProiz ?? 0} kom`} tone="success" />
-            <KpiCard icon={<ShieldAlert className="size-5" />} label="Ukupno škarta" value={`${data?.kpis.ukupnoSkart ?? 0} kom`} tone="warning" />
-            <KpiCard icon={<Clock className="size-5" />} label="Zastoji ukupno" value={fmtDuration(data?.kpis.zastojiTotalMin ?? 0)} sub={`${data?.kpis.zastojiCount ?? 0} događaja`} tone="danger" />
+            <KpiCard icon={<Clipboard className="size-5" />} label={t("istorija.kpi.radniNalozi")} value={String(data?.kpis.radniNalozi ?? 0)} tone="primary" />
+            <KpiCard icon={<Boxes className="size-5" />} label={t("istorija.kpi.ukupnoProiz")} value={`${data?.kpis.ukupnoProiz ?? 0} ${t("istorija.kpi.kom")}`} tone="success" />
+            <KpiCard icon={<ShieldAlert className="size-5" />} label={t("istorija.kpi.ukupnoSkart")} value={`${data?.kpis.ukupnoSkart ?? 0} ${t("istorija.kpi.kom")}`} tone="warning" />
+            <KpiCard icon={<Clock className="size-5" />} label={t("istorija.kpi.zastoji")} value={fmtDuration(data?.kpis.zastojiTotalMin ?? 0)} sub={t("istorija.kpi.events", { count: data?.kpis.zastojiCount ?? 0 })} tone="danger" />
           </>
         )}
       </div>
@@ -264,7 +264,7 @@ function IstorijaPage() {
 
       {error && (
         <div className="rounded-lg border border-destructive/50 bg-destructive/10 text-destructive px-3 py-2 text-sm mb-3">
-          Greška pri učitavanju istorije: {(error as Error).message}
+          {t("istorija.loadError", { msg: (error as Error).message })}
         </div>
       )}
 
