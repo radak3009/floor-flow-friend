@@ -305,11 +305,11 @@ export interface AvailableWorkOrder {
   sifraArtikla?: string;
   artikalNaziv?: string;
   planiranaKolicina?: number;
-  bukingSort?: number;
+  bukingSort?: number | string;
   narucilac?: string;
 }
 
-const STARTABLE_STATUSES = ["Potvrđen", "Spreman", "Upit", "Pauziran"];
+const STARTABLE_STATUSES = ["Potvrđen", "Spreman", "Pauziran"];
 
 export const getAvailableWorkOrdersFn = createServerFn({ method: "GET" })
   .inputValidator((input: { resursId: string }) => {
