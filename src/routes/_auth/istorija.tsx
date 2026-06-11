@@ -322,9 +322,10 @@ function Th({ children, className = "" }: { children?: React.ReactNode; classNam
 function Td({ children, className = "" }: { children?: React.ReactNode; className?: string }) {
   return <td className={`px-3 py-2.5 align-middle ${className}`}>{children}</td>;
 }
-function EmptyRow({ cols, text = "Nema podataka" }: { cols: number; text?: string }) {
+function EmptyRow({ cols, text }: { cols: number; text?: string }) {
+  const { t } = useTranslation();
   return (
-    <tr><td colSpan={cols} className="px-3 py-10 text-center text-muted-foreground">{text}</td></tr>
+    <tr><td colSpan={cols} className="px-3 py-10 text-center text-muted-foreground">{text ?? t("istorija.noData")}</td></tr>
   );
 }
 
