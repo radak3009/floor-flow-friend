@@ -216,9 +216,9 @@ function IstorijaPage() {
           </label>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <Button size="sm" variant="outline" onClick={() => { const td = new Date(); setFrom(toDateInput(td)); setTo(toDateInput(td)); }}>{t("istorija.preset.today", { defaultValue: "Danas" })}</Button>
-          <Button size="sm" variant="outline" onClick={() => setPreset(7)}>{t("istorija.preset.7d", { defaultValue: "7 dana" })}</Button>
-          <Button size="sm" variant="outline" onClick={() => setPreset(30)}>{t("istorija.preset.30d", { defaultValue: "30 dana" })}</Button>
+          <Button size="sm" variant="outline" onClick={() => { const td = new Date(); setFrom(toDateInput(td)); setTo(toDateInput(td)); }}>{t("istorija.preset.today")}</Button>
+          <Button size="sm" variant="outline" onClick={() => setPreset(7)}>{t("istorija.preset.7d")}</Button>
+          <Button size="sm" variant="outline" onClick={() => setPreset(30)}>{t("istorija.preset.30d")}</Button>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <Select value={resursId || "__all"} onValueChange={(v) => setResursId(v === "__all" ? "" : v)}>
@@ -231,14 +231,14 @@ function IstorijaPage() {
             </SelectContent>
           </Select>
           <Select value={status || "__all"} onValueChange={(v) => setStatus(v === "__all" ? "" : v)}>
-            <SelectTrigger><SelectValue placeholder="Svi statusi" /></SelectTrigger>
+            <SelectTrigger><SelectValue placeholder={t("istorija.allStatuses")} /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="__all">Svi statusi</SelectItem>
-              <SelectItem value="U toku">U toku</SelectItem>
-              <SelectItem value="Pauziran">Pauziran</SelectItem>
-              <SelectItem value="Potvrđen">Potvrđen</SelectItem>
-              <SelectItem value="Završen">Završen</SelectItem>
-              <SelectItem value="Arhiviran">Arhiviran</SelectItem>
+              <SelectItem value="__all">{t("istorija.allStatuses")}</SelectItem>
+              <SelectItem value="U toku">{t("istorija.statusUToku")}</SelectItem>
+              <SelectItem value="Pauziran">{t("istorija.statusPauziran")}</SelectItem>
+              <SelectItem value="Potvrđen">{t("istorija.statusPotvrdjen")}</SelectItem>
+              <SelectItem value="Završen">{t("istorija.statusZavrsen")}</SelectItem>
+              <SelectItem value="Arhiviran">{t("istorija.statusArhiviran")}</SelectItem>
             </SelectContent>
           </Select>
         </div>
