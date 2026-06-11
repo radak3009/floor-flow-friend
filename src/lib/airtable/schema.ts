@@ -98,6 +98,7 @@ export const FIELDS = {
     "ispravnoProizvedeno": "fld5fYPGgd9o4iUpL",
     "skart": "fldaQJSyjrdHaupjm",
     "preostaloZaProizvodnju": "fldYfdzVGjrrOz4G1",
+    "preostaloMaterijalaKg": "fldIOApeVYDbuh9HI",
     "realizovano": "fld76rh9FuoeSaz1k",
     "monitoring": "fldV2zqTfwSA5BWjj",
     "inspekcija": "fld2KrBlEC79wddyw",
