@@ -1083,6 +1083,7 @@ function AvailableWorkOrdersCard({
   startPending: boolean;
   onStart: (wo: AvailableWorkOrder, startTimeIso: string | undefined) => void;
 }) {
+  const { t } = useTranslation();
   const callAvail = useServerFn(getAvailableWorkOrdersFn);
   const [confirmWO, setConfirmWO] = useState<AvailableWorkOrder | null>(null);
   const [detailsWO, setDetailsWO] = useState<AvailableWorkOrder | null>(null);
