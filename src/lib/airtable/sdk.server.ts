@@ -144,13 +144,21 @@ function applyAliases(fields: Record<string, Record<string, string>>): Record<st
 
 async function getContext(): Promise<ActiveContext> {
   const cfg = await loadActiveConfig();
+  const staticFields = STATIC_FIELDS as unknown as Record<string, Record<string, string>>;
   if (cfg && cfg.tables && cfg.fields && Object.keys(cfg.tables).length > 0) {
+    // Merge static fields as fallback (override wins). Ensures fields added
+    // to schema.ts post-regen still resolve without forcing a re-regenerate.
+    const merged: Record<string, Record<string, string>> = {};
+    const allTables = new Set([...Object.keys(staticFields), ...Object.keys(cfg.fields)]);
+    for (const t of allTables) {
+      merged[t] = { ...(staticFields[t] ?? {}), ...(cfg.fields[t] ?? {}) };
+    }
     return {
       mode: "direct",
       baseId: cfg.baseId,
       pat: cfg.pat,
       tables: cfg.tables,
-      fields: applyAliases(cfg.fields),
+      fields: applyAliases(merged),
     };
   }
   if (cfg && (!cfg.tables || !cfg.fields)) {
@@ -159,14 +167,14 @@ async function getContext(): Promise<ActiveContext> {
       baseId: cfg.baseId,
       pat: cfg.pat,
       tables: STATIC_TABLES as unknown as Record<string, string>,
-      fields: applyAliases(STATIC_FIELDS as unknown as Record<string, Record<string, string>>),
+      fields: applyAliases(staticFields),
     };
   }
   return {
     mode: "gateway",
     baseId: AIRTABLE_BASE_ID,
     tables: STATIC_TABLES as unknown as Record<string, string>,
-    fields: applyAliases(STATIC_FIELDS as unknown as Record<string, Record<string, string>>),
+    fields: applyAliases(staticFields),
   };
 }
 
