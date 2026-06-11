@@ -198,7 +198,7 @@ function MonitoringPage() {
     onMutate: async () => {
       await queryClient.cancelQueries({ queryKey: ["dashboard"] });
     },
-    onSuccess: () => { setStartFor(null); toast.success("Nalog pokrenut"); },
+    onSuccess: () => { setStartFor(null); toast.success(t("monitoring.successStart")); },
     onError: (e) => {
       clearBusy();
       onErr(e as Error);
