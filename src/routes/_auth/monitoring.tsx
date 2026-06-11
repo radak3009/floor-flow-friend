@@ -346,7 +346,7 @@ function MonitoringPage() {
           title={startFor.nazivLinije}
           pending={startM.isPending}
           onSubmit={(args) => {
-            beginCardBusy(startFor.monitoringId, "Pokretanje naloga…");
+            beginCardBusy(startFor.monitoringId, t("monitoring.busyStart"));
             startM.mutate({ ...args, monitoringId: startFor.monitoringId, resursId: startFor.resursiId });
           }}
         />
@@ -364,11 +364,11 @@ function MonitoringPage() {
           onSubmitted={({ ongoing, grupaNaziv }) => {
             if (!downtimeFor) return;
             if (ongoing && grupaNaziv) {
-              beginCardBusy(downtimeFor.monitoringId, "Definisanje zastoja…");
+              beginCardBusy(downtimeFor.monitoringId, t("monitoring.busyDtDefine"));
             } else if (!ongoing) {
-              beginCardBusy(downtimeFor.monitoringId, "Podela zastoja…");
+              beginCardBusy(downtimeFor.monitoringId, t("monitoring.busyDtSplit"));
             } else {
-              beginCardBusy(downtimeFor.monitoringId, "Čuvanje…");
+              beginCardBusy(downtimeFor.monitoringId, t("monitoring.busySaving"));
             }
           }}
         />
@@ -405,7 +405,7 @@ function MonitoringPage() {
             };
             beginCardBusy(
               confirmAct.m.monitoringId,
-              confirmAct.kind === "pause" ? "Pauziranje…" : "Nastavljanje…",
+              confirmAct.kind === "pause" ? t("monitoring.busyPause") : t("monitoring.busyResume"),
             );
             if (confirmAct.kind === "pause") pauseM.mutate(args);
             else resumeM.mutate(args);
@@ -420,7 +420,7 @@ function MonitoringPage() {
           brojNaloga={stopFor.brojNaloga}
           pending={stopM.isPending}
           onConfirm={(payload) => {
-            beginCardBusy(stopFor.monitoringId, "Zatvaranje naloga…");
+            beginCardBusy(stopFor.monitoringId, t("monitoring.busyStop"));
             stopM.mutate({
               data: {
                 radniNalogId: stopFor.radniNalogId ?? "",
@@ -440,7 +440,7 @@ function MonitoringPage() {
           onOpenChange={(v) => !v && setScrapFor(null)}
           pending={scrapM.isPending}
           onConfirm={(payload) => {
-            beginCardBusy(scrapFor.monitoringId, "Upis škarta…");
+            beginCardBusy(scrapFor.monitoringId, t("monitoring.busyScrap"));
             scrapM.mutate({
               data: {
                 radniNalogId: scrapFor.radniNalogId ?? "",
