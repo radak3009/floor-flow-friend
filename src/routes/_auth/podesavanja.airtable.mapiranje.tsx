@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { ChevronLeft, ShieldAlert, CheckCircle2, AlertTriangle, XCircle, Search } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -21,7 +22,7 @@ import {
 } from "@/lib/airtable/config.functions";
 
 export const Route = createFileRoute("/_auth/podesavanja/airtable/mapiranje")({
-  head: () => ({ meta: [{ title: "Mapiranje polja — Airtable" }] }),
+  head: () => ({ meta: [{ title: "Field mapping — Airtable" }] }),
   component: FieldMappingPage,
 });
 
@@ -30,6 +31,7 @@ function isSuperAdmin(roleName: string | undefined): boolean {
 }
 
 function FieldMappingPage() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const qc = useQueryClient();
   const getOverview = useServerFn(getFieldMappingOverviewFn);
@@ -42,7 +44,6 @@ function FieldMappingPage() {
     queryFn: () => getOverview({ data: { currentUserId: user!.id } }),
   });
 
-  // picks: pending izmene koje korisnik treba da snimi. key = `${table}::${camelKey}` -> fieldId
   const [picks, setPicks] = useState<Record<string, string>>({});
   const [filter, setFilter] = useState("");
   const [showOnlyDiff, setShowOnlyDiff] = useState(false);
@@ -59,16 +60,16 @@ function FieldMappingPage() {
           const [table, key] = k.split("::");
           return { table, key, fieldId: v };
         });
-      if (overrides.length === 0) throw new Error("Nema izmena za snimanje.");
+      if (overrides.length === 0) throw new Error(t("settings.mapiranje.noChanges"));
       return saveOverrides({ data: { currentUserId: user!.id, overrides } });
     },
     onSuccess: (res) => {
-      toast.success(`Sačuvano: ${res.appliedCount} izmena. Nedostaje obaveznih: ${res.missingRequired.length}.`);
+      toast.success(t("settings.mapiranje.saveOk", { applied: res.appliedCount, missing: res.missingRequired.length }));
       setPicks({});
       qc.invalidateQueries({ queryKey: ["airtable-mapping-overview"] });
       qc.invalidateQueries({ queryKey: ["airtable-config-status"] });
     },
-    onError: (e: any) => toast.error(e?.message ?? "Greška pri snimanju"),
+    onError: (e: any) => toast.error(e?.message ?? t("settings.mapiranje.saveErr")),
   });
 
   const allEntries: FieldMappingEntry[] = useMemo(() => {
@@ -90,13 +91,13 @@ function FieldMappingPage() {
     });
     const groups = new Map<string, FieldMappingEntry[]>();
     for (const e of filtered) {
-      const k = e.isOptional ? `Opciono: ${e.tableLabel}` : e.tableLabel;
+      const k = e.isOptional ? t("settings.mapiranje.groupOptional", { label: e.tableLabel }) : e.tableLabel;
       const arr = groups.get(k) ?? [];
       arr.push(e);
       groups.set(k, arr);
     }
     return [...groups.entries()];
-  }, [allEntries, filter, showOnlyDiff, picks]);
+  }, [allEntries, filter, showOnlyDiff, picks, t]);
 
   const stats = useMemo(() => {
     let mapped = 0, missing = 0, stale = 0;
@@ -115,9 +116,9 @@ function FieldMappingPage() {
         <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-6 flex items-start gap-3">
           <ShieldAlert className="size-5 text-destructive shrink-0 mt-0.5" />
           <div>
-            <div className="font-semibold">Pristup zabranjen</div>
+            <div className="font-semibold">{t("settings.mapiranje.accessDeniedTitle")}</div>
             <div className="text-sm text-muted-foreground mt-1">
-              Samo Super Admin može da menja mapiranje polja.
+              {t("settings.mapiranje.accessDeniedDesc")}
             </div>
           </div>
         </div>
@@ -132,26 +133,24 @@ function FieldMappingPage() {
           to="/podesavanja/airtable"
           className="text-sm text-muted-foreground hover:text-foreground inline-flex items-center gap-1"
         >
-          <ChevronLeft className="size-4" /> Airtable konfiguracija
+          <ChevronLeft className="size-4" /> {t("settings.mapiranje.back")}
         </Link>
       </div>
 
       <div>
-        <h1 className="text-xl font-semibold uppercase tracking-wide">Mapiranje polja</h1>
+        <h1 className="text-xl font-semibold uppercase tracking-wide">{t("settings.mapiranje.title")}</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Pregled „pre / posle": leva kolona je naziv koji aplikacija očekuje (iz koda), desna je
-          aktuelno polje u Airtable bazi na koje je mapirano. Ako se nazivi razlikuju (npr.
-          „Masa komada (kg)" vs „Masa komad (g)") — ovde to ručno potvrđuješ izborom.
+          {t("settings.mapiranje.desc")}
         </p>
       </div>
 
       {/* Status pills */}
       <div className="flex flex-wrap gap-2">
-        <Pill icon={<CheckCircle2 className="size-3.5" />} label="Mapirano" count={stats.mapped} tone="ok" />
-        <Pill icon={<XCircle className="size-3.5" />} label="Nedostaje" count={stats.missing} tone="err" />
-        <Pill icon={<AlertTriangle className="size-3.5" />} label="Zastarelo" count={stats.stale} tone="warn" />
+        <Pill icon={<CheckCircle2 className="size-3.5" />} label={t("settings.mapiranje.statusMapped")} count={stats.mapped} tone="ok" />
+        <Pill icon={<XCircle className="size-3.5" />} label={t("settings.mapiranje.statusMissing")} count={stats.missing} tone="err" />
+        <Pill icon={<AlertTriangle className="size-3.5" />} label={t("settings.mapiranje.statusStale")} count={stats.stale} tone="warn" />
         {stats.pending > 0 && (
-          <Pill icon={<span className="text-[10px]">●</span>} label="Pending izmena" count={stats.pending} tone="info" />
+          <Pill icon={<span className="text-[10px]">●</span>} label={t("settings.mapiranje.statusPending")} count={stats.pending} tone="info" />
         )}
       </div>
 
@@ -160,7 +159,7 @@ function FieldMappingPage() {
         <div className="relative flex-1">
           <Search className="size-4 absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Pretraži po ključu, labeli ili nazivu polja…"
+            placeholder={t("settings.mapiranje.searchPh")}
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
             className="pl-8"
@@ -173,30 +172,28 @@ function FieldMappingPage() {
             onChange={(e) => setShowOnlyDiff(e.target.checked)}
             className="size-4"
           />
-          Sakrij OK redove (prikaži samo razlike / pending)
+          {t("settings.mapiranje.hideOk")}
         </label>
         <Button
           onClick={() => saveM.mutate()}
           disabled={saveM.isPending || stats.pending === 0}
         >
-          {saveM.isPending ? "Snimam…" : `Sačuvaj ${stats.pending} izmen${stats.pending === 1 ? "u" : "a"}`}
+          {saveM.isPending ? t("settings.mapiranje.saving") : t("settings.mapiranje.saveCount", { count: stats.pending })}
         </Button>
       </div>
 
       {overviewQ.isLoading && (
-        <div className="text-sm text-muted-foreground">Učitavanje…</div>
+        <div className="text-sm text-muted-foreground">{t("settings.mapiranje.loading")}</div>
       )}
 
       {overviewQ.data && !overviewQ.data.hasOverride && (
         <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-5 text-sm">
-          Nema aktivne Airtable override konfiguracije. Otvori{" "}
-          <Link to="/podesavanja/airtable" className="underline">Airtable konfiguraciju</Link>{" "}
-          i prvo regeneriši mapu.
+          {t("settings.mapiranje.noOverride")}
         </div>
       )}
 
       {overviewQ.data?.hasOverride && filteredByTable.length === 0 && (
-        <div className="text-sm text-muted-foreground italic">Nema redova koji odgovaraju filteru.</div>
+        <div className="text-sm text-muted-foreground italic">{t("settings.mapiranje.noRows")}</div>
       )}
 
       <div className="space-y-6">
@@ -208,10 +205,10 @@ function FieldMappingPage() {
             <div className="divide-y divide-border">
               {/* Header row (desktop) */}
               <div className="hidden md:grid grid-cols-[1.2fr_1fr_1.4fr_auto] gap-3 px-4 py-2 text-[11px] uppercase tracking-wide text-muted-foreground">
-                <div>Očekivano (aplikacija)</div>
-                <div>Trenutno (Airtable)</div>
-                <div>Ručna promena</div>
-                <div className="text-right">Status</div>
+                <div>{t("settings.mapiranje.colExpected")}</div>
+                <div>{t("settings.mapiranje.colCurrent")}</div>
+                <div>{t("settings.mapiranje.colManual")}</div>
+                <div className="text-right">{t("settings.mapiranje.colStatus")}</div>
               </div>
               {items.map((e) => {
                 const pickKey = `${e.table}::${e.key}`;
@@ -226,7 +223,7 @@ function FieldMappingPage() {
                         {e.expectedLabel}
                         {e.isOptional && (
                           <span className="ml-2 text-[10px] uppercase text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
-                            opciono
+                            {t("settings.mapiranje.optionalTag")}
                           </span>
                         )}
                       </div>
@@ -241,10 +238,10 @@ function FieldMappingPage() {
                         </div>
                       ) : e.status === "stale" ? (
                         <div className="text-amber-600 dark:text-amber-400 text-xs">
-                          ⚠ ID <code>{e.currentFieldId}</code> ne postoji u bazi
+                          {t("settings.mapiranje.staleNote", { id: e.currentFieldId })}
                         </div>
                       ) : (
-                        <div className="text-muted-foreground italic text-xs">— nije mapirano —</div>
+                        <div className="text-muted-foreground italic text-xs">{t("settings.mapiranje.notMapped")}</div>
                       )}
                     </div>
                     <div>
@@ -256,8 +253,8 @@ function FieldMappingPage() {
                           <SelectValue
                             placeholder={
                               e.candidates.length === 0
-                                ? "Tabela ne postoji u bazi"
-                                : "— Izaberi polje za promenu —"
+                                ? t("settings.mapiranje.noTableInBase")
+                                : t("settings.mapiranje.pickField")
                             }
                           />
                         </SelectTrigger>
@@ -282,12 +279,12 @@ function FieldMappingPage() {
                           }
                           className="text-xs text-muted-foreground hover:text-foreground mt-1 underline"
                         >
-                          Otkaži izmenu
+                          {t("settings.mapiranje.cancelChange")}
                         </button>
                       )}
                     </div>
                     <div className="text-right">
-                      <StatusBadge status={e.status} pending={!!pending} />
+                      <StatusBadge status={e.status} pending={!!pending} t={t} />
                     </div>
                   </div>
                 );
@@ -326,31 +323,31 @@ function Pill({
   );
 }
 
-function StatusBadge({ status, pending }: { status: FieldMappingEntry["status"]; pending: boolean }) {
+function StatusBadge({ status, pending, t }: { status: FieldMappingEntry["status"]; pending: boolean; t: (k: string) => string }) {
   if (pending) {
     return (
       <span className="text-[10px] uppercase font-semibold px-2 py-0.5 rounded bg-primary/15 text-primary">
-        Pending
+        {t("settings.mapiranje.pending")}
       </span>
     );
   }
   if (status === "mapped") {
     return (
       <span className="text-[10px] uppercase font-semibold px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-700 dark:text-emerald-400">
-        OK
+        {t("settings.mapiranje.ok")}
       </span>
     );
   }
   if (status === "stale") {
     return (
       <span className="text-[10px] uppercase font-semibold px-2 py-0.5 rounded bg-amber-500/15 text-amber-700 dark:text-amber-400">
-        Zastarelo
+        {t("settings.mapiranje.statusStale")}
       </span>
     );
   }
   return (
     <span className="text-[10px] uppercase font-semibold px-2 py-0.5 rounded bg-destructive/15 text-destructive">
-      Nedostaje
+      {t("settings.mapiranje.statusMissing")}
     </span>
   );
 }
