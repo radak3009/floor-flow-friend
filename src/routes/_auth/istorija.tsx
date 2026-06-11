@@ -14,6 +14,7 @@ import { Clipboard, Boxes, ShieldAlert, Clock, AlertTriangle } from "lucide-reac
 import WorkOrderDetailsDialog from "@/components/work-order/WorkOrderDetailsDialog";
 import type { MachineDashboardRow } from "@/lib/api/dashboard.functions";
 import { useAuth } from "@/context/AuthContext";
+import { formatDateTime } from "@/lib/i18n/format";
 
 export const Route = createFileRoute("/_auth/istorija")({
   head: () => ({ meta: [{ title: "Istorija — MES Shop Floor" }] }),
