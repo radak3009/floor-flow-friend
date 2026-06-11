@@ -126,9 +126,9 @@ function RoleIDozvolePage() {
     <div className="p-4 md:p-6 max-w-4xl mx-auto">
       <div className="flex items-center gap-3 mb-6">
         <Link to="/podesavanja" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
-          <ArrowLeft className="size-4" /> Nazad
+          <ArrowLeft className="size-4" /> {t("settings.roles.back")}
         </Link>
-        <h1 className="text-xl font-semibold uppercase tracking-wide">Role i dozvole</h1>
+        <h1 className="text-xl font-semibold uppercase tracking-wide">{t("settings.roles.title")}</h1>
       </div>
 
       {q.isLoading ? (
