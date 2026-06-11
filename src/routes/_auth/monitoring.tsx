@@ -122,7 +122,7 @@ function MonitoringPage() {
 
   const onErr = (e: Error) => {
     if (e?.message?.startsWith("KONFLIKT:")) {
-      toast.error(e.message.replace(/^KONFLIKT:\s*/, "Konflikt: ") + " Osvežavam stanje…");
+      toast.error(e.message.replace(/^KONFLIKT:\s*/, t("shopFloor.conflictPrefix")) + t("monitoring.conflictRefresh"));
       invalidateDash();
       setConfirmAct(null);
       setStopFor(null);
