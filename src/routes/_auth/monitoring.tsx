@@ -540,52 +540,52 @@ function MachineRow({
         <Button
           variant="outline"
           size="sm"
-          aria-label="Unos škarta"
+          aria-label={t("monitoring.scrapEntry")}
           className="border-[color:var(--color-status-downtime)] text-[color:var(--color-status-downtime)]"
           onClick={onScrap}
         >
-          <PackageMinus className={`size-4 ${ico}`} /> <span className={lbl}>Unos škarta</span>
+          <PackageMinus className={`size-4 ${ico}`} /> <span className={lbl}>{t("monitoring.scrapEntry")}</span>
         </Button>
       )}
       {showInspect && (
-        <Button variant="outline" size="sm" aria-label="Inspekcija" onClick={onInspect}>
-          <ClipboardCheck className={`size-4 ${ico}`} /> <span className={lbl}>Inspekcija</span>
+        <Button variant="outline" size="sm" aria-label={t("monitoring.inspection")} onClick={onInspect}>
+          <ClipboardCheck className={`size-4 ${ico}`} /> <span className={lbl}>{t("monitoring.inspection")}</span>
         </Button>
       )}
       {showDowntime && (
         <Button
           variant="outline"
           size="sm"
-          aria-label="Prijavi zastoj"
+          aria-label={t("monitoring.reportDowntime")}
           className="border-[color:var(--color-status-downtime)] text-[color:var(--color-status-downtime)]"
           onClick={onDowntime}
         >
-          <AlertTriangle className={`size-4 ${ico}`} /> <span className={lbl}>Prijavi zastoj</span>
+          <AlertTriangle className={`size-4 ${ico}`} /> <span className={lbl}>{t("monitoring.reportDowntime")}</span>
         </Button>
       )}
       {showStart && (
-        <Button size="sm" aria-label="Pokreni" onClick={onStart}>
-          <Play className={`size-4 ${ico}`} /> <span className={lbl}>Pokreni</span>
+        <Button size="sm" aria-label={t("monitoring.run")} onClick={onStart}>
+          <Play className={`size-4 ${ico}`} /> <span className={lbl}>{t("monitoring.run")}</span>
         </Button>
       )}
       {showResume && (
-        <Button size="sm" aria-label="Nastavi" onClick={onResume}>
-          <Play className={`size-4 ${ico}`} /> <span className={lbl}>Nastavi</span>
+        <Button size="sm" aria-label={t("monitoring.resume")} onClick={onResume}>
+          <Play className={`size-4 ${ico}`} /> <span className={lbl}>{t("monitoring.resume")}</span>
         </Button>
       )}
       {showPause && (
-        <Button variant="outline" size="sm" aria-label="Pauziraj" onClick={onPause}>
+        <Button variant="outline" size="sm" aria-label={t("monitoring.pause")} onClick={onPause}>
           <Pause className="size-4" />
         </Button>
       )}
       {showStop && (
         <Button
           size="sm"
-          aria-label="STOP"
+          aria-label={t("monitoring.stop")}
           onClick={onStop}
           className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
         >
-          <Square className={`size-4 fill-current ${ico}`} /> <span className={lbl}>STOP</span>
+          <Square className={`size-4 fill-current ${ico}`} /> <span className={lbl}>{t("monitoring.stop")}</span>
         </Button>
       )}
     </>
@@ -599,23 +599,23 @@ function MachineRow({
 
   const stats = !isZastoj ? (
     <>
-      <Stat label="Planiran ciklus" value={m.projektovanCiklusSek != null ? `${fmtSec(m.projektovanCiklusSek)} s` : "—"} />
-      <Stat label="Trenutni ciklus" value={m.trenutniCiklusSek != null ? `${m.trenutniCiklusSek.toLocaleString("sr", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} s` : "—"} />
+      <Stat label={t("monitoring.plannedCycle")} value={m.projektovanCiklusSek != null ? `${fmtSec(m.projektovanCiklusSek)} s` : "—"} />
+      <Stat label={t("monitoring.currentCycle")} value={m.trenutniCiklusSek != null ? `${formatNumber(m.trenutniCiklusSek, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} s` : "—"} />
       <Stat
-        label="Performanse"
+        label={t("monitoring.performance")}
         value={m.performanse != null ? `${(m.performanse * 100).toFixed(1)}%` : "—"}
         valueColor={perfColor(m.performanse)}
       />
-      <Stat label="Preostalo vreme" value={m.procenjenoTrajanje || "—"} />
+      <Stat label={t("monitoring.remainingTime")} value={m.procenjenoTrajanje || "—"} />
     </>
   ) : (
     <>
       <div className="col-span-2 min-w-0">
-        <div className="text-xs text-muted-foreground uppercase">Zastoj</div>
-        <div className="font-semibold truncate">{m.grupaZastoja || "Nedefinisan zastoj"}</div>
+        <div className="text-xs text-muted-foreground uppercase">{t("monitoring.downtime")}</div>
+        <div className="font-semibold truncate">{m.grupaZastoja || t("monitoring.undefinedDowntime")}</div>
         {m.tipZastojaDetail && <div className="text-xs text-muted-foreground truncate">{m.tipZastojaDetail}</div>}
       </div>
-      <Stat label="Trajanje" value={m.trajanjeZastoja || "—"} />
+      <Stat label={t("monitoring.duration")} value={m.trajanjeZastoja || "—"} />
     </>
   );
 
