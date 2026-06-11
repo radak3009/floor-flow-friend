@@ -83,7 +83,6 @@ function MonitoringPage() {
   });
 
   const [filter, setFilter] = useState<StatusFilter>("all");
-  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
 
   // dialog state
   const [detailsFor, setDetailsFor] = useState<MachineDashboardRow | null>(null);
