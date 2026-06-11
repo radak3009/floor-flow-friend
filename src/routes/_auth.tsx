@@ -65,7 +65,7 @@ function AuthLayout() {
 
   const visible = useMemo(() => {
     if (!user) return [];
-    return NAV.filter((n) => user.permissions[n.perm] || (n.to === "/shop-floor" && user.permissions.viewAllFactoryMachines));
+    return NAV.filter((n) => user.permissions[n.perm]);
   }, [user]);
 
   const currentTitle = useMemo(() => {
