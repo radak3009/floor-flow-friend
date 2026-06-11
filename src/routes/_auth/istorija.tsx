@@ -93,10 +93,11 @@ function qualityBadge(s?: string, kind: "general" | "ok" = "general") {
 }
 
 function ColSearch({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const { t } = useTranslation();
   return (
     <input
       type="text"
-      placeholder="Pretraži…"
+      placeholder={t("istorija.searchPh")}
       value={value}
       onChange={(e) => onChange(e.target.value)}
       className="w-full h-8 px-2 text-xs rounded border border-input bg-background"
