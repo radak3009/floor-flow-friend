@@ -103,6 +103,7 @@ export const REQUIRED_SCHEMA: ReadonlyArray<RequiredTable> = [
       { key: "vremeZatvaranjaNaloga", label: "Vreme zatvaranja naloga" },
       { key: "ispravnoProizvedeno", label: "Ispravno proizvedeno" },
       { key: "skart", label: "Škart" },
+      { key: "preostaloMaterijalaKg", label: "Preostalo materijala (kg)" },
       { key: "monitoring", label: "Monitoring (link)" },
     ],
   },

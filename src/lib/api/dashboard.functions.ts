@@ -24,6 +24,7 @@ export interface MachineDashboardRow {
   procenatSkarta?: number;
   dobroProizvedeno?: number;
   preostaloZaProizvodnju?: number;
+  preostaloMaterijalaKg?: number;
   ciklusiTotal?: number;
   projektovanCiklusSek?: number;
   trenutniCiklusSek?: number;
@@ -214,6 +215,7 @@ async function buildAirtableDashboard(): Promise<{ machines: MachineDashboardRow
       procenatSkarta: pickNum(m.procenatSkarta),
       dobroProizvedeno: pickNum(m.dobroProizvedeno),
       preostaloZaProizvodnju: pickNum(m.preostaloZaProizvodnju),
+      preostaloMaterijalaKg: pickNum((wo as Record<string, unknown> | undefined)?.preostaloMaterijalaKg),
       ciklusiTotal: pickNum(m.ciklusiTotal),
       projektovanCiklusSek: pickNum(m.projektovanCiklusSek),
       trenutniCiklusSek: pickNum(m.trenutniCiklusSek),
