@@ -124,9 +124,9 @@ function KorisniciPage() {
     <div className="p-4 md:p-6 max-w-4xl mx-auto">
       <div className="flex items-center gap-3 mb-4">
         <Link to="/podesavanja" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
-          <ArrowLeft className="size-4" /> Nazad
+          <ArrowLeft className="size-4" /> {t("settings.users.back")}
         </Link>
-        <h1 className="text-xl font-semibold uppercase tracking-wide">Korisnici</h1>
+        <h1 className="text-xl font-semibold uppercase tracking-wide">{t("settings.users.title")}</h1>
       </div>
 
 
@@ -138,12 +138,12 @@ function KorisniciPage() {
             setSearch(e.target.value);
             navigate({ search: (prev: { page?: number; pageSize?: number }) => ({ ...prev, page: 1 }) });
           }}
-          placeholder="Pretraži po imenu ili ID-u…"
+          placeholder={t("settings.users.searchPh")}
           className="pl-9 h-11"
         />
       </div>
       <div className="text-sm text-muted-foreground mb-4">
-        {usersQ.isLoading ? "…" : `${totalCount} korisnika`}
+        {usersQ.isLoading ? "…" : t("settings.users.count", { count: totalCount })}
       </div>
 
       <div className="space-y-3">
