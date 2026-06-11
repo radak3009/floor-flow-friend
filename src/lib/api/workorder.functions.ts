@@ -393,16 +393,21 @@ export const getAvailableWorkOrdersFn = createServerFn({ method: "GET" })
         sifraArtikla: typeof r.sifraArtikla === "string" ? r.sifraArtikla : Array.isArray(r.sifraArtikla) ? String(r.sifraArtikla[0] ?? "") || undefined : undefined,
         artikalNaziv,
         planiranaKolicina: typeof r.planiranaKolicina === "number" ? r.planiranaKolicina : undefined,
-        bukingSort: typeof r.bukingSort === "number" ? r.bukingSort : undefined,
+        bukingSort: typeof r.bukingSort === "number" || typeof r.bukingSort === "string" ? r.bukingSort : undefined,
         narucilac,
       };
     });
 
     items.sort((a, b) => {
-      const av = a.bukingSort ?? Number.POSITIVE_INFINITY;
-      const bv = b.bukingSort ?? Number.POSITIVE_INFINITY;
-      if (av !== bv) return av - bv;
-      return (a.brojNaloga || "").localeCompare(b.brojNaloga || "", "sr");
+      const av = a.bukingSort;
+      const bv = b.bukingSort;
+      const aMissing = av == null || av === "";
+      const bMissing = bv == null || bv === "";
+      if (aMissing && bMissing) return (a.brojNaloga || "").localeCompare(b.brojNaloga || "", "sr");
+      if (aMissing) return 1;
+      if (bMissing) return -1;
+      if (typeof av === "number" && typeof bv === "number") return av - bv;
+      return String(av).localeCompare(String(bv), "sr", { numeric: true });
     });
 
     return { items };
