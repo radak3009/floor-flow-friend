@@ -42,7 +42,18 @@ function LoginPage() {
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    if (ready && user) navigate({ to: "/shop-floor" });
+    if (ready && user) {
+      const dest = user.permissions.viewAssignedMachines
+        ? "/shop-floor"
+        : user.permissions.viewAllFactoryMachines
+          ? "/monitoring"
+          : user.permissions.viewHistory
+            ? "/istorija"
+            : user.permissions.manageUsers
+              ? "/podesavanja"
+              : "/shop-floor";
+      navigate({ to: dest });
+    }
   }, [ready, user, navigate]);
 
   useEffect(() => {
