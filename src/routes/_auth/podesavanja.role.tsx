@@ -160,12 +160,12 @@ function RoleIDozvolePage() {
           {SECTIONS.map((section) => (
             <div key={section.title} className="rounded-xl border border-border bg-card overflow-hidden">
               <div className="px-4 py-2 text-xs uppercase tracking-wider text-muted-foreground bg-muted/40 border-b border-border">
-                {section.title}
+                {t(`settings.roles.sections.${section.title}`)}
               </div>
               <div className="divide-y divide-border">
                 {section.fields.map((f) => (
                   <div key={f.key} className="flex items-center justify-between px-4 py-3">
-                    <div className="text-sm">{f.label}</div>
+                    <div className="text-sm">{t(`settings.roles.fields.${f.label}`)}</div>
                     <Switch
                       checked={active.permissions[f.key]}
                       disabled={mut.isPending}
