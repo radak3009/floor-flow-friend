@@ -306,8 +306,10 @@ export interface AvailableWorkOrder {
   artikalNaziv?: string;
   planiranaKolicina?: number;
   bukingSort?: number | string;
+  planiranStart?: string;
   narucilac?: string;
 }
+
 
 const STARTABLE_STATUSES = ["Potvrđen", "Spreman", "Pauziran"];
 
@@ -394,18 +396,25 @@ export const getAvailableWorkOrdersFn = createServerFn({ method: "GET" })
         artikalNaziv,
         planiranaKolicina: typeof r.planiranaKolicina === "number" ? r.planiranaKolicina : undefined,
         bukingSort: typeof r.bukingSort === "number" || typeof r.bukingSort === "string" ? r.bukingSort : undefined,
+        planiranStart: typeof r.planiranStart === "string" ? r.planiranStart : undefined,
         narucilac,
       };
     });
 
-    // Sortiranje isključivo po Buking sort (Date and time), Earliest → Latest.
+    // Sortiranje: najpre po Planiran start, zatim po Buking sort
+    // (oba Date and time, Earliest → Latest). Prazne vrednosti idu na kraj.
     const toTime = (v: unknown): number => {
       if (v == null || v === "") return Number.POSITIVE_INFINITY;
       if (typeof v === "number") return v;
       const t = Date.parse(String(v));
       return Number.isFinite(t) ? t : Number.POSITIVE_INFINITY;
     };
-    items.sort((a, b) => toTime(a.bukingSort) - toTime(b.bukingSort));
+    items.sort((a, b) => {
+      const ps = toTime(a.planiranStart) - toTime(b.planiranStart);
+      if (ps !== 0) return ps;
+      return toTime(a.bukingSort) - toTime(b.bukingSort);
+    });
+
 
     return { items };
     });
