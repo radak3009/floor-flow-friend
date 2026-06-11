@@ -695,28 +695,19 @@ function MachineRow({
             </div>
           )}
 
-          {/* Toggle */}
-          <div>
-            <button onClick={onToggle} className="text-primary text-sm inline-flex items-center gap-1 hover:underline">
-              {expanded ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
-              {expanded ? t("monitoring.hideDetails") : t("monitoring.showDetails")}
-            </button>
+          <div className="grid grid-cols-2 md:grid-cols-7 gap-4 pt-2 border-t border-border">
+            <Stat label={t("monitoring.plannedQty")} value={`${formatNumber(m.planiranaKolicina ?? 0)} ${t("monitoring.kom")}`} />
+            <Stat label={t("monitoring.produced")} value={`${formatNumber(goodQty)} ${t("monitoring.kom")}`} />
+            <Stat
+              label={t("monitoring.realization")}
+              value={`${realizacijaPct.toFixed(1)}%`}
+              valueColor={overproduction ? "var(--color-status-downtime)" : undefined}
+            />
+            <Stat label={t("monitoring.scrapLabel")} value={`${formatNumber(m.skart ?? 0)} ${t("monitoring.kom")}`} valueColor="var(--color-status-nosignal)" />
+            <Stat label={t("monitoring.scrapPct")} value={m.procenatSkarta != null ? `${(m.procenatSkarta * 100).toFixed(1)}%` : "—"} />
+            <Stat label={t("monitoring.remaining")} value={`${formatNumber(m.preostaloZaProizvodnju ?? 0)} ${t("monitoring.kom")}`} />
+            <Stat label={t("monitoring.remainingMaterialKg")} value={`${formatNumber(m.preostaloMaterijalaKg ?? 0)} kg`} />
           </div>
-
-          {expanded && (
-            <div className="grid grid-cols-2 md:grid-cols-6 gap-4 pt-2 border-t border-border">
-              <Stat label={t("monitoring.plannedQty")} value={`${formatNumber(m.planiranaKolicina ?? 0)} ${t("monitoring.kom")}`} />
-              <Stat label={t("monitoring.produced")} value={`${formatNumber(goodQty)} ${t("monitoring.kom")}`} />
-              <Stat
-                label={t("monitoring.realization")}
-                value={`${realizacijaPct.toFixed(1)}%`}
-                valueColor={overproduction ? "var(--color-status-downtime)" : undefined}
-              />
-              <Stat label={t("monitoring.scrapLabel")} value={`${formatNumber(m.skart ?? 0)} ${t("monitoring.kom")}`} valueColor="var(--color-status-nosignal)" />
-              <Stat label={t("monitoring.scrapPct")} value={m.procenatSkarta != null ? `${(m.procenatSkarta * 100).toFixed(1)}%` : "—"} />
-              <Stat label={t("monitoring.remaining")} value={`${formatNumber(m.preostaloZaProizvodnju ?? 0)} ${t("monitoring.kom")}`} />
-            </div>
-          )}
         </div>
       )}
 
