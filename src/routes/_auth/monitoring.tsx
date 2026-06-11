@@ -704,7 +704,7 @@ function MachineRow({
           <div>
             <button onClick={onToggle} className="text-primary text-sm inline-flex items-center gap-1 hover:underline">
               {expanded ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
-              {expanded ? "Sakrij detalje" : "Prikaži detalje"}
+              {expanded ? t("monitoring.hideDetails") : t("monitoring.showDetails")}
             </button>
           </div>
 
