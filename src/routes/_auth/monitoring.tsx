@@ -658,11 +658,18 @@ function MachineRow({
               </button>
             </div>
             <div className="col-span-12 md:col-span-7 min-w-0">
-              <div className="truncate">
+              <div
+                className="break-words whitespace-normal md:truncate"
+                title={[m.sifraArtikla, m.artikalNaziv].filter(Boolean).join(" | ")}
+              >
                 {m.sifraArtikla ? <span className="font-medium">{m.sifraArtikla} | </span> : null}
                 {m.artikalNaziv}
               </div>
-              {m.narucilac && <div className="text-xs text-muted-foreground truncate">{m.narucilac}</div>}
+              {m.narucilac && (
+                <div className="text-xs text-muted-foreground break-words whitespace-normal md:truncate" title={m.narucilac}>
+                  {m.narucilac}
+                </div>
+              )}
             </div>
             <div className="col-span-12 md:col-span-3 md:text-right">
               <div className="text-xs text-muted-foreground uppercase">{t("monitoring.activeWork")}</div>
