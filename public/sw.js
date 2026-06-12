@@ -80,18 +80,34 @@ self.addEventListener("fetch", (event) => {
   if (isHtmlNavigation(request)) {
     event.respondWith(
       (async () => {
+        // NetworkFirst sa TIMEOUT-om: na lošem Wi-Fi-ju ne visi do browser
+        // timeouta — posle NAV_TIMEOUT_MS pada na keširani HTML. Ako keša
+        // nema (prva poseta), ipak sačeka originalni mrežni odgovor.
+        const NAV_TIMEOUT_MS = 4000;
+        const networkPromise = fetch(request);
+        const cache = await caches.open(HTML_CACHE);
         try {
-          const fresh = await fetch(request);
-          const cache = await caches.open(HTML_CACHE);
+          const fresh = await Promise.race([
+            networkPromise,
+            new Promise((_, reject) =>
+              setTimeout(() => reject(new Error("nav-timeout")), NAV_TIMEOUT_MS),
+            ),
+          ]);
           cache.put(request, fresh.clone()).catch(() => {});
           return fresh;
         } catch {
-          const cache = await caches.open(HTML_CACHE);
           const cached = await cache.match(request);
           if (cached) return cached;
           const fallback = await caches.match("/");
           if (fallback) return fallback;
-          return new Response("Offline", { status: 503 });
+          // Nema keša: bolje sporo nego ništa — sačekaj mrežu do kraja.
+          try {
+            const fresh = await networkPromise;
+            cache.put(request, fresh.clone()).catch(() => {});
+            return fresh;
+          } catch {
+            return new Response("Offline", { status: 503 });
+          }
         }
       })(),
     );
