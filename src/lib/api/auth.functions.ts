@@ -105,30 +105,36 @@ export const loginFn = createServerFn({ method: "POST" })
       return { success: false as const, error: "Korisnik nema dodeljenu ulogu" };
     }
 
-    const role = await Role.findOne({ id: roleId });
+    // PERF: čitanje uloge i upis prijave idu PARALELNO (dva nezavisna
+    // Airtable poziva) — skraćuje login za vreme jednog round-trip-a.
+    // Upis prijave je i dalje soft-fail (login ne sme da padne zbog loga).
+    const rolePromise = Role.findOne({ id: roleId }).catch(() => null);
+    const prijavaPromise = (async () => {
+      try {
+        const prijava = await PrijaveNaSistem.create({
+          record: {
+            datumIVremePrijave: new Date().toISOString(),
+            korisnik: [kontakt.id],
+            ...(uredaj ? { ureaj: uredaj } : {}),
+          },
+        });
+        return prijava.id;
+      } catch (e) {
+        console.warn(
+          `[soft-fail] PrijaveNaSistem.create — upis prijave nije uspeo. Proveri: (1) PAT data.records:write scope, (2) obavezna polja u tabeli, (3) mapiranje 'korisnik' linka. Greška:`,
+          e instanceof Error ? e.message : e,
+        );
+        return "";
+      }
+    })();
+
+    const [role, prijavaId] = await Promise.all([rolePromise, prijavaPromise]);
     if (!role) {
       await finishAttempt(false, "no_role");
       return { success: false as const, error: "Uloga nije pronađena" };
     }
 
     const permissions = buildPermissions(role);
-
-    let prijavaId = "";
-    try {
-      const prijava = await PrijaveNaSistem.create({
-        record: {
-          datumIVremePrijave: new Date().toISOString(),
-          korisnik: [kontakt.id],
-          ...(uredaj ? { ureaj: uredaj } : {}),
-        },
-      });
-      prijavaId = prijava.id;
-    } catch (e) {
-      console.warn(
-        `[soft-fail] PrijaveNaSistem.create — upis prijave nije uspeo. Proveri: (1) PAT data.records:write scope, (2) obavezna polja u tabeli, (3) mapiranje 'korisnik' linka. Greška:`,
-        e instanceof Error ? e.message : e,
-      );
-    }
 
     await finishAttempt(true, "ok");
 
