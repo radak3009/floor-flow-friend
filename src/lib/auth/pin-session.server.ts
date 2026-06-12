@@ -74,6 +74,45 @@ export async function signSession(params: { userId: string; roleId: string; prij
   return `${b64urlEncode(payloadBytes)}.${b64urlEncode(sig)}`;
 }
 
+/**
+ * Verifikuje token uz dozvoljen "grace" period nakon isteka (za sliding
+ * refresh): potpis MORA biti validan (dokaz da je token legitimno izdat),
+ * a `exp` sme biti u prošlosti najviše `graceSec` sekundi.
+ */
+export async function verifySessionAllowExpired(
+  token: string,
+  graceSec: number,
+): Promise<PinSessionPayload | null> {
+  if (!token || typeof token !== "string") return null;
+  const dot = token.indexOf(".");
+  if (dot <= 0) return null;
+  let payloadBytes: Uint8Array;
+  let sigBytes: Uint8Array;
+  try {
+    payloadBytes = b64urlDecode(token.slice(0, dot));
+    sigBytes = b64urlDecode(token.slice(dot + 1));
+  } catch {
+    return null;
+  }
+  const expected = await hmac(payloadBytes);
+  if (!timingSafeEqualBytes(expected, sigBytes)) return null;
+  let payload: PinSessionPayload;
+  try {
+    payload = JSON.parse(new TextDecoder().decode(payloadBytes));
+  } catch {
+    return null;
+  }
+  if (!payload || typeof payload.exp !== "number" || typeof payload.userId !== "string" || !payload.userId) return null;
+  if (Math.floor(Date.now() / 1000) >= payload.exp + graceSec) return null;
+  return payload;
+}
+
+/* Čita PIN session token iz zaglavlja zahteva (X-PIN-Session ili Authorization). */
+export function readPinSessionToken(headers: Headers | undefined | null): string {
+  const auth = headers?.get("x-pin-session") ?? headers?.get("authorization") ?? "";
+  return auth.startsWith("Bearer ") ? auth.slice("Bearer ".length) : auth;
+}
+
 export async function verifySession(token: string): Promise<PinSessionPayload | null> {
   if (!token || typeof token !== "string") return null;
   const dot = token.indexOf(".");
@@ -107,9 +146,7 @@ export async function verifySession(token: string): Promise<PinSessionPayload | 
  */
 export const requirePinSession = createMiddleware({ type: "function" }).server(async ({ next }) => {
   const req = getRequest();
-  const h = req?.headers;
-  const auth = h?.get("x-pin-session") ?? h?.get("authorization") ?? "";
-  const token = auth.startsWith("Bearer ") ? auth.slice("Bearer ".length) : auth;
+  const token = readPinSessionToken(req?.headers);
   const payload = await verifySession(token);
   if (!payload) {
     throw new Error("Unauthorized: nevažeća ili istekla sesija");

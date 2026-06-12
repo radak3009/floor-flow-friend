@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { Monitoring, RadniNalozi, Artikli, Resursi, Komitenti } from "@/lib/airtable/sdk.server";
 import type { RecordOf } from "@/lib/airtable/types";
 import { sharedMemoize } from "@/lib/airtable/shared-cache.server";
+import { requirePinSession } from "@/lib/auth/pin-session.server";
 import { getActiveOverrides, reconcileAndDrop, deleteOverride, type OverridePatch, type OverrideExpected } from "@/lib/api/overrides.server";
 
 export interface MachineDashboardRow {
@@ -309,7 +310,9 @@ async function withTimeout<T>(p: Promise<T>, ms: number, fallback: T): Promise<T
   ]);
 }
 
-export const getDashboardFn = createServerFn({ method: "GET" }).handler(async (): Promise<DashboardResult> => {
+export const getDashboardFn = createServerFn({ method: "GET" })
+  .middleware([requirePinSession])
+  .handler(async (): Promise<DashboardResult> => {
   // 1) Cached Airtable build (deljeno za celu flotu)
   const cached = await sharedMemoize("dashboard:airtable:v1", 60_000, buildAirtableDashboard);
 
@@ -372,4 +375,3 @@ export const getDashboardFn = createServerFn({ method: "GET" }).handler(async ()
 
   return { machines, kpis };
 });
-

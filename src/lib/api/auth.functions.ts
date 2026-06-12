@@ -4,7 +4,7 @@ import { z } from "zod";
 import { KontaktOsobe, Role, PrijaveNaSistem } from "@/lib/airtable/sdk.server";
 import { verifyPin } from "@/lib/auth/pin-hash.server";
 import { checkLockout, recordAttempt, clientIp, type AttemptReason } from "@/lib/auth/login-throttle.server";
-import { signSession } from "@/lib/auth/pin-session.server";
+import { signSession, verifySessionAllowExpired, readPinSessionToken } from "@/lib/auth/pin-session.server";
 
 const PermissionFields = [
   "viewAssignedMachines",
@@ -164,12 +164,32 @@ export const logoutFn = createServerFn({ method: "POST" })
     return { success: true };
   });
 
-const RefreshSchema = z.object({ userId: z.string().min(1).max(64) });
+const RefreshSchema = z.object({ userId: z.string().min(1).max(64).optional() });
+
+// Koliko dugo nakon isteka tokena i dalje dozvoljavamo "sliding" refresh.
+// Potpis tokena mora biti validan; ovo samo ograničava starost. Tablet koji
+// nije otvorio aplikaciju duže od ovoga mora ponovo da unese PIN.
+const REFRESH_GRACE_SEC = 30 * 24 * 60 * 60; // 30 dana
 
 export const refreshSessionFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => RefreshSchema.parse(d))
-  .handler(async ({ data }) => {
-    const kontakt = await KontaktOsobe.findOne({ id: data.userId }).catch(() => null);
+  .handler(async () => {
+    // BEZBEDNOST: identitet se čita ISKLJUČIVO iz potpisanog tokena u
+    // zaglavlju (attachPinSession ga šalje uz svaki poziv), nikad iz
+    // klijentskog payload-a — inače bi bilo ko mogao da "osveži" sesiju
+    // proizvoljnog korisnika samo pogađanjem ID-a zapisa.
+    let headerToken = "";
+    try {
+      const req = getRequest();
+      headerToken = readPinSessionToken(req?.headers);
+    } catch {
+      /* SSR-safe */
+    }
+    const payload = await verifySessionAllowExpired(headerToken, REFRESH_GRACE_SEC);
+    if (!payload) return { invalid: true as const };
+    const userId = payload.userId;
+
+    const kontakt = await KontaktOsobe.findOne({ id: userId }).catch(() => null);
     if (!kontakt) return { invalid: true as const };
     if (getCI(kontakt, "aktivan") === false) return { invalid: true as const };
 
@@ -181,7 +201,7 @@ export const refreshSessionFn = createServerFn({ method: "POST" })
     if (!role) return { invalid: true as const };
 
     // Izdaj sveži token uz svaki refresh (sliding expiration).
-    const token = await signSession({ userId: data.userId, roleId });
+    const token = await signSession({ userId, roleId, prijavaId: payload.prijavaId });
 
     return {
       invalid: false as const,
