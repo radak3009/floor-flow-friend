@@ -123,12 +123,19 @@ export default function StartWorkOrderDialog({
               </SelectTrigger>
               <SelectContent>
                 {items.map((it) => (
-                  <SelectItem key={it.id} value={it.id} className="h-12">
-                    <span className="flex items-center gap-2 flex-wrap">
-                      <span className="font-medium">{it.brojNaloga}</span>
-                      {it.sifraArtikla && <span className="text-muted-foreground text-xs">{it.sifraArtikla}</span>}
-                      <StatusBadge status={it.statusNaloga} />
-                    </span>
+                  <SelectItem key={it.id} value={it.id} className="py-2">
+                    <div className="flex flex-col gap-0.5 w-full">
+                      <span className="flex items-center gap-2 flex-wrap">
+                        <span className="font-medium">{it.brojNaloga}</span>
+                        {it.sifraArtikla && <span className="text-muted-foreground text-xs">{it.sifraArtikla}</span>}
+                        <StatusBadge status={it.statusNaloga} />
+                      </span>
+                      {it.artikalNaziv && (
+                        <span className="text-[11px] sm:text-xs text-muted-foreground leading-snug break-words whitespace-normal">
+                          {it.artikalNaziv}
+                        </span>
+                      )}
+                    </div>
                   </SelectItem>
                 ))}
               </SelectContent>
