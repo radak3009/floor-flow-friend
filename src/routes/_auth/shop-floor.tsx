@@ -12,6 +12,7 @@ import {
   type PromenaRow,
   type AvailableWorkOrder,
 } from "@/lib/api/workorder.functions";
+import { isMassScrapTipName } from "@/lib/scrap";
 import WorkOrderDetailsDialog from "@/components/work-order/WorkOrderDetailsDialog";
 import StartWorkOrderDialog, { type StartWorkOrderSubmitArgs } from "@/components/work-order/StartWorkOrderDialog";
 import { Button } from "@/components/ui/button";
