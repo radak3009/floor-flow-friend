@@ -307,6 +307,8 @@ export const getHistoryFn = createServerFn({ method: "GET" })
       addCreatorIds(kontaktiIds, r);
       addId(rnIds, r.radniNalog);
       addId(artikliIds, r.artikal);
+      // artikalNaziv je lookup koji ponekad vraća recordId stringove (rec...) — pokupimo ih radi rezolucije naziva
+      for (const v of asArray((r as AnyRow).artikalNaziv)) addId(artikliIds, v);
     }
     for (const r of inspRecords) {
       addId(resursiIds, r.proizvodnaLinija);
