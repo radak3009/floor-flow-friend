@@ -310,7 +310,7 @@ async function withTimeout<T>(p: Promise<T>, ms: number, fallback: T): Promise<T
   ]);
 }
 
-export const getDashboardFn = createServerFn({ method: "GET" })
+export const getDashboardFn = createServerFn({ method: "POST" })
   .middleware([requirePinSession])
   .handler(async (): Promise<DashboardResult> => {
   // 1) Cached Airtable build (deljeno za celu flotu)
