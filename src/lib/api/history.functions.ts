@@ -455,7 +455,16 @@ export const getHistoryFn = createServerFn({ method: "GET" })
         datum: pickStr(r.datumKreiranja),
         brojNaloga: rnId ? rnMap.get(rnId) : pickStr(r.radniNalog),
         masina: resolveName(resursiMap, r.proizvodnaLinija),
-        artikalNaziv: pickStr((r as AnyRow).artikalNaziv) ?? resolveName(artikliMap, r.artikal),
+        artikalNaziv: (() => {
+          // 1) ako lookup vraća recordId — rezolvuj preko artikliMap
+          const lookupId = firstId((r as AnyRow).artikalNaziv);
+          if (lookupId && artikliMap.get(lookupId)) return artikliMap.get(lookupId);
+          // 2) ako lookup vraća stvarni naziv (string koji NIJE recordId)
+          const lookupStr = pickStr((r as AnyRow).artikalNaziv);
+          if (lookupStr && !lookupStr.startsWith("rec")) return lookupStr;
+          // 3) fallback na link artikal
+          return resolveName(artikliMap, r.artikal);
+        })(),
         kategorija,
         kolicina: pickNum(r.kolicinaSkarta),
         operator: resolveCreator(kontaktiMap, r),
