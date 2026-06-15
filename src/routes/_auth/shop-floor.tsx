@@ -796,6 +796,7 @@ interface StopPayload {
   grupaSkartaId?: string;
   tipSkartaId?: string;
   komentar?: string;
+  masaSkartaKg?: number;
 }
 
 function StopWithBatchDialog({
@@ -813,14 +814,26 @@ function StopWithBatchDialog({
   const [grupa, setGrupa] = useState<string>("");
   const [tip, setTip] = useState<string>("");
   const [komentar, setKomentar] = useState<string>("");
+  const [masa, setMasa] = useState<string>("");
+
+  const callDropdown = useServerFn(getDropdownDataFn);
+  const q = useQuery({
+    queryKey: ["dropdown-data"],
+    queryFn: () => callDropdown(),
+    staleTime: 10 * 60_000,
+  });
+  const tipNaziv = q.data?.tipovi.find((x) => x.id === tip)?.naziv;
 
   const skartNum = Number(skart);
   const hasSkart = !!skart && skartNum > 0;
+  const showMasa = hasSkart && isMassScrapTipName(tipNaziv);
+  const masaNum = Number(masa);
+  const masaValid = !showMasa || masa === "" || (Number.isFinite(masaNum) && masaNum >= 0);
   const dobroNum = Number(dobro);
   const validDobro = !isNaN(dobroNum) && dobroNum >= 0;
-  const valid = validDobro && (!hasSkart || (!!grupa && !!tip));
+  const valid = validDobro && (!hasSkart || (!!grupa && !!tip)) && masaValid;
 
-  const reset = () => { setDobro("0"); setSkart(""); setGrupa(""); setTip(""); setKomentar(""); };
+  const reset = () => { setDobro("0"); setSkart(""); setGrupa(""); setTip(""); setKomentar(""); setMasa(""); };
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) reset(); onOpenChange(v); }}>
@@ -866,6 +879,23 @@ function StopWithBatchDialog({
             <ScrapGroupTypeSelectors grupa={grupa} setGrupa={setGrupa} tip={tip} setTip={setTip} />
           )}
 
+          {showMasa && (
+            <div className="space-y-2">
+              <Label htmlFor="stop-masa">{t("dialogs.scrap.massLabel")}</Label>
+              <Input
+                id="stop-masa"
+                type="number"
+                inputMode="decimal"
+                min={0}
+                step="0.01"
+                value={masa}
+                onChange={(e) => setMasa(e.target.value)}
+                className="h-12"
+                placeholder={t("dialogs.scrap.massPh")}
+              />
+            </div>
+          )}
+
           <div className="space-y-2">
             <Label htmlFor="stop-komentar">{t("dialogs.commentLabel")}</Label>
             <Textarea
@@ -889,6 +919,7 @@ function StopWithBatchDialog({
               grupaSkartaId: hasSkart ? grupa : undefined,
               tipSkartaId: hasSkart ? tip : undefined,
               komentar: komentar.trim() || undefined,
+              masaSkartaKg: showMasa && masa !== "" && Number.isFinite(masaNum) ? masaNum : undefined,
             })}
             disabled={!valid}
             className="min-w-28 bg-destructive text-destructive-foreground hover:bg-destructive/90"
@@ -906,6 +937,7 @@ interface ScrapPayload {
   grupaSkartaId: string;
   tipSkartaId: string;
   komentar?: string;
+  masaSkartaKg?: number;
 }
 
 function ScrapDialog({
@@ -921,11 +953,23 @@ function ScrapDialog({
   const [grupa, setGrupa] = useState<string>("");
   const [tip, setTip] = useState<string>("");
   const [komentar, setKomentar] = useState<string>("");
+  const [masa, setMasa] = useState<string>("");
+
+  const callDropdown = useServerFn(getDropdownDataFn);
+  const q = useQuery({
+    queryKey: ["dropdown-data"],
+    queryFn: () => callDropdown(),
+    staleTime: 10 * 60_000,
+  });
+  const tipNaziv = q.data?.tipovi.find((x) => x.id === tip)?.naziv;
+  const showMasa = isMassScrapTipName(tipNaziv);
 
   const skartNum = Number(skart);
-  const valid = !!skart && skartNum > 0 && !!grupa && !!tip;
+  const masaNum = Number(masa);
+  const masaValid = !showMasa || masa === "" || (Number.isFinite(masaNum) && masaNum >= 0);
+  const valid = !!skart && skartNum > 0 && !!grupa && !!tip && masaValid;
 
-  const reset = () => { setSkart(""); setGrupa(""); setTip(""); setKomentar(""); };
+  const reset = () => { setSkart(""); setGrupa(""); setTip(""); setKomentar(""); setMasa(""); };
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) reset(); onOpenChange(v); }}>
@@ -952,6 +996,23 @@ function ScrapDialog({
 
           <ScrapGroupTypeSelectors grupa={grupa} setGrupa={setGrupa} tip={tip} setTip={setTip} />
 
+          {showMasa && (
+            <div className="space-y-2">
+              <Label htmlFor="scrap-masa">{t("dialogs.scrap.massLabel")}</Label>
+              <Input
+                id="scrap-masa"
+                type="number"
+                inputMode="decimal"
+                min={0}
+                step="0.01"
+                value={masa}
+                onChange={(e) => setMasa(e.target.value)}
+                className="h-12"
+                placeholder={t("dialogs.scrap.massPh")}
+              />
+            </div>
+          )}
+
           <div className="space-y-2">
             <Label htmlFor="scrap-komentar">{t("dialogs.commentLabel")}</Label>
             <Textarea
@@ -974,6 +1035,7 @@ function ScrapDialog({
               grupaSkartaId: grupa,
               tipSkartaId: tip,
               komentar: komentar.trim() || undefined,
+              masaSkartaKg: showMasa && masa !== "" && Number.isFinite(masaNum) ? masaNum : undefined,
             })}
             disabled={!valid}
             className="min-w-28"
