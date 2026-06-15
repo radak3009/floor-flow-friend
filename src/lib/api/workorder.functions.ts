@@ -478,6 +478,7 @@ interface ScrapInput {
   clientOpId?: string;
   monitoringId?: string;
   prevSkart?: number;
+  masaSkartaKg?: number;
 }
 
 function validateScrap(input: ScrapInput): ScrapInput {
@@ -485,6 +486,9 @@ function validateScrap(input: ScrapInput): ScrapInput {
   if (!(input.kolicinaSkarta > 0)) throw new Error("Količina škarta mora biti veća od 0");
   if (!input.grupaSkartaId) throw new Error("Grupa škarta je obavezna");
   if (!input.tipSkartaId) throw new Error("Tip škarta je obavezan");
+  if (input.masaSkartaKg !== undefined && !(Number.isFinite(input.masaSkartaKg) && input.masaSkartaKg >= 0)) {
+    throw new Error("Masa škarta (kg) mora biti broj >= 0");
+  }
   return input;
 }
 
@@ -498,6 +502,7 @@ async function createScrapRow(input: ScrapInput) {
   };
   // proizvodnaLinija je computed — ne upisuje se
   if (input.komentar) record.komentar = input.komentar;
+  if (input.masaSkartaKg !== undefined) record.masaSkartaKg = input.masaSkartaKg;
   if (input.clientOpId) record.__extraFields = { clientOpId: input.clientOpId };
   await PromeneNaloga.create({ record });
 }
@@ -534,6 +539,7 @@ interface StopBatchInput {
   komentar?: string;
   clientOpId?: string;
   monitoringId?: string;
+  masaSkartaKg?: number;
 }
 
 export const stopWorkOrderWithBatchFn = createServerFn({ method: "POST" })
@@ -544,6 +550,9 @@ export const stopWorkOrderWithBatchFn = createServerFn({ method: "POST" })
     if (input.kolicinaSkarta && input.kolicinaSkarta > 0) {
       if (!input.grupaSkartaId) throw new Error("Grupa škarta je obavezna kada se upisuje škart");
       if (!input.tipSkartaId) throw new Error("Tip škarta je obavezan kada se upisuje škart");
+    }
+    if (input.masaSkartaKg !== undefined && !(Number.isFinite(input.masaSkartaKg) && input.masaSkartaKg >= 0)) {
+      throw new Error("Masa škarta (kg) mora biti broj >= 0");
     }
     return { ...input, userId: "" } as StopBatchInput;
   })
@@ -586,6 +595,7 @@ export const stopWorkOrderWithBatchFn = createServerFn({ method: "POST" })
           kolicinaSkarta: data.kolicinaSkarta,
           grupaSkartaId: data.grupaSkartaId!,
           tipSkartaId: data.tipSkartaId!,
+          masaSkartaKg: data.masaSkartaKg,
         });
       }
       // 2) Stop + dobroProizvedeno row

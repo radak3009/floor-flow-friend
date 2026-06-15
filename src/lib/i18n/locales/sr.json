@@ -451,7 +451,9 @@
       "pickType": "Izaberite tip",
       "pickGroupFirst": "Prvo izaberite grupu",
       "noTypes": "Nema tipova",
-      "noTypesForGroup": "Nema tipova za izabranu grupu"
+      "noTypesForGroup": "Nema tipova za izabranu grupu",
+      "massLabel": "Masa škarta (kg)",
+      "massPh": "0"
     },
     "commentLabel": "Komentar (opciono)",
     "pomeriStart": {

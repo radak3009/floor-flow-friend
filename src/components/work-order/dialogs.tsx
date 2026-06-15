@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getDropdownDataFn } from "@/lib/api/workorder.functions";
 import { pickName } from "@/lib/i18n/format";
+import { isMassScrapTipName } from "@/lib/scrap";
 import { useTranslation, Trans } from "react-i18next";
 
 export type ConfirmActionKind = "start" | "resume" | "pause";
@@ -109,6 +110,7 @@ export interface ScrapPayload {
   grupaSkartaId: string;
   tipSkartaId: string;
   komentar?: string;
+  masaSkartaKg?: number;
 }
 
 export function ScrapDialog({
@@ -124,10 +126,22 @@ export function ScrapDialog({
   const [grupa, setGrupa] = useState("");
   const [tip, setTip] = useState("");
   const [komentar, setKomentar] = useState("");
+  const [masa, setMasa] = useState("");
+
+  const callDropdown = useServerFn(getDropdownDataFn);
+  const q = useQuery({
+    queryKey: ["dropdown-data"],
+    queryFn: () => callDropdown(),
+    staleTime: 10 * 60_000,
+  });
+  const tipNaziv = q.data?.tipovi.find((x) => x.id === tip)?.naziv;
+  const showMasa = isMassScrapTipName(tipNaziv);
 
   const skartNum = Number(skart);
-  const valid = !!skart && skartNum > 0 && !!grupa && !!tip;
-  const reset = () => { setSkart(""); setGrupa(""); setTip(""); setKomentar(""); };
+  const masaNum = Number(masa);
+  const masaValid = !showMasa || masa === "" || (Number.isFinite(masaNum) && masaNum >= 0);
+  const valid = !!skart && skartNum > 0 && !!grupa && !!tip && masaValid;
+  const reset = () => { setSkart(""); setGrupa(""); setTip(""); setKomentar(""); setMasa(""); };
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) reset(); onOpenChange(v); }}>
@@ -144,6 +158,14 @@ export function ScrapDialog({
               className="h-14 text-2xl font-semibold text-center" placeholder="0" />
           </div>
           <ScrapGroupTypeSelectors grupa={grupa} setGrupa={setGrupa} tip={tip} setTip={setTip} />
+          {showMasa && (
+            <div className="space-y-2">
+              <Label htmlFor="scrap-masa">{t("dialogs.scrap.massLabel")}</Label>
+              <Input id="scrap-masa" type="number" inputMode="decimal" min={0} step="0.01"
+                value={masa} onChange={(e) => setMasa(e.target.value)}
+                className="h-12" placeholder={t("dialogs.scrap.massPh")} />
+            </div>
+          )}
           <div className="space-y-2">
             <Label htmlFor="scrap-komentar">{t("dialogs.commentLabel")}</Label>
             <Textarea id="scrap-komentar" value={komentar} onChange={(e) => setKomentar(e.target.value)} rows={2} />
@@ -155,7 +177,13 @@ export function ScrapDialog({
             size="touch"
             pending={pending}
             pendingLabel={t("dialogs.scrap.btnPending")}
-            onClick={() => onConfirm({ kolicinaSkarta: skartNum, grupaSkartaId: grupa, tipSkartaId: tip, komentar: komentar.trim() || undefined })}
+            onClick={() => onConfirm({
+              kolicinaSkarta: skartNum,
+              grupaSkartaId: grupa,
+              tipSkartaId: tip,
+              komentar: komentar.trim() || undefined,
+              masaSkartaKg: showMasa && masa !== "" && Number.isFinite(masaNum) ? masaNum : undefined,
+            })}
             disabled={!valid} className="min-w-28">
             {t("dialogs.scrap.btn")}
           </AsyncButton>
@@ -171,6 +199,7 @@ export interface StopPayload {
   grupaSkartaId?: string;
   tipSkartaId?: string;
   komentar?: string;
+  masaSkartaKg?: number;
 }
 
 export function StopWithBatchDialog({
@@ -188,13 +217,25 @@ export function StopWithBatchDialog({
   const [grupa, setGrupa] = useState("");
   const [tip, setTip] = useState("");
   const [komentar, setKomentar] = useState("");
+  const [masa, setMasa] = useState("");
+
+  const callDropdown = useServerFn(getDropdownDataFn);
+  const q = useQuery({
+    queryKey: ["dropdown-data"],
+    queryFn: () => callDropdown(),
+    staleTime: 10 * 60_000,
+  });
+  const tipNaziv = q.data?.tipovi.find((x) => x.id === tip)?.naziv;
 
   const skartNum = Number(skart);
   const hasSkart = !!skart && skartNum > 0;
+  const showMasa = hasSkart && isMassScrapTipName(tipNaziv);
+  const masaNum = Number(masa);
+  const masaValid = !showMasa || masa === "" || (Number.isFinite(masaNum) && masaNum >= 0);
   const dobroNum = Number(dobro);
   const validDobro = !isNaN(dobroNum) && dobroNum >= 0;
-  const valid = validDobro && (!hasSkart || (!!grupa && !!tip));
-  const reset = () => { setDobro("0"); setSkart(""); setGrupa(""); setTip(""); setKomentar(""); };
+  const valid = validDobro && (!hasSkart || (!!grupa && !!tip)) && masaValid;
+  const reset = () => { setDobro("0"); setSkart(""); setGrupa(""); setTip(""); setKomentar(""); setMasa(""); };
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) reset(); onOpenChange(v); }}>
@@ -221,6 +262,14 @@ export function StopWithBatchDialog({
               className="h-12" placeholder="0" />
           </div>
           {hasSkart && <ScrapGroupTypeSelectors grupa={grupa} setGrupa={setGrupa} tip={tip} setTip={setTip} />}
+          {showMasa && (
+            <div className="space-y-2">
+              <Label htmlFor="stop-masa">{t("dialogs.scrap.massLabel")}</Label>
+              <Input id="stop-masa" type="number" inputMode="decimal" min={0} step="0.01"
+                value={masa} onChange={(e) => setMasa(e.target.value)}
+                className="h-12" placeholder={t("dialogs.scrap.massPh")} />
+            </div>
+          )}
           <div className="space-y-2">
             <Label htmlFor="stop-komentar">{t("dialogs.commentLabel")}</Label>
             <Textarea id="stop-komentar" value={komentar} onChange={(e) => setKomentar(e.target.value)} rows={2} />
@@ -238,6 +287,7 @@ export function StopWithBatchDialog({
               grupaSkartaId: hasSkart ? grupa : undefined,
               tipSkartaId: hasSkart ? tip : undefined,
               komentar: komentar.trim() || undefined,
+              masaSkartaKg: showMasa && masa !== "" && Number.isFinite(masaNum) ? masaNum : undefined,
             })}
             disabled={!valid}
             className="min-w-28 bg-destructive text-destructive-foreground hover:bg-destructive/90">
