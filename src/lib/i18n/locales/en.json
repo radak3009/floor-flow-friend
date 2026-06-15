@@ -451,7 +451,9 @@
       "pickType": "Select type",
       "pickGroupFirst": "Select a group first",
       "noTypes": "No types",
-      "noTypesForGroup": "No types for the selected group"
+      "noTypesForGroup": "No types for the selected group",
+      "massLabel": "Scrap mass (kg)",
+      "massPh": "0"
     },
     "commentLabel": "Comment (optional)",
     "pomeriStart": {

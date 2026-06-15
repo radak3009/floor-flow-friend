@@ -484,7 +484,8 @@ export const FIELDS = {
     "artikal": "fldLGqX35OTPmHdt6",
     "artikalNaziv": "fldCIdL6OIWFYw6Rq",
     "masaUlivkaKg": "fldcuIHqq0pDQ8ScZ",
-    "materijal": "fldjfRRPzxkPFrHPc"
+    "materijal": "fldjfRRPzxkPFrHPc",
+    "masaSkartaKg": "fld5TFBnsiHsMVlm9"
   },
   "CycleIntervals": {
     "naziv": "fld57d3DbDPbzQDnR",
