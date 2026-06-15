@@ -347,8 +347,7 @@ function ShopFloorPage() {
                       <FileText className="size-4" />
                     </Button>
                   </div>
-                  <div className="text-sm mt-1">
-                    {m.sifraArtikla && <span className="font-medium">{m.sifraArtikla} | </span>}
+                  <div className="text-sm mt-1 break-words whitespace-normal md:truncate" title={m.artikalNaziv || ""}>
                     {m.artikalNaziv}
                   </div>
                   {m.narucilac && <div className="text-xs text-muted-foreground">{m.narucilac}</div>}
