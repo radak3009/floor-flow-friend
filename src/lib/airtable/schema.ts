@@ -483,6 +483,7 @@ export const FIELDS = {
     "upisSkarta": "fldHYJZNrsBqHjjHm",
     "razlogBrisanjaSkarta": "fldBhdLjMqF7prMhs",
     "artikal": "fld0G61hJ7xQfzNyz",
+    "artikalNaziv": "fldCIdL6OIWFYw6Rq",
     "masaUlivkaKg": "fldcuIHqq0pDQ8ScZ",
     "materijal": "fldjfRRPzxkPFrHPc"
   },

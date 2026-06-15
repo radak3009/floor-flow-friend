@@ -453,7 +453,7 @@ export const getHistoryFn = createServerFn({ method: "GET" })
         datum: pickStr(r.datumKreiranja),
         brojNaloga: rnId ? rnMap.get(rnId) : pickStr(r.radniNalog),
         masina: resolveName(resursiMap, r.proizvodnaLinija),
-        artikalNaziv: resolveName(artikliMap, r.artikal),
+        artikalNaziv: pickStr((r as AnyRow).artikalNaziv) ?? resolveName(artikliMap, r.artikal),
         kategorija,
         kolicina: pickNum(r.kolicinaSkarta),
         operator: resolveCreator(kontaktiMap, r),

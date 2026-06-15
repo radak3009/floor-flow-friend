@@ -395,7 +395,7 @@ function RnTable({
               <button onClick={() => onOpen(r)} className="font-medium text-primary hover:underline">{r.brojNaloga || "—"}</button>
             </Td>
             <Td>{r.masina || "—"}</Td>
-            <Td className="max-w-[280px] truncate">{[r.sifraArtikla, r.artikalNaziv].filter(Boolean).join(" · ") || "—"}</Td>
+            <Td className="max-w-[280px] truncate"><span title={r.artikalNaziv || ""}>{r.artikalNaziv || "—"}</span></Td>
             <Td>{r.narucilac || "—"}</Td>
             <Td className="text-right tabular-nums">{r.planiranaKolicina ?? "—"}</Td>
             <Td className="text-right tabular-nums">{r.ispravnoProizvedeno ?? "—"}</Td>
