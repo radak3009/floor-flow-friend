@@ -648,8 +648,8 @@ function MachineRow({
       {/* Work order row */}
       {m.brojNaloga && (
         <div className="border-t border-border px-4 py-3 space-y-2">
-          <div className="grid grid-cols-12 gap-4 items-start">
-            <div className="col-span-12 md:col-span-3">
+          <div className="grid grid-cols-12 gap-2 md:gap-3 items-start">
+            <div className="col-span-12 md:col-span-2">
               <div className="text-xs text-muted-foreground uppercase">{t("monitoring.workOrder")}</div>
               <div className="flex items-center gap-2 flex-wrap mt-0.5">
                 <button
@@ -663,7 +663,7 @@ function MachineRow({
                 </span>
               </div>
             </div>
-            <div className="hidden md:block md:col-span-2">
+            <div className="hidden md:block md:col-span-1">
               <div className="text-xs text-muted-foreground uppercase">{t("monitoring.priority")}</div>
               <div className="mt-0.5">
                 <PriorityBadge value={m.prioritet} />
