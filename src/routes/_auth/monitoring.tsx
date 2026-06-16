@@ -669,7 +669,7 @@ function MachineRow({
                 <PriorityBadge value={m.prioritet} />
               </div>
             </div>
-            <div className="col-span-12 md:col-span-4 min-w-0">
+            <div className="col-span-12 md:col-span-5 min-w-0">
               <div
                 className="break-words whitespace-normal md:truncate"
                 title={m.artikalNaziv || ""}
@@ -682,7 +682,7 @@ function MachineRow({
                 </div>
               )}
             </div>
-            <div className="col-span-12 md:col-span-3 md:text-right">
+            <div className="col-span-12 md:col-span-4 md:text-right">
               <div className="text-xs text-muted-foreground uppercase">{t("monitoring.activeWork")}</div>
               {m.vremeOtvaranjaNaloga && (
                 <div className="text-xs">{t("monitoring.started", { when: formatDateTime(m.vremeOtvaranjaNaloga) })}</div>
