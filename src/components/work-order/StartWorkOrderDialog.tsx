@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { formatNumber } from "@/lib/i18n/format";
+import { PriorityBadge } from "@/components/work-order/PriorityBadge";
 
 import {
   getAvailableWorkOrdersFn,
@@ -117,6 +118,7 @@ export default function StartWorkOrderDialog({
                     <span className="flex items-center gap-2">
                       <span className="font-medium">{selectedWO.brojNaloga}</span>
                       <StatusBadge status={selectedWO.statusNaloga} />
+                      <PriorityBadge value={selectedWO.prioritet} />
                     </span>
                   )}
                 </SelectValue>
@@ -129,6 +131,7 @@ export default function StartWorkOrderDialog({
                         <span className="font-medium">{it.brojNaloga}</span>
                         {it.sifraArtikla && <span className="text-muted-foreground text-xs">{it.sifraArtikla}</span>}
                         <StatusBadge status={it.statusNaloga} />
+                        <PriorityBadge value={it.prioritet} />
                       </span>
                       {it.artikalNaziv && (
                         <span className="text-[11px] sm:text-xs text-muted-foreground leading-snug break-words whitespace-normal">

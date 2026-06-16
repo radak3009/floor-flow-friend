@@ -25,6 +25,7 @@ import StartWorkOrderDialog, { type StartWorkOrderSubmitArgs } from "@/component
 import { LoadingOverlay } from "@/components/ui/loading-overlay";
 
 import { ConfirmActionDialog, ScrapDialog, StopWithBatchDialog } from "@/components/work-order/dialogs";
+import { PriorityBadge } from "@/components/work-order/PriorityBadge";
 import DowntimeModal from "@/components/shop-floor/DowntimeModal";
 import InspectionModal from "@/components/shop-floor/InspectionModal";
 

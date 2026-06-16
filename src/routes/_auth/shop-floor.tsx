@@ -15,6 +15,7 @@ import {
 import { isMassScrapTipName } from "@/lib/scrap";
 import WorkOrderDetailsDialog from "@/components/work-order/WorkOrderDetailsDialog";
 import StartWorkOrderDialog, { type StartWorkOrderSubmitArgs } from "@/components/work-order/StartWorkOrderDialog";
+import { PriorityBadge } from "@/components/work-order/PriorityBadge";
 import { Button } from "@/components/ui/button";
 import { AsyncButton } from "@/components/ui/async-button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
