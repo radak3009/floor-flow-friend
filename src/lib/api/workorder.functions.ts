@@ -308,6 +308,7 @@ export interface AvailableWorkOrder {
   bukingSort?: number | string;
   planiranStart?: string;
   narucilac?: string;
+  prioritet?: string;
 }
 
 
@@ -398,6 +399,7 @@ export const getAvailableWorkOrdersFn = createServerFn({ method: "GET" })
         bukingSort: typeof r.bukingSort === "number" || typeof r.bukingSort === "string" ? r.bukingSort : undefined,
         planiranStart: typeof r.planiranStart === "string" ? r.planiranStart : undefined,
         narucilac,
+        prioritet: typeof r.prioritet === "string" ? r.prioritet : undefined,
       };
     });
 
