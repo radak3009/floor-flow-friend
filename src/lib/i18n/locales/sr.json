@@ -136,6 +136,7 @@
     "undefinedDowntime": "Nedefinisan zastoj",
     "duration": "Trajanje",
     "workOrder": "Radni nalog",
+    "priority": "Prioritet",
     "activeWork": "Aktivni posao",
     "started": "Počeo: {{when}}",
     "production": "Proizvodnja: {{count}} ciklusa",

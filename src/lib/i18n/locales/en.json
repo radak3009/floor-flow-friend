@@ -136,6 +136,7 @@
     "undefinedDowntime": "Undefined downtime",
     "duration": "Duration",
     "workOrder": "Work order",
+    "priority": "Priority",
     "activeWork": "Active job",
     "started": "Started: {{when}}",
     "production": "Production: {{count}} cycles",
