@@ -15,6 +15,7 @@ import {
 import { isMassScrapTipName } from "@/lib/scrap";
 import WorkOrderDetailsDialog from "@/components/work-order/WorkOrderDetailsDialog";
 import StartWorkOrderDialog, { type StartWorkOrderSubmitArgs } from "@/components/work-order/StartWorkOrderDialog";
+import { PriorityBadge } from "@/components/work-order/PriorityBadge";
 import { Button } from "@/components/ui/button";
 import { AsyncButton } from "@/components/ui/async-button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -337,7 +338,7 @@ function ShopFloorPage() {
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <div className="text-xs text-muted-foreground">{t("shopFloor.activeWorkOrder")}</div>
-                  <div className="flex items-center gap-2 mt-0.5">
+                  <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                     <button
                       onClick={() => setDetailsOpen(true)}
                       className="text-2xl font-semibold underline underline-offset-4 hover:text-primary"
@@ -347,6 +348,7 @@ function ShopFloorPage() {
                     <Button size="icon" variant="ghost" className="size-8 rounded-full" onClick={() => setDetailsOpen(true)} title={t("shopFloor.workOrderDetails")}>
                       <FileText className="size-4" />
                     </Button>
+                    <PriorityBadge value={m.prioritet} />
                   </div>
                   <div className="text-sm mt-1 break-words whitespace-normal md:truncate" title={m.artikalNaziv || ""}>
                     {m.artikalNaziv}
@@ -1203,6 +1205,7 @@ function AvailableWorkOrdersCard({
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="font-semibold truncate">{wo.brojNaloga}</span>
                   <StatusBadge status={wo.statusNaloga} />
+                  <PriorityBadge value={wo.prioritet} />
                 </div>
                 <div className="text-sm text-muted-foreground truncate">
                   {wo.sifraArtikla && <span>{wo.sifraArtikla} | </span>}

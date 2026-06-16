@@ -25,6 +25,7 @@ import StartWorkOrderDialog, { type StartWorkOrderSubmitArgs } from "@/component
 import { LoadingOverlay } from "@/components/ui/loading-overlay";
 
 import { ConfirmActionDialog, ScrapDialog, StopWithBatchDialog } from "@/components/work-order/dialogs";
+import { PriorityBadge } from "@/components/work-order/PriorityBadge";
 import DowntimeModal from "@/components/shop-floor/DowntimeModal";
 import InspectionModal from "@/components/shop-floor/InspectionModal";
 
@@ -650,12 +651,15 @@ function MachineRow({
           <div className="grid grid-cols-12 gap-4 items-start">
             <div className="col-span-12 md:col-span-2">
               <div className="text-xs text-muted-foreground uppercase">{t("monitoring.workOrder")}</div>
-              <button
-                onClick={onOpenDetails}
-                className="font-semibold underline underline-offset-2 hover:text-primary text-left"
-              >
-                {m.brojNaloga}
-              </button>
+              <div className="flex items-center gap-2 flex-wrap mt-0.5">
+                <button
+                  onClick={onOpenDetails}
+                  className="font-semibold underline underline-offset-2 hover:text-primary text-left"
+                >
+                  {m.brojNaloga}
+                </button>
+                <PriorityBadge value={m.prioritet} />
+              </div>
             </div>
             <div className="col-span-12 md:col-span-7 min-w-0">
               <div

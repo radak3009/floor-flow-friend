@@ -41,6 +41,7 @@ export interface MachineDashboardRow {
   startNaloga?: string;
   vremeOtvaranjaNaloga?: string;
   procenjenoTrajanje?: string;
+  prioritet?: string;
   hasAvailableOrders: boolean;
 }
 
@@ -251,6 +252,7 @@ async function buildAirtableDashboard(): Promise<{ machines: MachineDashboardRow
       startNaloga: pickStr(m.start),
       vremeOtvaranjaNaloga: pickStr(wo?.vremeOtvaranjaNaloga),
       procenjenoTrajanje: pickStr(m.procenjenoTrajanjeDhmin) ?? pickStr((m as Record<string, unknown>).procenjenoTrajanjeDHMin),
+      prioritet: pickStr(wo?.prioritet),
       hasAvailableOrders: resursiId ? availableResursiIds.has(resursiId) : false,
     };
   });
