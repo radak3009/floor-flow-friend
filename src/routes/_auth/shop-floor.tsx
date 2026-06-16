@@ -429,7 +429,7 @@ function ShopFloorPage() {
       )}
 
       {showAvailableList && m?.resursiId && (
-        <div className="relative">
+        <div className="relative mt-6">
           <LoadingOverlay show={overlayShow} label={t("shopFloor.loadingData")} />
           <AvailableWorkOrdersCard
             resursId={m.resursiId}
