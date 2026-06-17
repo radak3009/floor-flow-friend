@@ -649,12 +649,12 @@ function MachineRow({
       {m.brojNaloga && (
         <div className="border-t border-border px-4 py-3 space-y-2">
           <div className="grid grid-cols-12 gap-2 md:gap-3 items-start">
-            <div className="col-span-12 md:col-span-2 lg:col-span-2">
+            <div className="col-span-12 md:col-span-3 lg:col-span-2">
               <div className="text-xs text-muted-foreground uppercase">{t("monitoring.workOrder")}</div>
               <div className="flex items-center gap-2 flex-wrap mt-0.5">
                 <button
                   onClick={onOpenDetails}
-                  className="font-semibold underline underline-offset-2 hover:text-primary text-left"
+                  className="font-semibold underline underline-offset-2 hover:text-primary text-left md:whitespace-nowrap"
                 >
                   {m.brojNaloga}
                 </button>
@@ -669,7 +669,7 @@ function MachineRow({
                 <PriorityBadge value={m.prioritet} />
               </div>
             </div>
-            <div className="col-span-12 md:order-3 md:col-span-8 lg:order-4 lg:col-span-4 md:text-right">
+            <div className="col-span-12 md:order-3 md:col-span-7 lg:order-4 lg:col-span-4 md:text-right">
               <div className="text-xs text-muted-foreground uppercase">{t("monitoring.activeWork")}</div>
               {m.vremeOtvaranjaNaloga && (
                 <div className="text-xs">{t("monitoring.started", { when: formatDateTime(m.vremeOtvaranjaNaloga) })}</div>
