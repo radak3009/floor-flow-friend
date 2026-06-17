@@ -1208,7 +1208,6 @@ function AvailableWorkOrdersCard({
                   <PriorityBadge value={wo.prioritet} />
                 </div>
                 <div className="text-sm text-muted-foreground truncate">
-                  {wo.sifraArtikla && <span>{wo.sifraArtikla} | </span>}
                   {wo.artikalNaziv}
                 </div>
                 {(wo.narucilac || wo.planiranaKolicina != null) && (
