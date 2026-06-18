@@ -1219,14 +1219,16 @@ function AvailableWorkOrdersCard({
                   </div>
                 )}
               </button>
-              <Button
-                onClick={() => setConfirmWO(wo)}
-                disabled={startPending}
-                className="shrink-0"
-              >
-                <Play className="size-4" />
-                {wo.statusNaloga === "Pauziran" ? t("shopFloor.resume") : t("shopFloor.start")}
-              </Button>
+              {!hideStart && (
+                <Button
+                  onClick={() => setConfirmWO(wo)}
+                  disabled={startPending}
+                  className="shrink-0"
+                >
+                  <Play className="size-4" />
+                  {wo.statusNaloga === "Pauziran" ? t("shopFloor.resume") : t("shopFloor.start")}
+                </Button>
+              )}
             </li>
           ))}
         </ul>
