@@ -279,7 +279,7 @@ function ShopFloorPage() {
   const showScrap = !!perms?.logScrap && hasActiveWO;
   const showInspection = !!perms?.performInspection && hasActiveWO;
   const canInspection = !!perms?.performInspection && !!m?.radniNalogId;
-  const showAvailableList = !hasActiveWO && !!m?.resursiId && !!perms?.startWorkOrder;
+  const showAvailableList = !!m?.resursiId && !!perms?.startWorkOrder;
   const showDowntimeBtn = !!perms?.logDowntime && !!m && ["Zastoj", "Nema signala", "OFF"].includes(m.statusMasine);
 
   
