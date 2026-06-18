@@ -279,7 +279,7 @@ function ShopFloorPage() {
   const showScrap = !!perms?.logScrap && hasActiveWO;
   const showInspection = !!perms?.performInspection && hasActiveWO;
   const canInspection = !!perms?.performInspection && !!m?.radniNalogId;
-  const showAvailableList = !hasActiveWO && !!m?.resursiId && !!perms?.startWorkOrder;
+  const showAvailableList = !!m?.resursiId && !!perms?.startWorkOrder;
   const showDowntimeBtn = !!perms?.logDowntime && !!m && ["Zastoj", "Nema signala", "OFF"].includes(m.statusMasine);
 
   
@@ -435,6 +435,7 @@ function ShopFloorPage() {
             resursId={m.resursiId}
             machine={m}
             startPending={startM.isPending}
+            hideStart={hasActiveWO}
             onStart={(wo, startTimeIso) =>
               startM.mutate({
                 woId: wo.id,
@@ -1140,11 +1141,12 @@ function DowntimeInfoCard({ m }: { m: MachineDashboardRow }) {
 
 // ============= Available work orders card (inline list with per-row Start) =============
 function AvailableWorkOrdersCard({
-  resursId, machine, startPending, onStart,
+  resursId, machine, startPending, hideStart, onStart,
 }: {
   resursId: string;
   machine: MachineDashboardRow;
   startPending: boolean;
+  hideStart?: boolean;
   onStart: (wo: AvailableWorkOrder, startTimeIso: string | undefined) => void;
 }) {
   const { t } = useTranslation();
@@ -1217,14 +1219,16 @@ function AvailableWorkOrdersCard({
                   </div>
                 )}
               </button>
-              <Button
-                onClick={() => setConfirmWO(wo)}
-                disabled={startPending}
-                className="shrink-0"
-              >
-                <Play className="size-4" />
-                {wo.statusNaloga === "Pauziran" ? t("shopFloor.resume") : t("shopFloor.start")}
-              </Button>
+              {!hideStart && (
+                <Button
+                  onClick={() => setConfirmWO(wo)}
+                  disabled={startPending}
+                  className="shrink-0"
+                >
+                  <Play className="size-4" />
+                  {wo.statusNaloga === "Pauziran" ? t("shopFloor.resume") : t("shopFloor.start")}
+                </Button>
+              )}
             </li>
           ))}
         </ul>
