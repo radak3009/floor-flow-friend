@@ -1141,11 +1141,12 @@ function DowntimeInfoCard({ m }: { m: MachineDashboardRow }) {
 
 // ============= Available work orders card (inline list with per-row Start) =============
 function AvailableWorkOrdersCard({
-  resursId, machine, startPending, onStart,
+  resursId, machine, startPending, hideStart, onStart,
 }: {
   resursId: string;
   machine: MachineDashboardRow;
   startPending: boolean;
+  hideStart?: boolean;
   onStart: (wo: AvailableWorkOrder, startTimeIso: string | undefined) => void;
 }) {
   const { t } = useTranslation();
