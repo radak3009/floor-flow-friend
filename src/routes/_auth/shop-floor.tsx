@@ -435,6 +435,7 @@ function ShopFloorPage() {
             resursId={m.resursiId}
             machine={m}
             startPending={startM.isPending}
+            hideStart={hasActiveWO}
             onStart={(wo, startTimeIso) =>
               startM.mutate({
                 woId: wo.id,
