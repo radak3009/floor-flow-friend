@@ -107,6 +107,36 @@ export type Database = {
         }
         Relationships: []
       }
+      downtime_idempotency: {
+        Row: {
+          created_at: string
+          idempotency_key: string
+          kraj: string | null
+          monitoring_id: string
+          ongoing: boolean
+          result: Json | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          idempotency_key: string
+          kraj?: string | null
+          monitoring_id: string
+          ongoing: boolean
+          result?: Json | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          idempotency_key?: string
+          kraj?: string | null
+          monitoring_id?: string
+          ongoing?: boolean
+          result?: Json | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       login_attempts: {
         Row: {
           attempted_at: string
