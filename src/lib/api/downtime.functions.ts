@@ -3,6 +3,10 @@ import { Monitoring, Zastoji, PromeneNaloga } from "@/lib/airtable/sdk.server";
 import type { RecordOf } from "@/lib/airtable/types";
 import { findIdByClientOpId } from "@/lib/airtable/dedupe.server";
 import { upsertOverride } from "@/lib/api/overrides.server";
+import { supabaseAdmin } from "@/integrations/supabase/client.server";
+
+// Prozor unutar koga se zastoji za istu liniju smatraju duplikatom (klijent je istekao i pokušao ponovo).
+const DOWNTIME_DEDUP_WINDOW_MS = 30_000;
 
 type ZastojRow = RecordOf<"Zastoji">;
 
