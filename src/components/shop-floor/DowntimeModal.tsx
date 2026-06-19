@@ -118,9 +118,11 @@ export default function DowntimeModal({ open, onOpenChange, monitoringId, userId
     },
   });
 
-  const canSave = !noActive && !active.isLoading && (!!grupaId || !!komentar);
+  const canSave = !noActive && !active.isLoading && (!!grupaId || !!komentar) && !isSubmitting;
 
   const handleSave = () => {
+    // Hard lock: ne dozvoli drugi submit dok prvi nije gotov (čak ni unutar istog tick-a).
+    if (submittingRef.current || m.isPending) return;
     if (!ongoing) {
       const startIso = active.data?.start;
       if (!startIso) {
@@ -142,6 +144,8 @@ export default function DowntimeModal({ open, onOpenChange, monitoringId, userId
         return;
       }
     }
+    submittingRef.current = true;
+    setIsSubmitting(true);
     m.mutate();
   };
 
