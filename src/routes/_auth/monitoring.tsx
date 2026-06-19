@@ -555,6 +555,7 @@ function MachineRow({
           aria-label={t("monitoring.reportDowntime")}
           className="border-[color:var(--color-status-downtime)] text-[color:var(--color-status-downtime)]"
           onClick={onDowntime}
+          disabled={busy}
         >
           <AlertTriangle className={`size-4 ${ico}`} /> <span className={lbl}>{t("monitoring.reportDowntime")}</span>
         </Button>
