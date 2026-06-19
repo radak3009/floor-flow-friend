@@ -320,7 +320,7 @@ function MonitoringPage() {
             onPause={() => setConfirmAct({ m, kind: "pause" })}
             onResume={() => setConfirmAct({ m, kind: "resume" })}
             onStop={() => setStopFor(m)}
-            onDowntime={() => setDowntimeFor(m)}
+            onDowntime={() => { if (busyCard?.id === m.monitoringId) return; setDowntimeFor(m); }}
             onInspect={() => setInspectFor(m)}
             onScrap={() => setScrapFor(m)}
           />
