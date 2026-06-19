@@ -175,7 +175,7 @@ export const logDowntimeFn = createServerFn({ method: "POST" })
     if (data.idempotencyKey) {
       await supabaseAdmin
         .from("downtime_idempotency")
-        .update({ result: result as unknown as Record<string, unknown> })
+        .update({ result: result as unknown as never })
         .eq("idempotency_key", data.idempotencyKey);
     }
 
