@@ -3,6 +3,10 @@ import { Monitoring, Zastoji, PromeneNaloga } from "@/lib/airtable/sdk.server";
 import type { RecordOf } from "@/lib/airtable/types";
 import { findIdByClientOpId } from "@/lib/airtable/dedupe.server";
 import { upsertOverride } from "@/lib/api/overrides.server";
+import { supabaseAdmin } from "@/integrations/supabase/client.server";
+
+// Prozor unutar koga se zastoji za istu liniju smatraju duplikatom (klijent je istekao i pokušao ponovo).
+const DOWNTIME_DEDUP_WINDOW_MS = 30_000;
 
 type ZastojRow = RecordOf<"Zastoji">;
 
@@ -41,7 +45,14 @@ interface LogDowntimeInput {
   ongoing: boolean;
   kraj?: string;
   clientOpId?: string;
+  idempotencyKey?: string;
 }
+
+type LogDowntimeResult = {
+  ok: true;
+  activeZastojStart?: string;
+  deduped?: true;
+};
 
 export const logDowntimeFn = createServerFn({ method: "POST" })
   .inputValidator((input: LogDowntimeInput) => {
@@ -51,11 +62,72 @@ export const logDowntimeFn = createServerFn({ method: "POST" })
     if (!input.ongoing && !input.kraj) throw new Error("Kraj je obavezan kada zastoj nije u toku");
     return input;
   })
-  .handler(async ({ data }) => {
+  .handler(async ({ data }): Promise<LogDowntimeResult> => {
+    // 1) Idempotency key — sinhroni backstop u našem Postgres-u (UNIQUE PRIMARY KEY).
+    //    Ako isti ključ već postoji → vrati postojeći rezultat (no-op).
+    if (data.idempotencyKey) {
+      const { data: existing } = await supabaseAdmin
+        .from("downtime_idempotency")
+        .select("result")
+        .eq("idempotency_key", data.idempotencyKey)
+        .maybeSingle();
+      if (existing) {
+        const stored = (existing.result ?? {}) as Partial<LogDowntimeResult>;
+        return { ok: true, activeZastojStart: stored.activeZastojStart, deduped: true };
+      }
+    }
+
+    // 2) Legacy clientOpId dedup preko Airtable (kasni; ostavljeno kao dodatni backstop).
     if (data.clientOpId) {
       const existing = await findIdByClientOpId("PromeneNaloga", data.clientOpId);
-      if (existing) return { ok: true as const, activeZastojStart: undefined as string | undefined, deduped: true as const };
+      if (existing) return { ok: true, activeZastojStart: undefined, deduped: true };
     }
+
+    // 3) Overlap dedup — ako je u poslednjih N sekundi već primljen upis za istu liniju,
+    //    tretiraj kao duplikat (klijent je verovatno poslao više puta zbog tap-a/refresh-a).
+    const sinceIso = new Date(Date.now() - DOWNTIME_DEDUP_WINDOW_MS).toISOString();
+    const { data: recent } = await supabaseAdmin
+      .from("downtime_idempotency")
+      .select("result, ongoing")
+      .eq("monitoring_id", data.monitoringId)
+      .gte("created_at", sinceIso)
+      .order("created_at", { ascending: false })
+      .limit(1);
+    if (recent && recent.length > 0 && recent[0].ongoing === data.ongoing) {
+      const stored = (recent[0].result ?? {}) as Partial<LogDowntimeResult>;
+      return { ok: true, activeZastojStart: stored.activeZastojStart, deduped: true };
+    }
+
+    // 4) Rezerviši idempotency_key PRE upisa u Airtable — UNIQUE PK hvata trku
+    //    između dva paralelna zahteva sa istim ključem.
+    if (data.idempotencyKey) {
+      const { error: reserveErr } = await supabaseAdmin
+        .from("downtime_idempotency")
+        .insert({
+          idempotency_key: data.idempotencyKey,
+          monitoring_id: data.monitoringId,
+          user_id: data.userId,
+          ongoing: data.ongoing,
+          kraj: data.kraj ?? null,
+          result: null,
+        });
+      if (reserveErr) {
+        // 23505 = unique_violation → drugi paralelni zahtev je već rezervisao ključ.
+        const code = (reserveErr as { code?: string }).code;
+        if (code === "23505") {
+          const { data: existing } = await supabaseAdmin
+            .from("downtime_idempotency")
+            .select("result")
+            .eq("idempotency_key", data.idempotencyKey)
+            .maybeSingle();
+          const stored = (existing?.result ?? {}) as Partial<LogDowntimeResult>;
+          return { ok: true, activeZastojStart: stored.activeZastojStart, deduped: true };
+        }
+        // Druga greška — ne blokiramo upis, ali logujemo.
+        console.warn("[downtime] idempotency reserve failed:", reserveErr);
+      }
+    }
+
     const z = await findActiveZastoj(data.monitoringId);
     if (!z) throw new Error("Nema aktivnog zastoja za ovu liniju");
 
@@ -79,9 +151,6 @@ export const logDowntimeFn = createServerFn({ method: "POST" })
 
     // Override sloj — trenutna vidljivost dok Airtable automatizacija ne sustigne
     if (data.ongoing) {
-      // Definisanje: prikaži grupu odmah i forsiraj statusMasine="Zastoj"
-      // kako bi se pregazio eventualni rezidualni override iz start/resume
-      // (koji postavlja statusMasine="U radu" sa TTL 120s).
       const patch: Record<string, unknown> = { statusMasine: "Zastoj" };
       const expected: Record<string, unknown> = { statusMasine: "Zastoj" };
       if (data.grupaNaziv) {
@@ -90,7 +159,6 @@ export const logDowntimeFn = createServerFn({ method: "POST" })
       }
       await upsertOverride(data.monitoringId, patch, expected);
     } else if (!data.ongoing) {
-      // Podela: zastoj je završen — mašina više nije u "Zastoj"
       await upsertOverride(
         data.monitoringId,
         { statusMasine: "U radu", grupaZastoja: null },
@@ -98,6 +166,19 @@ export const logDowntimeFn = createServerFn({ method: "POST" })
       );
     }
 
-    return { ok: true as const, activeZastojStart: typeof z.start === "string" ? z.start : undefined };
+    const result: LogDowntimeResult = {
+      ok: true,
+      activeZastojStart: typeof z.start === "string" ? z.start : undefined,
+    };
+
+    // Sačuvaj rezultat uz idempotency_key (za naredne ponovljene pozive).
+    if (data.idempotencyKey) {
+      await supabaseAdmin
+        .from("downtime_idempotency")
+        .update({ result: JSON.parse(JSON.stringify(result)) })
+        .eq("idempotency_key", data.idempotencyKey);
+    }
+
+    return result;
   });
 

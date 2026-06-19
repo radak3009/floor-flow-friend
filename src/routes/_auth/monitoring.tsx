@@ -320,7 +320,7 @@ function MonitoringPage() {
             onPause={() => setConfirmAct({ m, kind: "pause" })}
             onResume={() => setConfirmAct({ m, kind: "resume" })}
             onStop={() => setStopFor(m)}
-            onDowntime={() => setDowntimeFor(m)}
+            onDowntime={() => { if (busyCard?.id === m.monitoringId) return; setDowntimeFor(m); }}
             onInspect={() => setInspectFor(m)}
             onScrap={() => setScrapFor(m)}
           />
@@ -555,6 +555,7 @@ function MachineRow({
           aria-label={t("monitoring.reportDowntime")}
           className="border-[color:var(--color-status-downtime)] text-[color:var(--color-status-downtime)]"
           onClick={onDowntime}
+          disabled={busy}
         >
           <AlertTriangle className={`size-4 ${ico}`} /> <span className={lbl}>{t("monitoring.reportDowntime")}</span>
         </Button>

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
@@ -45,6 +45,12 @@ export default function DowntimeModal({ open, onOpenChange, monitoringId, userId
   const [ongoing, setOngoing] = useState(true);
   const [komentar, setKomentar] = useState("");
   const [krajInput, setKrajInput] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Idempotency key — STABILAN za jedno otvaranje modala. Više klikova / retry-ja
+  // koristi isti ključ pa server svodi na jedan upis.
+  const idempotencyKeyRef = useRef<string>("");
+  const submittingRef = useRef(false);
 
   const dd = useQuery({
     queryKey: ["dropdown-data"],
@@ -62,6 +68,12 @@ export default function DowntimeModal({ open, onOpenChange, monitoringId, userId
     if (open) {
       setGrupaId(""); setTipId(""); setKomentar(""); setOngoing(true);
       setKrajInput(toLocalInput(new Date()));
+      setIsSubmitting(false);
+      submittingRef.current = false;
+      idempotencyKeyRef.current =
+        (typeof crypto !== "undefined" && "randomUUID" in crypto)
+          ? crypto.randomUUID()
+          : `idem_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
     }
   }, [open]);
 
@@ -86,6 +98,7 @@ export default function DowntimeModal({ open, onOpenChange, monitoringId, userId
           komentar: komentar.trim() || undefined,
           ongoing,
           kraj: !ongoing ? new Date(krajInput).toISOString() : undefined,
+          idempotencyKey: idempotencyKeyRef.current,
         },
       );
     },
@@ -98,12 +111,18 @@ export default function DowntimeModal({ open, onOpenChange, monitoringId, userId
       onOpenChange(false);
     },
     onError: (e: Error) => toast.error(e.message || t("common.error")),
-    onSettled: () => invalidateAfterActionDelayed(queryClient, { radniNalogId, monitoringId, resursId }),
+    onSettled: () => {
+      submittingRef.current = false;
+      setIsSubmitting(false);
+      invalidateAfterActionDelayed(queryClient, { radniNalogId, monitoringId, resursId });
+    },
   });
 
-  const canSave = !noActive && !active.isLoading && (!!grupaId || !!komentar);
+  const canSave = !noActive && !active.isLoading && (!!grupaId || !!komentar) && !isSubmitting;
 
   const handleSave = () => {
+    // Hard lock: ne dozvoli drugi submit dok prvi nije gotov (čak ni unutar istog tick-a).
+    if (submittingRef.current || m.isPending) return;
     if (!ongoing) {
       const startIso = active.data?.start;
       if (!startIso) {
@@ -125,6 +144,8 @@ export default function DowntimeModal({ open, onOpenChange, monitoringId, userId
         return;
       }
     }
+    submittingRef.current = true;
+    setIsSubmitting(true);
     m.mutate();
   };
 
