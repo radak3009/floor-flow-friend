@@ -45,7 +45,14 @@ interface LogDowntimeInput {
   ongoing: boolean;
   kraj?: string;
   clientOpId?: string;
+  idempotencyKey?: string;
 }
+
+type LogDowntimeResult = {
+  ok: true;
+  activeZastojStart?: string;
+  deduped?: true;
+};
 
 export const logDowntimeFn = createServerFn({ method: "POST" })
   .inputValidator((input: LogDowntimeInput) => {
@@ -55,11 +62,42 @@ export const logDowntimeFn = createServerFn({ method: "POST" })
     if (!input.ongoing && !input.kraj) throw new Error("Kraj je obavezan kada zastoj nije u toku");
     return input;
   })
-  .handler(async ({ data }) => {
+  .handler(async ({ data }): Promise<LogDowntimeResult> => {
+    // 1) Idempotency key — sinhroni backstop u našem Postgres-u (UNIQUE PRIMARY KEY).
+    //    Ako isti ključ već postoji → vrati postojeći rezultat (no-op).
+    if (data.idempotencyKey) {
+      const { data: existing } = await supabaseAdmin
+        .from("downtime_idempotency")
+        .select("result")
+        .eq("idempotency_key", data.idempotencyKey)
+        .maybeSingle();
+      if (existing) {
+        const stored = (existing.result ?? {}) as Partial<LogDowntimeResult>;
+        return { ok: true, activeZastojStart: stored.activeZastojStart, deduped: true };
+      }
+    }
+
+    // 2) Legacy clientOpId dedup preko Airtable (kasni; ostavljeno kao dodatni backstop).
     if (data.clientOpId) {
       const existing = await findIdByClientOpId("PromeneNaloga", data.clientOpId);
-      if (existing) return { ok: true as const, activeZastojStart: undefined as string | undefined, deduped: true as const };
+      if (existing) return { ok: true, activeZastojStart: undefined, deduped: true };
     }
+
+    // 3) Overlap dedup — ako je u poslednjih N sekundi već primljen upis za istu liniju,
+    //    tretiraj kao duplikat (klijent je verovatno poslao više puta zbog tap-a/refresh-a).
+    const sinceIso = new Date(Date.now() - DOWNTIME_DEDUP_WINDOW_MS).toISOString();
+    const { data: recent } = await supabaseAdmin
+      .from("downtime_idempotency")
+      .select("result, ongoing")
+      .eq("monitoring_id", data.monitoringId)
+      .gte("created_at", sinceIso)
+      .order("created_at", { ascending: false })
+      .limit(1);
+    if (recent && recent.length > 0 && recent[0].ongoing === data.ongoing) {
+      const stored = (recent[0].result ?? {}) as Partial<LogDowntimeResult>;
+      return { ok: true, activeZastojStart: stored.activeZastojStart, deduped: true };
+    }
+
     const z = await findActiveZastoj(data.monitoringId);
     if (!z) throw new Error("Nema aktivnog zastoja za ovu liniju");
 
