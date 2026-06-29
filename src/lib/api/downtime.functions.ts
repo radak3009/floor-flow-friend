@@ -133,7 +133,7 @@ export const logDowntimeFn = createServerFn({ method: "POST" })
 
     const record: Record<string, unknown> = {
       zastoj: [z.id],
-      opcija: data.ongoing ? "Definisanje" : "Podela",
+      akcija: data.ongoing ? "Definisanje" : "Podela",
       start: z.start,
       kreiraola: [data.userId],
     };

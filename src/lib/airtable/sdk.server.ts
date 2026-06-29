@@ -89,8 +89,12 @@ const FIELD_ALIASES: Partial<Record<TableName, Record<string, string>>> = {
   PromeneNaloga: {
     artikal: "artikal",
     idZapisa: "idZapisa",
-    opcija: "opcije",
-    opcije: "opcija",
+    // Polje u Airtable je preimenovano iz "Opcije" u "Akcija" (isti field id
+    // fldN7TsdqFCRNJs3C). Aliasi održavaju kompatibilnost u oba smera:
+    // novi regen daje key `akcija`, stari kod koristi `opcija`/`opcije`.
+    akcija: "opcija",
+    opcija: "akcija",
+    opcije: "akcija",
     kreiraola: "kreiraoLa",
     kreiraoLa: "kreiraola",
   },
