@@ -474,7 +474,7 @@ export const FIELDS = {
     "deleted": "fld3lvr37Id5QkUAk",
     "zastoj": "fld8P3eksgKXddkho",
     "statusZastoja": "fld9aXOHUG9dloidf",
-    "opcija": "fldN7TsdqFCRNJs3C",
+    "akcija": "fldN7TsdqFCRNJs3C",
     "start": "fld7RMkZ4hOlEC1Gh",
     "kraj": "fldB27GQqavqPcaX0",
     "grupa": "fldiXQMwtZlObLKp2",
