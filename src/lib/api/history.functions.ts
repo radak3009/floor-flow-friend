@@ -290,7 +290,7 @@ export const getHistoryFn = createServerFn({ method: "GET" })
     for (const r of rnRecords) {
       addId(resursiIds, r.proizvodnaLinija);
       addId(artikliIds, r.artikal);
-      addId(komitentiIds, r.kupac);
+      addId(komitentiIds, (r as AnyRow).krajnjiKupac);
     }
     for (const r of zastojiRecords) {
       // Zastoji.proizvodnaLinija links to Monitoring (not Resursi directly)
@@ -413,7 +413,7 @@ export const getHistoryFn = createServerFn({ method: "GET" })
       masina: resolveName(resursiMap, r.proizvodnaLinija),
       sifraArtikla: pickStr(r.sifraArtikla) ?? (firstId(r.artikal) ? artikliSifraMap.get(firstId(r.artikal)!) : undefined),
       artikalNaziv: pickStr(r.artikalIzErPa) ?? resolveName(artikliMap, r.artikal),
-      narucilac: resolveName(komitentiMap, r.kupac),
+      narucilac: resolveName(komitentiMap, (r as AnyRow).krajnjiKupac),
       planiranaKolicina: pickNum(r.planiranaKolicina),
       ispravnoProizvedeno: pickNum(r.ispravnoProizvedeno),
       skart: pickNum(r.skart),

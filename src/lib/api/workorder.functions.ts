@@ -343,9 +343,11 @@ export const getAvailableWorkOrdersFn = createServerFn({ method: "GET" })
         const aid = Array.isArray(r.artikal) ? r.artikal[0] : r.artikal;
         if (aid && typeof aid === "string") artIds.add(aid);
       }
-      const kRaw = (r as AnyRow).kupac ?? (r as AnyRow).narucilac;
-      const kid = Array.isArray(kRaw) ? kRaw[0] : kRaw;
-      if (typeof kid === "string" && kid.startsWith("rec")) kupacIds.add(kid);
+      const kRaw = (r as AnyRow).krajnjiKupac;
+      const kArr = Array.isArray(kRaw) ? kRaw : [kRaw];
+      for (const kid of kArr) {
+        if (typeof kid === "string" && kid.startsWith("rec")) kupacIds.add(kid);
+      }
     }
     const nameById = new Map<string, string>();
     if (artIds.size > 0) {
@@ -383,7 +385,7 @@ export const getAvailableWorkOrdersFn = createServerFn({ method: "GET" })
         const aid = Array.isArray(r.artikal) ? r.artikal[0] : r.artikal;
         if (aid && typeof aid === "string") artikalNaziv = nameById.get(aid);
       }
-      const kRaw = (r as AnyRow).kupac ?? (r as AnyRow).narucilac;
+      const kRaw = (r as AnyRow).krajnjiKupac;
       const kFirst = Array.isArray(kRaw) ? kRaw[0] : kRaw;
       let narucilac: string | undefined;
       if (typeof kFirst === "string") {
