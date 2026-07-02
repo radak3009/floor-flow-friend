@@ -353,7 +353,7 @@ function ShopFloorPage() {
                   <div className="text-sm mt-1 break-words whitespace-normal md:truncate" title={m.artikalNaziv || ""}>
                     {m.artikalNaziv}
                   </div>
-                  {m.narucilac && <div className="text-xs text-muted-foreground">{m.narucilac}</div>}
+                  {m.narucilac && <div className="text-sm font-semibold">{m.narucilac}</div>}
                   {status && <div className="text-xs mt-1">{t("shopFloor.statusLabel")}: <span className="font-medium">{status}</span></div>}
                 </div>
               </div>
