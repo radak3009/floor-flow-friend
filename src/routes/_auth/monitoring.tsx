@@ -687,7 +687,7 @@ function MachineRow({
                 {m.artikalNaziv}
               </div>
               {m.narucilac && (
-                <div className="text-xs text-muted-foreground break-words whitespace-normal lg:truncate" title={m.narucilac}>
+                <div className="font-semibold break-words whitespace-normal lg:truncate" title={m.narucilac}>
                   {m.narucilac}
                 </div>
               )}
