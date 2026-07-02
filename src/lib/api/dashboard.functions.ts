@@ -144,10 +144,10 @@ async function buildAirtableDashboard(): Promise<{ machines: MachineDashboardRow
     if (id && id.startsWith("rec")) neededKupacIds.add(id);
   };
   for (const m of monResult.records) {
-    collectKupacId((m as Record<string, unknown>).kupac);
+    collectKupacId((m as Record<string, unknown>).krajnjiKupac);
     const rnId = firstId(m.radniNalog);
     const wo = rnId ? woMap.get(rnId) : undefined;
-    if (wo) collectKupacId((wo as Record<string, unknown>).kupac);
+    if (wo) collectKupacId((wo as Record<string, unknown>).krajnjiKupac);
   }
   const kupacMap = new Map<string, string>();
   if (neededKupacIds.size > 0) {
@@ -197,8 +197,8 @@ async function buildAirtableDashboard(): Promise<{ machines: MachineDashboardRow
       sifraArtikla: pickStr(wo?.sifraArtikla),
       artikalNaziv,
       narucilac: (() => {
-        const fromWo = (wo as Record<string, unknown> | undefined)?.kupac;
-        const fromMon = (m as Record<string, unknown>).kupac;
+        const fromWo = (wo as Record<string, unknown> | undefined)?.krajnjiKupac;
+        const fromMon = (m as Record<string, unknown>).krajnjiKupac;
         const id = firstId(fromWo) ?? firstId(fromMon);
         if (id && id.startsWith("rec") && kupacMap.has(id)) return kupacMap.get(id);
         return pickStr(fromWo) ?? pickStr(fromMon);

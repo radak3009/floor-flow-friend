@@ -104,6 +104,7 @@ export const REQUIRED_SCHEMA: ReadonlyArray<RequiredTable> = [
       { key: "ispravnoProizvedeno", label: "Ispravno proizvedeno" },
       { key: "skart", label: "Škart" },
       { key: "preostaloMaterijalaKg", label: "Preostalo materijala (kg)" },
+      { key: "krajnjiKupac", label: "Krajnji kupac (lookup)", hint: "Lookup iz Porudžbine → Komitenti" },
       { key: "monitoring", label: "Monitoring (link)" },
     ],
   },
@@ -121,6 +122,7 @@ export const REQUIRED_SCHEMA: ReadonlyArray<RequiredTable> = [
       { key: "aktivnoZastoja", label: "Aktivno zastoja" },
       { key: "grupa", label: "Grupa zastoja (lookup)", hint: "Prikazuje se u override-u dok Airtable ne sustigne" },
       { key: "tip", label: "Tip zastoja (lookup)", hint: "Prikazuje se u override-u dok Airtable ne sustigne" },
+      { key: "krajnjiKupac", label: "Krajnji kupac (lookup)", hint: "Lookup preko RN → Porudžbine → Komitenti" },
     ],
   },
   {
